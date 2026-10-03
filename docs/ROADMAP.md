@@ -16,6 +16,8 @@ Gooseberry on its own, on any Plasma desktop.
   workspace.
 - Tuck away and bring back. Removing sends a note to the trash.
 - Notes kept through a crash, a logout and a restart.
+- The note format written down and versioned: the folder layout and each
+  note's header.
 
 **Proves:** a week of the maintainer's daily use on the tablet without a lost
 note, and with capture fast enough that nothing is written elsewhere instead.
@@ -60,7 +62,12 @@ Waits on Tettegouche taking up its need in `DESKTOP.md`.
   offers it.
 - A rail of stickies beside the card, only if daily use asks for it.
 - Notes on several computers, through whatever folder sync the person already
-  uses.
+  uses, with two copies of a note edited apart offered to merge rather than
+  left side by side.
+- A mobile companion: capture, the planner and reminders on a phone, reading
+  the same folder. On Plasma Mobile it is the same program; on Android, a port
+  of the core and screens, with the phone's own widget, share sheet and alarms.
+  A reminder rings once, not on every device.
 
 ## Not planned
 

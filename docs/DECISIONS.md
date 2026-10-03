@@ -92,6 +92,23 @@ computer, such as hardware and maintenance. (The maintainer, 3 October.)
 Rejected: kept items staying only in Split Rock's notebook, which splits the
 person's notes in two and keeps them off the board and the planner.
 
+## The core is built for a mobile companion
+
+A mobile companion is a likely later step, so Gooseberry is built for it from
+the start. (The maintainer, 3 October.)
+
+- **One core, desktop parts outside it.** Notes, the board, the planner and
+  reminders live in a core that knows nothing of Kadunce, Tettegouche, Split
+  Rock or any panel. What those add sits outside it and is found at run time.
+- **Screens in Kirigami.** The same screens then run on Plasma Mobile as they
+  are, and are the starting point for a port to Android.
+- **The note format is a contract.** The folder layout and the header at the
+  top of each note are written down and versioned before Milestone 0 ends, since
+  a second device reading the same folder depends on them.
+
+Rejected: building for the desktop first and separating later, which turns a
+companion into a second app.
+
 ## Window arrangement is requested, never done directly
 
 To show notes beside or with a window, Gooseberry asks the window manager, which
@@ -102,8 +119,8 @@ two owners.
 
 ## Written in C++ and Qt, like the rest of the suite
 
-The program uses C++, Qt and KDE's own libraries, as Kadunce, Tettegouche and
-Split Rock do. This is engineering's choice.
+The program uses C++, Qt and KDE's own libraries, with Kirigami for its
+screens, as Kadunce, Tettegouche and Split Rock do. This is engineering's choice.
 
 Rejected: a web toolkit, which is heavy on a tablet's battery and draws nothing
 like the rest of the desktop; and a second language and toolchain for a suite
