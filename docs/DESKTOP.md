@@ -62,7 +62,7 @@ Where Split Rock is installed and set up, Gooseberry is one of its tools: the
 assistant can find notes, read one, and add one when Robin asks, and says when
 it reads one. From a note, "next step" sends only that note, and offers a
 checklist, a reminder or a better home; nothing changes until Robin chooses.
-Where the assistant's own kept items live is open (`ROADMAP.md`). Gooseberry
+What Robin keeps from the assistant becomes notes here too (`DECISIONS.md`). Gooseberry
 needs no assistant, and offers none of its own.
 
 ## Needs

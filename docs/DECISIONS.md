@@ -81,6 +81,17 @@ October.)
 Rejected: Split Rock reading Gooseberry's folder directly, which would make the
 folder's layout a contract and hide from the person what was read.
 
+## What the assistant keeps becomes notes, where Gooseberry is installed
+
+Where Gooseberry is installed, what the person keeps from Split Rock, and the
+memory items it needs to call on later, become Gooseberry notes: on the board,
+found by Search, under a place of their own. Split Rock keeps its own memory
+until it has an installed Gooseberry to use, and always keeps the record of the
+computer, such as hardware and maintenance. (The maintainer, 3 October.)
+
+Rejected: kept items staying only in Split Rock's notebook, which splits the
+person's notes in two and keeps them off the board and the planner.
+
 ## Window arrangement is requested, never done directly
 
 To show notes beside or with a window, Gooseberry asks the window manager, which

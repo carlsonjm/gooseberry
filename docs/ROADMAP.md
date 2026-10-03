@@ -71,25 +71,5 @@ Waits on Tettegouche taking up its need in `DESKTOP.md`.
 
 ## Open decisions
 
-The maintainer's to make. Each has two options, a recommendation and what
-neither covers. Settled ones move to `DECISIONS.md`.
-
-### Where the assistant's memory lives
-
-Holds up the notes tool's add, and Split Rock's own `docs/MEMORY.md`, which is
-Split Rock's to change. The maintainer leans toward Gooseberry.
-
-- **Kept items in Gooseberry.** What the person keeps from the assistant, and
-  memory items it needs to call on later, become notes: on the board, found by
-  Search, with a place of their own under Belongs to. Split Rock keeps the
-  record of the computer and its page about the person. Costs: Split Rock must
-  still keep its own notes folder for desktops without Gooseberry, so it has
-  two places to write and one to choose at run time.
-- **Kept items stay in Split Rock's notebook,** as its `docs/MEMORY.md` has
-  them now. Costs: the person's notes are in two places, and what the assistant
-  keeps never shows on the board or the planner.
-- **Other.** Whether the page about the person moves too.
-
-**Recommendation:** kept items in Gooseberry when it is installed, Split Rock's
-own folder when not. It puts what the person keeps where the person already
-looks.
+None open. Settled ones are in `DECISIONS.md`; a new one is added here with two
+options, a recommendation and what neither covers.
