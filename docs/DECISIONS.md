@@ -30,6 +30,27 @@ comes first. (The maintainer, 3 October.)
 Rejected: a title or notebook chosen first, as most notes apps ask. That
 question is where the thought is lost.
 
+## On a card, notes stack behind it
+
+A card's notes are a Gooseberry window in that card's Stack, behind it. Going
+back to the card puts them away; side by side is a Bento pair. Like a note
+tucked behind the page rather than one stuck to the monitor's edge, it takes no
+room and never needs closing. (The maintainer, 3 October.)
+
+Rejected, for now: a rail of stickies beside the card, which needs Kadunce to
+offer room and a rule to fold it away, and is revisited only if daily use shows
+that seeing a note while working matters; and stickies floating over the card,
+which cover the work and each need moving or closing.
+
+## Notes are plain files; Search makes them look at home
+
+Notes are kept as a folder of plain Markdown files, ink beside each as a
+drawing. Tettegouche's Search is the bridge that shows them as notes rather
+than files. (The maintainer, 3 October.)
+
+Rejected: a database of Gooseberry's own, which no other app, file index or
+assistant can read.
+
 ## Window arrangement is requested, never done directly
 
 To show notes beside or with a window, Gooseberry asks the window manager, which

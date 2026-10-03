@@ -26,8 +26,8 @@ to sit beside a card. Gooseberry cannot make either happen itself.
 ### What Kadunce does not offer
 
 - **Room beside a card.** Kadunce makes room on the Active card for the keys
-  and for nothing else. A sticky rail beside a card needs Kadunce to offer that
-  room to a companion.
+  and for nothing else. Gooseberry stacks notes behind the card instead, and
+  asks for room only if a rail beside the card is ever revisited.
 - **Notes drawn on cards in Spread.** A count of notes on a card's corner, and
   carrying a note from one card to another in Spread, are Kadunce's to draw and
   answer.
@@ -47,6 +47,8 @@ Search draws only from a closed list of local sources: applications, KDE's file
 index and recent documents, settings, a calculator and unit conversion (its
 `docs/SEARCH-CONTRACT.md`). If notes are kept as plain files, KDE's file index
 already finds them by name, and by content where indexing allows, as files.
+Notes are kept that way, so Search finds them before it offers anything more;
+Tettegouche is the bridge that makes them look like notes.
 
 ### What Tettegouche does not offer
 
@@ -64,12 +66,10 @@ assistant, and offers none of its own.
 ## Needs
 
 Each is for that component to take up in the open, under its own contracts.
-None is assumed, and none is asked for before `ROADMAP.md` § Open decisions are
-settled.
+None is assumed.
 
 | Component | Need | Holds up |
 | --- | --- | --- |
-| Kadunce | Room beside the Active card for a companion, offered and withdrawn by Kadunce | Notes pinned beside a card, if chosen |
 | Kadunce | A way to show a companion's count on a card in Spread | Notes in Spread |
 | Kadunce | Its request interface, to stack a companion with a card | Stacking without a hand gesture |
 | Tettegouche | A notes source for Search, with a Notes tab | Notes in Search |

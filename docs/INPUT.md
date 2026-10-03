@@ -1,9 +1,9 @@
 # Input
 
 Every tap and key Gooseberry answers, and what you see happen. None is built
-yet; this map is the plan, and it changes when the program does. How notes on a
-card are shown and put away waits on `ROADMAP.md` § Open decisions, and is
-added here once settled.
+yet; this map is the plan, and it changes when the program does. A card's notes
+join its Stack by Kadunce's own hold and let go; stepping back to the card puts
+them away.
 
 | Task | Touch | Keyboard |
 | --- | --- | --- |

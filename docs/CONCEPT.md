@@ -28,9 +28,9 @@ Four places, one set of notes.
    cursor already in it. Type, or switch to Pen. It saves as Robin writes. By
    default the note belongs to whatever Robin is working on; one tap changes
    that. Going back to the work closes the sheet.
-2. **Notes on the work.** A note that belongs to a window comes back with that
-   window. How it is shown there, beside the window or behind it, is open
-   (`ROADMAP.md` § Open decisions).
+2. **Notes on the work.** A window's notes wait behind it in its Stack, shown
+   only as a count until Robin steps to them. Stepping back to the work puts
+   them away.
 3. **The board.** Every note in one place, gathered without Robin filing
    anything: Loose, Today, Tucked away, each window or document that has notes,
    each project, and the workspace.
@@ -68,7 +68,7 @@ Four places, one set of notes.
 
 | Need | Approach | Notes |
 | --- | --- | --- |
-| Keeping notes | Open: plain files or a database (`ROADMAP.md` § Open decisions) | Either way, saved as written |
+| Keeping notes | A folder of plain Markdown files, ink beside each as a drawing | Other apps, the file index and folder sync can all read them |
 | Reminders | The desktop's standard notifications | Whatever shows notifications on that desktop shows them |
 | Handwriting | Qt's pen and touch input; recognition on the computer | Nothing leaves the computer to be read |
 | Knowing what Robin is working on | Kadunce's read-only workspace snapshot, where Kadunce runs | Without Kadunce, the window in front as the desktop reports it |
@@ -80,9 +80,8 @@ Four places, one set of notes.
 - **Belonging outlives windows badly.** A window's identity lasts only while it
   is open. A note tied to it has to find its way back when the document opens
   again, or it becomes clutter (`ROADMAP.md` § Open decisions).
-- **Room is not Gooseberry's to take.** On the card workspace, Kadunce owns
-  every window's size and place. Anything shown beside a card needs Kadunce to
-  offer room, which it does not yet (`DESKTOP.md`).
+- **A Stack is made by hand.** Kadunce owns every window's place, so Robin
+  drops a card's notes on the card once to stack them (`DESKTOP.md`).
 - **Handwriting recognition on the computer** may be too weak or too heavy for a
   tablet. Ink stays the note either way; only finding it depends on the reading.
 - **Habit.** A notes app that loses one thought, or asks one question too many,

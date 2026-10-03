@@ -39,11 +39,11 @@ reminder on time, and none shown twice.
 
 ## Milestone 3: with cards
 
-Waits on § Open decisions 1 and 3.
+Waits on § Open decisions, When a card's window closes.
 
 - Capture defaults to the card in front.
 - Notes come back with their card's document.
-- Notes on a card shown the way decision 1 chooses.
+- A card's notes kept in its Stack, shown only as a count until asked for.
 
 **Proves:** a week of daily use on Shuffle where notes on cards never need
 putting away by hand.
@@ -60,8 +60,9 @@ Waits on Tettegouche taking up its need in `DESKTOP.md`.
   from a note.
 - Notes on cards in Spread, and carrying a note between cards, once Kadunce
   offers it.
+- A rail of stickies beside the card, only if daily use asks for it.
 - Notes on several computers, through whatever folder sync the person already
-  uses, if notes are plain files.
+  uses.
 
 ## Not planned
 
@@ -73,53 +74,9 @@ Waits on Tettegouche taking up its need in `DESKTOP.md`.
 ## Open decisions
 
 The maintainer's to make. Each has two options, a recommendation and what
-neither covers.
+neither covers. Settled ones move to `DECISIONS.md`.
 
-### 1. On the card: pinned beside it, or stacked behind it
-
-Holds up Milestone 3 and any request to Kadunce.
-
-- **Stacked behind the card.** The card's notes are a Gooseberry window in the
-  card's Stack. They take no room and there is nothing to put away: stepping
-  back to the card is putting them away. Side by side, when wanted, is Bento,
-  which already exists. Costs: no glance at a note without a step or a Bento
-  pair; a Stack is made by hand, so Robin drops the notes on the card once;
-  one notes window for each card that has notes.
-- **Pinned beside the card** (the first mock-up). A slim rail of stickies, with
-  the card made narrower to fit. Notes are in view while working. Costs: needs
-  Kadunce to offer room beside the card, which it does not yet; and a rule that
-  puts the rail away by itself, such as folding when the card's own content is
-  touched, so it never needs a tap to close.
-- **Other.** A floating sticky over the card is not offered: it covers the
-  work, and every one needs moving or closing, which is the extra tap this
-  product exists to avoid.
-
-**Recommendation:** stacked behind the card first. It needs nothing new from
-Kadunce, takes no room, and puts itself away. Build the rail only if daily use
-shows that glancing at a note while working matters, with folding on touch
-designed in from the start.
-
-Whichever is chosen, two rules hold: a card's notes show only as a count until
-asked for, and nothing opens a note on its own except Robin writing one.
-
-### 2. How notes are kept
-
-Holds up Milestone 0.
-
-- **Plain files.** A folder of Markdown notes, with ink saved beside each as a
-  drawing. KDE's file index finds them, other apps open them, folder sync can
-  carry them, and Split Rock can read them. Costs: the planner reads every note
-  with a time from a folder rather than asking a database.
-- **A database.** One file Gooseberry owns. The planner and board are simpler
-  to make fast. Costs: no other app can read the notes, KDE's file index cannot
-  find their words, and Split Rock cannot read them as files.
-- **Other.** Whether Gooseberry's folder and Split Rock's notebook are one
-  folder or two.
-
-**Recommendation:** plain files. They match how Split Rock keeps its notebook,
-and they let Search find notes before Tettegouche offers a Notes tab.
-
-### 3. When a card's window closes
+### When a card's window closes
 
 Holds up Milestone 3.
 
@@ -135,3 +92,17 @@ Holds up Milestone 3.
 
 **Recommendation:** the note follows the document, falling back to Loose with
 where it came from.
+
+### Gooseberry's folder and Split Rock's notebook
+
+Holds up Milestone 0's folder, and next step with Split Rock.
+
+- **Two folders.** Gooseberry keeps its notes; Split Rock keeps its notebook
+  about the computer. Split Rock reads a note only when opened from it.
+  Costs: two places on disk, though Search shows both.
+- **One folder.** Split Rock's notebook gains a notes part Gooseberry owns, and
+  the assistant can see every note. Costs: the two components share a layout
+  and its rules, and the assistant sees more than the note in hand.
+- **Other.** Where an answer kept from Split Rock lands.
+
+**Recommendation:** two folders.
