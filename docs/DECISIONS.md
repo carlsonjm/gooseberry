@@ -51,6 +51,36 @@ than files. (The maintainer, 3 October.)
 Rejected: a database of Gooseberry's own, which no other app, file index or
 assistant can read.
 
+## A card's notes reopen with it
+
+When a card's window closes, its notes stay with what was open in it, and come
+back in its Stack when that document opens again: a sticky note on the monitor,
+made virtual. Gooseberry remembers the application and the document's name or
+path; a note whose document cannot be found again waits in Loose, marked with
+where it came from. (The maintainer, 3 October.)
+
+Rejected: turning a closed card's notes Loose, which never brings them back and
+fills Loose up.
+
+## Gooseberry's folder is its own
+
+Gooseberry keeps its notes in its own folder, apart from Split Rock's notebook
+about the computer. Search shows both. (The maintainer, 3 October.)
+
+Rejected: one folder shared with Split Rock, which would tie the two
+components to one layout and its rules.
+
+## Notes are a tool for the assistant
+
+Where Split Rock is installed, Gooseberry offers it a notes tool: find notes,
+read one, and add one when the person asks. The assistant says when it reads a
+note, as Split Rock does with its own memory, and next step from a note sends
+only that note. Gooseberry works the same without it. (The maintainer, 3
+October.)
+
+Rejected: Split Rock reading Gooseberry's folder directly, which would make the
+folder's layout a contract and hide from the person what was read.
+
 ## Window arrangement is requested, never done directly
 
 To show notes beside or with a window, Gooseberry asks the window manager, which

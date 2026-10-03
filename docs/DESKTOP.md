@@ -58,10 +58,12 @@ Tettegouche is the bridge that makes them look like notes.
 
 ## Split Rock
 
-Where Split Rock is installed and set up, a note can offer "next step": turn it
-into a checklist, a reminder or a better home. Split Rock sees only the note it
-was opened from, and nothing changes until Robin chooses. Gooseberry needs no
-assistant, and offers none of its own.
+Where Split Rock is installed and set up, Gooseberry is one of its tools: the
+assistant can find notes, read one, and add one when Robin asks, and says when
+it reads one. From a note, "next step" sends only that note, and offers a
+checklist, a reminder or a better home; nothing changes until Robin chooses.
+Where the assistant's own kept items live is open (`ROADMAP.md`). Gooseberry
+needs no assistant, and offers none of its own.
 
 ## Needs
 
@@ -73,3 +75,4 @@ None is assumed.
 | Kadunce | A way to show a companion's count on a card in Spread | Notes in Spread |
 | Kadunce | Its request interface, to stack a companion with a card | Stacking without a hand gesture |
 | Tettegouche | A notes source for Search, with a Notes tab | Notes in Search |
+| Split Rock | Use Gooseberry's notes tool where present | The notes tool |

@@ -73,13 +73,13 @@ Four places, one set of notes.
 | Handwriting | Qt's pen and touch input; recognition on the computer | Nothing leaves the computer to be read |
 | Knowing what Robin is working on | Kadunce's read-only workspace snapshot, where Kadunce runs | Without Kadunce, the window in front as the desktop reports it |
 | Being found | Tettegouche's Search, where installed | `DESKTOP.md` § Needs |
-| Turning a note into a next step | Split Rock, where installed and set up | Optional; Gooseberry needs no assistant |
+| The assistant | Split Rock, where installed and set up, using Gooseberry as a tool | Optional; Gooseberry needs no assistant |
 
 ## Risks
 
-- **Belonging outlives windows badly.** A window's identity lasts only while it
-  is open. A note tied to it has to find its way back when the document opens
-  again, or it becomes clutter (`ROADMAP.md` § Open decisions).
+- **Finding the document again.** A window's identity lasts only while it is
+  open, so a card's notes come back by the document's name or path. A renamed
+  or moved document leaves its notes in Loose (`DECISIONS.md`).
 - **A Stack is made by hand.** Kadunce owns every window's place, so Robin
   drops a card's notes on the card once to stack them (`DESKTOP.md`).
 - **Handwriting recognition on the computer** may be too weak or too heavy for a

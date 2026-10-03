@@ -39,8 +39,6 @@ reminder on time, and none shown twice.
 
 ## Milestone 3: with cards
 
-Waits on § Open decisions, When a card's window closes.
-
 - Capture defaults to the card in front.
 - Notes come back with their card's document.
 - A card's notes kept in its Stack, shown only as a count until asked for.
@@ -56,8 +54,8 @@ Waits on Tettegouche taking up its need in `DESKTOP.md`.
 
 ## Later
 
-- Next step with Split Rock: a checklist, a reminder or a better home, offered
-  from a note.
+- The notes tool for Split Rock: find, read and add, and next step from a
+  note.
 - Notes on cards in Spread, and carrying a note between cards, once Kadunce
   offers it.
 - A rail of stickies beside the card, only if daily use asks for it.
@@ -76,33 +74,22 @@ Waits on Tettegouche taking up its need in `DESKTOP.md`.
 The maintainer's to make. Each has two options, a recommendation and what
 neither covers. Settled ones move to `DECISIONS.md`.
 
-### When a card's window closes
+### Where the assistant's memory lives
 
-Holds up Milestone 3.
+Holds up the notes tool's add, and Split Rock's own `docs/MEMORY.md`, which is
+Split Rock's to change. The maintainer leans toward Gooseberry.
 
-- **The note follows the document.** Gooseberry remembers the application and
-  the document's name or path, and the note comes back when that document
-  opens again. Costs: a renamed or moved document loses its notes to Loose,
-  where they wait with where they came from.
-- **The note turns Loose.** When the window closes, its notes go to the board
-  under Loose, marked with where they were. Costs: notes never come back on
-  their own, and Loose fills up.
-- **Other.** A note about an application rather than one document, such as a
-  terminal.
+- **Kept items in Gooseberry.** What the person keeps from the assistant, and
+  memory items it needs to call on later, become notes: on the board, found by
+  Search, with a place of their own under Belongs to. Split Rock keeps the
+  record of the computer and its page about the person. Costs: Split Rock must
+  still keep its own notes folder for desktops without Gooseberry, so it has
+  two places to write and one to choose at run time.
+- **Kept items stay in Split Rock's notebook,** as its `docs/MEMORY.md` has
+  them now. Costs: the person's notes are in two places, and what the assistant
+  keeps never shows on the board or the planner.
+- **Other.** Whether the page about the person moves too.
 
-**Recommendation:** the note follows the document, falling back to Loose with
-where it came from.
-
-### Gooseberry's folder and Split Rock's notebook
-
-Holds up Milestone 0's folder, and next step with Split Rock.
-
-- **Two folders.** Gooseberry keeps its notes; Split Rock keeps its notebook
-  about the computer. Split Rock reads a note only when opened from it.
-  Costs: two places on disk, though Search shows both.
-- **One folder.** Split Rock's notebook gains a notes part Gooseberry owns, and
-  the assistant can see every note. Costs: the two components share a layout
-  and its rules, and the assistant sees more than the note in hand.
-- **Other.** Where an answer kept from Split Rock lands.
-
-**Recommendation:** two folders.
+**Recommendation:** kept items in Gooseberry when it is installed, Split Rock's
+own folder when not. It puts what the person keeps where the person already
+looks.
