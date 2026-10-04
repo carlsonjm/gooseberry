@@ -17,9 +17,12 @@ Kirigami.ApplicationWindow {
     visible: false
     pageStack.globalToolBar.style: Kirigami.ApplicationHeaderStyle.None
 
-    // Opened from Gooseberry's entry, the board starts on Today.
-    function present() {
+    // The board starts on Today, or on the place a note sits in.
+    function present(place) {
         board.reset();
+        if (place) {
+            board.notes.place = place;
+        }
         visible = true;
         raise();
         requestActivate();

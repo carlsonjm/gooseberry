@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "NoteStore.h"
+#include "QuickNoteService.h"
 #include "Shell.h"
 
 #include <KAboutData>
@@ -62,6 +63,11 @@ int main(int argc, char *argv[])
     QQmlEngine engine;
     KLocalization::setupLocalizedContext(&engine);
     Gooseberry::Shell shell(&store, &engine);
+    // The quick note for a desktop search that draws it in its own window.
+    Gooseberry::QuickNoteService quickNote(&shell, &store);
+    if (!quickNote.publish()) {
+        qWarning() << "Gooseberry's quick note is not on the session bus";
+    }
     QObject::connect(&service, &KDBusService::activateRequested, &shell,
                      [&shell](const QStringList &arguments, const QString &) {
                          shell.handle(arguments);

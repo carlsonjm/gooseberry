@@ -14,6 +14,8 @@ Item {
     required property QtObject capture
     // Project names, the most recently used first.
     property var projects: []
+    // The application's name, as its desktop file gives it.
+    property string title: Qt.application.displayName
 
     signal boardRequested()
 
@@ -43,79 +45,122 @@ Item {
         anchors.fill: parent
         clip: true
         contentWidth: width
-        contentHeight: column.height + 18 + 20
+        contentHeight: column.y + column.height + 22
         interactive: contentHeight > height
         boundsBehavior: Flickable.StopAtBounds
 
-        ColumnLayout {
-            id: column
-            x: 22
-            y: 18
-            width: flick.width - 44
-            height: Math.max(flick.height - 18 - 20, implicitHeight)
-            spacing: 14
+        // The header: the application, the note's colours centred, and All
+        // notes at the right.
+        Item {
+            id: header
+            objectName: "header"
+            x: 0
+            y: 14
+            width: flick.width
+            height: 44
 
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: 8
+            Row {
+                id: identity
+                x: 22
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 10
 
-                Pill {
-                    objectName: "allNotes"
-                    text: i18n("All notes")
-                    iconName: "view-list-details"
-                    onClicked: quick.boardRequested()
+                Rectangle {
+                    objectName: "appTile"
+                    width: 32
+                    height: 32
+                    radius: 8
+                    color: quick.capture.hexFor("butter")
+                    Kirigami.Icon {
+                        anchors.centerIn: parent
+                        width: 18
+                        height: 18
+                        source: Qt.resolvedUrl("icons/note.svg")
+                        color: "#1A1A1A"
+                        isMask: true
+                    }
                 }
-
-                Item {
-                    Layout.fillWidth: true
+                QQC2.Label {
+                    objectName: "appName"
+                    anchors.verticalCenter: parent.verticalCenter
+                    // Left out where the colours need the room.
+                    visible: identity.x + 42 + implicitWidth + 12 <= colours.x
+                    text: quick.title
+                    font.pixelSize: 15
+                    font.weight: Font.DemiBold
                 }
+            }
 
-                RowLayout {
-                    spacing: 2
-                    Repeater {
-                        model: quick.capture.colours
-                        delegate: QQC2.AbstractButton {
-                            id: swatch
-                            required property var modelData
-                            objectName: "colour-" + modelData.name
-                            readonly property bool chosen: quick.capture.colour === modelData.name
-                            implicitWidth: 44
-                            implicitHeight: 44
-                            focusPolicy: Qt.NoFocus
-                            enabled: !quick.capture.readOnly
-                            Accessible.name: modelData.name
-                            Accessible.role: Accessible.RadioButton
-                            Accessible.checked: chosen
-                            onClicked: quick.capture.colour = modelData.name
-                            contentItem: Item {
-                                Rectangle {
-                                    anchors.centerIn: parent
-                                    visible: swatch.chosen
-                                    width: 38
-                                    height: 38
-                                    radius: 19
-                                    color: Kirigami.Theme.textColor
-                                }
-                                Rectangle {
-                                    anchors.centerIn: parent
-                                    visible: swatch.chosen
-                                    width: 34
-                                    height: 34
-                                    radius: 17
-                                    color: quick.surface
-                                }
-                                Rectangle {
-                                    anchors.centerIn: parent
-                                    width: 28
-                                    height: 28
-                                    radius: 14
-                                    color: swatch.modelData.hex
-                                }
+            Row {
+                id: colours
+                objectName: "colours"
+                // Centred, unless a narrow card would put them under All notes.
+                x: Math.max(identity.x + 42, Math.min((header.width - width) / 2, allNotes.x - 8 - width))
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 2
+                Repeater {
+                    model: quick.capture.colours
+                    delegate: QQC2.AbstractButton {
+                        id: swatch
+                        required property var modelData
+                        objectName: "colour-" + modelData.name
+                        readonly property bool chosen: quick.capture.colour === modelData.name
+                        implicitWidth: 44
+                        implicitHeight: 44
+                        focusPolicy: Qt.NoFocus
+                        enabled: !quick.capture.readOnly
+                        Accessible.name: modelData.name
+                        Accessible.role: Accessible.RadioButton
+                        Accessible.checked: chosen
+                        onClicked: quick.capture.colour = modelData.name
+                        contentItem: Item {
+                            Rectangle {
+                                anchors.centerIn: parent
+                                visible: swatch.chosen
+                                width: 38
+                                height: 38
+                                radius: 19
+                                color: Kirigami.Theme.textColor
+                            }
+                            Rectangle {
+                                anchors.centerIn: parent
+                                visible: swatch.chosen
+                                width: 34
+                                height: 34
+                                radius: 17
+                                color: quick.surface
+                            }
+                            Rectangle {
+                                anchors.centerIn: parent
+                                width: 28
+                                height: 28
+                                radius: 14
+                                color: swatch.modelData.hex
                             }
                         }
                     }
                 }
             }
+
+            Pill {
+                id: allNotes
+                objectName: "allNotes"
+                compact: true
+                anchors.right: parent.right
+                anchors.rightMargin: 14
+                anchors.verticalCenter: parent.verticalCenter
+                text: i18n("All notes")
+                onClicked: quick.boardRequested()
+            }
+        }
+
+        ColumnLayout {
+            id: column
+            x: 22
+            y: header.y + header.height + 14
+            width: flick.width - 44
+            height: Math.max(flick.height - y - 22, implicitHeight)
+            spacing: 14
 
             Rectangle {
                 id: page

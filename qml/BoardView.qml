@@ -17,10 +17,8 @@ Item {
     property date now: new Date()
     // Drawn where a person can see it: in a shown window, and not faded out.
     readonly property bool shown: visible && Window.window !== null && Window.window.visible
-    // In the card, a way back to the note leads the places.
+    // Inside the quick-note card, whose corners it follows.
     property bool collapsible: false
-
-    signal collapseRequested()
 
     // Each time the board is opened it starts on Today.
     function reset() {
@@ -96,15 +94,6 @@ Item {
                 anchors.margins: 12
                 anchors.topMargin: 14
                 spacing: 2
-
-                Pill {
-                    objectName: "backToNote"
-                    visible: board.collapsible
-                    Layout.bottomMargin: 6
-                    text: i18n("Back to the note")
-                    iconName: "go-previous"
-                    onClicked: board.collapseRequested()
-                }
 
                 QQC2.TextField {
                     id: search

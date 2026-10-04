@@ -15,7 +15,8 @@ session.
 | `tst_note` | The header is written and read exactly as `FORMAT.md` says; keys from a newer version survive an edit; a file with no header is a Loose note; a newer note is not changed; the first words are the title; a window's title gives the document's name |
 | `tst_store` | A note is on disk from its first letter, typing after it once the writing pauses and on the way through long typing, and at once on Done or any other change; nothing is kept for an empty note; Belongs to and colour are one change each; removing sends the note and its ink to the trash with the record the trash needs, and undo brings them back; tuck away and bring back; the board's places, counts, order and search; changes made by other programs are read; a missing folder is made again; a folder or note from a newer version is left alone |
 | `tst_keep` | A second copy of the test types a note and is ended as a crash ends a program, after one letter, mid-sentence and after a pause, and as a logout ends it mid-sentence; after a pause or a logout the note is all there, a crash mid-sentence keeps it up to the last pause, nothing half-written is left beside it, and it is back on the board after a restart |
-| `tst_screens` | The quick-note card and the board, drawn off screen and used by tap and keyboard: the card is the size of the desktop's search, centred, and keeps above the on-screen keys, rising only as far as it must and then shortening; All notes grows it into the board, and a note opened there, Back to the note or `Esc` brings the note back; a tap around it puts it away; the cursor is in the note when the card opens; typing keeps the note; colour and Belongs to are one tap; a new project is named once; Done; Tuck away and Remove show only for a kept note; the board opens on Today, opens a note, tucks one away and brings it back, and starts a new note in the place shown; every target is at least 44 pixels |
+| `tst_quicknote_bus` | The quick note's session-bus interface, used by a client that loads none of Gooseberry's code against the real Gooseberry, on a bus and in a home of the test's own: the version; Start gives an empty note and its choices and keeps nothing; text, colour and Belongs to are on disk when each call returns, and nonsense is refused; Start resumes the open note; a change made to the file elsewhere comes back as Changed; Done, Tuck away, and Remove to the trash with Undo; OpenBoard opens the board and BoardShown follows with the caller's token |
+| `tst_screens` | The quick-note card and the board, drawn off screen and used by tap and keyboard: the card is the size of the desktop's search, centred, and keeps above the on-screen keys, rising only as far as it must and then shortening; its header follows the approved layout, with the application's tile and name, the colours centred and a 30 px All notes pill 14 px from the edge, and the note pad 14 px below; All notes grows it to the whole work area into the board, with no Back button, and a note opened there or `Esc` brings the note back; a tap around it puts it away; the cursor is in the note when the card opens; typing keeps the note; colour and Belongs to are one tap; a new project is named once; Done; Tuck away and Remove show only for a kept note; the board opens on Today, opens a note, tucks one away and brings it back, and starts a new note in the place shown; every target is at least 44 pixels |
 
 With `GOOSEBERRY_SCREENSHOTS` set to a folder, `tst_screens` saves a picture of
 each screen there, to compare with the mock-up by eye.
@@ -27,10 +28,10 @@ with capture fast enough that nothing is written elsewhere instead
 (`ROADMAP.md`). These checks come first, once, after installing; then the week
 of use.
 
-1. Over a document, hold Gooseberry and tap New note. The card opens in the
-   middle of the screen with the cursor in the note and the on-screen keys up,
-   the whole card above the keys and every control reachable; "This window"
-   names the document. Tap Gooseberry itself: the board opens as an ordinary
+1. Over a document, tap Gooseberry. The card opens in the middle of the
+   screen with the cursor in the note and the on-screen keys up, the whole card
+   above the keys and every control reachable; "This window" names the
+   document. Hold Gooseberry and tap All notes: the board opens as an ordinary
    window.
 2. Type one letter and nothing else, then tap the work around the card. Open
    the board: the note is there under Today.
@@ -44,7 +45,8 @@ of use.
 6. Tuck a note away from the board; it waits only under Tucked away. Tap it
    there; it goes back where it was.
 7. Remove a note. It is in the desktop's trash, and the trash can put it back.
-8. On the card, tap All notes: it grows into the board as Apps grows the
-   search. Tap a note there: the card comes back to that note.
+8. On the card, tap All notes: it grows to the whole screen, less a narrow
+   margin, into the board, as Apps grows the search. Tap a note there: the card
+   comes back to that note.
 9. Open the notes folder, `~/Documents/Gooseberry`, in a file manager: one
    Markdown file per note, readable in any editor.

@@ -16,8 +16,8 @@ include(KDEInstallDirs)
 include(KDECMakeSettings)
 include(KDECompilerSettings NO_POLICY_SCOPE)
 
-find_package(Qt6 6.9 REQUIRED COMPONENTS Core Gui Qml Quick QuickControls2 Widgets Test)
-find_package(KF6 6.17 REQUIRED COMPONENTS CoreAddons DBusAddons I18n WindowSystem)
+find_package(Qt6 6.9 REQUIRED COMPONENTS Core DBus Gui Qml Quick QuickControls2 Widgets Test)
+find_package(KF6 6.17 REQUIRED COMPONENTS CoreAddons DBusAddons I18n Service WindowSystem)
 find_package(KF6Kirigami 6.17 REQUIRED)
 find_package(LayerShellQt 6.4 REQUIRED)
 find_package(LibTaskManager 6.4 REQUIRED)
@@ -52,6 +52,7 @@ qt_add_qml_module(gooseberry-screens
         qml/Pill.qml
         qml/QuickNote.qml
     RESOURCES
+        qml/icons/note.svg
         qml/icons/tuck.svg
 )
 
@@ -59,13 +60,14 @@ qt_add_qml_module(gooseberry-screens
 # place on screen, one running copy.
 add_library(gooseberry-desktop STATIC
     src/desktop/Log.h
+    src/desktop/QuickNoteService.cpp src/desktop/QuickNoteService.h
     src/desktop/Shell.cpp src/desktop/Shell.h
     src/desktop/WindowContext.cpp src/desktop/WindowContext.h
 )
 target_include_directories(gooseberry-desktop PUBLIC src/desktop)
 target_link_libraries(gooseberry-desktop PUBLIC
-    gooseberry-core Qt6::Gui Qt6::Qml Qt6::Quick
-    KF6::WindowSystem LayerShellQt::Interface PW::LibTaskManager)
+    gooseberry-core Qt6::DBus Qt6::Gui Qt6::Qml Qt6::Quick
+    KF6::I18n KF6::Service KF6::WindowSystem LayerShellQt::Interface PW::LibTaskManager)
 
 qt_add_executable(gooseberry src/app/main.cpp)
 # Qt's own QML plugins load at run time; nothing needs linking in statically.
@@ -81,6 +83,9 @@ target_link_libraries(gooseberry PRIVATE
 install(TARGETS gooseberry ${KDE_INSTALL_TARGETS_DEFAULT_ARGS})
 configure_file(data/${GOOSEBERRY_APP_ID}.desktop.in ${GOOSEBERRY_APP_ID}.desktop @ONLY)
 configure_file(data/${GOOSEBERRY_APP_ID}-autostart.desktop.in ${GOOSEBERRY_APP_ID}-autostart.desktop @ONLY)
+configure_file(data/io.github.carlsonjm.gooseberry.service.in io.github.carlsonjm.gooseberry.service @ONLY)
+# A search that calls the quick note before Gooseberry has started starts it.
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/io.github.carlsonjm.gooseberry.service DESTINATION ${KDE_INSTALL_DBUSSERVICEDIR})
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${GOOSEBERRY_APP_ID}.desktop DESTINATION ${KDE_INSTALL_APPDIR})
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${GOOSEBERRY_APP_ID}-autostart.desktop
     DESTINATION ${KDE_INSTALL_AUTOSTARTDIR} RENAME ${GOOSEBERRY_APP_ID}.desktop)

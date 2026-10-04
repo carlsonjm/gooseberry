@@ -7,6 +7,7 @@
 #include "WindowContext.h"
 #include "Log.h"
 
+#include <KService>
 #include <KWindowSystem>
 #include <LayerShellQt/Window>
 
@@ -97,13 +98,13 @@ void Shell::handle(const QStringList &arguments)
         captureWindow();
         return;
     }
-    if (parser.isSet(capture)) {
-        showCapture();
+    if (parser.isSet(board)) {
+        showBoard();
         return;
     }
     // Opening Gooseberry, from a launcher, a search or a pinned button, opens
-    // the board as an ordinary window; --board says the same.
-    showBoard();
+    // the quick-note card; --capture says the same.
+    showCapture();
 }
 
 QQuickWindow *Shell::create(const QString &name)
@@ -203,13 +204,41 @@ void Shell::newNoteIn(const QString &placeKey)
     raiseCard();
 }
 
+CaptureContext Shell::currentContext() const
+{
+    return m_context->current();
+}
+
+QString Shell::applicationName() const
+{
+    if (const auto service = KService::serviceByDesktopName(QGuiApplication::desktopFileName())) {
+        if (!service->name().isEmpty()) {
+            return service->name();
+        }
+    }
+    return QGuiApplication::applicationDisplayName();
+}
+
 void Shell::showBoard()
+{
+    showBoardOn({});
+}
+
+void Shell::showBoardOn(const QString &noteId)
 {
     QQuickWindow *window = boardWindow();
     if (!window) {
         return;
     }
-    QMetaObject::invokeMethod(window, "present");
+    QString place;
+    if (const auto note = m_store->note(noteId)) {
+        place = note->tucked ? QStringLiteral("tucked") : note->placeKey();
+    }
+    // The first frame drawn after this request is the board having arrived;
+    // a frame is asked for, so one comes even when nothing on it changes.
+    connect(window, &QQuickWindow::frameSwapped, this, &Shell::boardShown, Qt::SingleShotConnection);
+    QMetaObject::invokeMethod(window, "present", Q_ARG(QVariant, place));
+    window->update();
     // The launcher's activation token, handed over with this start, lets the
     // board come to the front rather than wait behind the window in use.
     KWindowSystem::updateStartupId(window);

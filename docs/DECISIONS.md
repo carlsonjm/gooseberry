@@ -148,6 +148,17 @@ an application of its own, not part of the search. (The maintainer, 4 October.)
 This supersedes the bottom sheet in `mockup/Capture.dc.html`; what the card
 holds, the size of its controls and the note colours still follow the mock-up.
 
+The card's layout, approved on the tablet (the maintainer, 4 October): the
+search's 8 px corners with a 1 px outline and a 22 px inner margin; a 44 px
+header with a 32 px tile in the note's yellow carrying the notes glyph and the
+application's name at the left, the five colours centred, and All notes at the
+right as a 30 px pill 14 px from the edge; the note pad 14 px under the header,
+across the width, with 14 px corners in the note's colour; then Belongs to, and
+Saved as you go, Tuck away, Remove and Done at the bottom. All notes grows the
+card to the whole work area less a 10 px gutter in 220 ms, easing out, with no
+Back button at that size: a note opened or started on the board, or `Esc`,
+brings the card back.
+
 Rejected: a sheet from the bottom of the screen, where the on-screen keys come
 up over it; and the card growing into a larger page for one note, which leaves
 nothing to browse where Apps and Files have their lists.
@@ -166,16 +177,33 @@ chooses; a panel widget, which exists only where a panel holds it; and the
 layer above the keys, where a surface opened after them covers them and takes
 every touch meant for them, as the desktop's search found.
 
-## Opening Gooseberry opens the board
+## Opening Gooseberry opens the quick-note card
 
-Gooseberry's entry, in a launcher, a search or pinned to a dock, opens the board
-as an ordinary window; capture is New note in its menu, on the board, and any
-one-tap way a desktop adds, such as a Notes tab in its search. (The maintainer,
-3 October.)
+Gooseberry's entry, in a launcher, a search or pinned to a dock, opens the
+quick-note card. The board is All notes on the card and All notes in the
+entry's menu, where New note stays too. (The maintainer, 4 October, superseding
+the board opening from the entry, of 3 October.)
 
-Rejected: the entry opening the quick-note card. The card is not a window, so a
-card workspace waiting for the opened application to arrive never sees it, and
-the application has nothing to show on a dock.
+Where a desktop's search hosts the quick note (below), the search no longer
+opens Gooseberry and waits for a window to arrive; it draws the note itself.
+
+Rejected: the entry opening the board, which put a window between the person
+and the note they opened Gooseberry to write.
+
+## A desktop's search can host the quick note
+
+Shuffle's Search hosts the quick note as one of its modes: it draws the note
+pad in its own window, in its own card, and Gooseberry keeps the note, through
+a small, versioned interface on the session bus (`DESKTOP.md` § Tettegouche).
+The search loads none of Gooseberry's code and holds no notes; every change it
+sends is written before the call returns, as Gooseberry writes its own. Outside
+the search, Gooseberry's own card has the same shape. (The maintainer, 4
+October, approved on the tablet.)
+
+Rejected: the search opening Gooseberry's card over itself, which is two
+surfaces for one note, and the search reading or writing the notes folder
+itself, which would make the folder's layout its contract and bypass
+Gooseberry's own keeping.
 
 ## Gooseberry stays ready
 

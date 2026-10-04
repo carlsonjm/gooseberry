@@ -10,6 +10,7 @@
 #include <KLocalizedString>
 
 #include <QGuiApplication>
+#include <QColor>
 #include <QIcon>
 #include <QQmlComponent>
 #include <QRegularExpression>
@@ -54,6 +55,7 @@ public Q_SLOTS:
     void newNoteIn(const QString &place) { newIn = place; }
     void showBoard() { }
     void showCapture() { }
+    QString applicationName() const { return QStringLiteral("Gooseberry"); }
 
 private:
     QObject *m_capture;
@@ -177,6 +179,45 @@ private Q_SLOTS:
         m_view.reset();
         m_capture.reset();
         m_store.reset();
+    }
+
+    // The approved layout: an 8 px card with a 1 px outline; a 44 px header
+    // with the yellow tile and the application's name at the left, the
+    // colours centred and a 30 px All notes pill 14 px from the right edge;
+    // the note pad 14 px under it, across the width inside 22 px margins.
+    void headerFollowsTheApprovedLayout()
+    {
+        QQuickItem *header = named(QStringLiteral("header"));
+        QVERIFY(header);
+        QCOMPARE(header->height(), 44.0);
+        QQuickItem *tile = named(QStringLiteral("appTile"));
+        QCOMPARE(tile->width(), 32.0);
+        QCOMPARE(tile->height(), 32.0);
+        QCOMPARE(tile->property("radius").toReal(), 8.0);
+        QCOMPARE(tile->property("color").value<QColor>(), QColor(QStringLiteral("#F2D98A")));
+        QCOMPARE(tile->mapToItem(note(), QPointF()).x(), 22.0);
+        QQuickItem *name = named(QStringLiteral("appName"));
+        QVERIFY(name->isVisible());
+        QCOMPARE(name->property("text").toString(), QStringLiteral("Gooseberry"));
+        QQuickItem *colours = named(QStringLiteral("colours"));
+        const QPointF coloursAt = colours->mapToItem(note(), QPointF());
+        QCOMPARE(coloursAt.x() + colours->width() / 2, note()->width() / 2);
+        QQuickItem *allNotes = named(QStringLiteral("allNotes"));
+        const QPointF allNotesAt = allNotes->mapToItem(note(), QPointF());
+        QCOMPARE(allNotesAt.x() + allNotes->width(), note()->width() - 14);
+        QCOMPARE(itemNamed(allNotes, QStringLiteral("face"))->height(), 30.0);
+        QVERIFY(allNotes->height() >= 44);
+        QQuickItem *pad = note()->property("editor").value<QQuickItem *>();
+        QQuickItem *page = pad->parentItem();
+        while (page && page->property("radius").toReal() != 14.0) {
+            page = page->parentItem();
+        }
+        QVERIFY(page);
+        const QPointF pageAt = page->mapToItem(note(), QPointF());
+        const QPointF headerAt = header->mapToItem(note(), QPointF());
+        QCOMPARE(pageAt.y(), headerAt.y() + 44 + 14);
+        QCOMPARE(pageAt.x(), 22.0);
+        QCOMPARE(page->width(), note()->width() - 44);
     }
 
     void cursorIsReadyAndTypingKeeps()
@@ -308,6 +349,8 @@ private Q_SLOTS:
         QCOMPARE(card->height(), 471.0);
         QCOMPARE(card->x(), 227.0);
         QCOMPARE(card->y(), 133.0);
+        QCOMPARE(card->property("radius").toReal(), 8.0);
+        QCOMPARE(card->property("border").value<QObject *>()->property("width").toReal(), 1.0);
         auto *quick = window->property("note").value<QQuickItem *>();
         QTRY_VERIFY(quick->property("editor").value<QQuickItem *>()->hasActiveFocus());
         picture(window, QStringLiteral("card"));
@@ -335,7 +378,7 @@ private Q_SLOTS:
     }
 
     // All notes grows the card into the board, as Apps grows the search; a
-    // note opened there, Back to the note or Esc brings the note back, and a
+    // note opened there or Esc brings the note back, and a
     // second Esc or a tap outside the card puts it away.
     void cardGrowsIntoTheBoard()
     {
@@ -375,12 +418,11 @@ private Q_SLOTS:
         QVERIFY(!window->property("expanded").toBool());
         QTRY_COMPARE(card->width(), 806.0);
 
-        // Back to the note, then Esc twice.
+        // At full size there is no Back button: Esc brings the note back, and
+        // a second Esc puts the card away.
         tap(window, itemNamed(card, QStringLiteral("allNotes")));
-        QTRY_VERIFY(itemNamed(card, QStringLiteral("backToNote"))->isVisible());
-        tap(window, itemNamed(card, QStringLiteral("backToNote")));
-        QVERIFY(!window->property("expanded").toBool());
-        tap(window, itemNamed(card, QStringLiteral("allNotes")));
+        QVERIFY(window->property("expanded").toBool());
+        QVERIFY(!itemNamed(card, QStringLiteral("backToNote")));
         QSignalSpy finished(m_capture.get(), &Capture::finished);
         QTest::keyClick(window, Qt::Key_Escape);
         QVERIFY(!window->property("expanded").toBool());
@@ -390,7 +432,7 @@ private Q_SLOTS:
 
         // A tap on the card is the card's; a tap beside it puts it away.
         QMetaObject::invokeMethod(window, "open");
-        QTest::mouseClick(window, Qt::LeftButton, {}, QPoint(int(card->x()) + 300, int(card->y()) + 20));
+        QTest::mouseClick(window, Qt::LeftButton, {}, QPoint(int(card->x()) + 120, int(card->y()) + 36));
         QCOMPARE(finished.count(), 1);
         QTest::mouseClick(window, Qt::LeftButton, {}, QPoint(60, 60));
         QCOMPARE(finished.count(), 2);
@@ -427,7 +469,7 @@ private Q_SLOTS:
         QVERIFY2(object, qPrintable(component.errorString()));
         auto *board = qobject_cast<QQuickWindow *>(object.get());
         QVERIFY(board);
-        QMetaObject::invokeMethod(board, "present");
+        QMetaObject::invokeMethod(board, "present", Q_ARG(QVariant, QVariant()));
         QVERIFY(QTest::qWaitForWindowExposed(board));
         QCOMPARE(notes.place(), QStringLiteral("today"));
         board->resize(1260, 716);
@@ -480,6 +522,7 @@ int main(int argc, char *argv[])
     qputenv("QT_QUICK_BACKEND", "software");
     QGuiApplication app(argc, argv);
     KLocalizedString::setApplicationDomain("gooseberry");
+    QGuiApplication::setApplicationDisplayName(QStringLiteral("Gooseberry"));
     // The desktop names the icon theme and where themes are; off screen,
     // Breeze from the system's icon folders stands in for it.
     QIcon::setThemeSearchPaths(QIcon::themeSearchPaths()

@@ -10,8 +10,12 @@ Keywords=note;notes;sticky;stickies;memo;jot;
 StartupNotify=true
 SingleMainWindow=true
 X-KDE-Wayland-Interfaces=org_kde_plasma_window_management,org_kde_plasma_virtual_desktop_management
-Actions=Capture;
+Actions=Capture;Board;
 
 [Desktop Action Capture]
 Name=New note
 Exec=@CMAKE_INSTALL_FULL_BINDIR@/gooseberry --capture
+
+[Desktop Action Board]
+Name=All notes
+Exec=@CMAKE_INSTALL_FULL_BINDIR@/gooseberry --board

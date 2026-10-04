@@ -11,21 +11,30 @@ QQC2.AbstractButton {
 
     property var iconName: ""
     property bool tall: false
+    // Drawn 30 pixels tall, as a header's pill, inside the full touch height.
+    property bool compact: false
     property bool primary: false
     readonly property bool filled: checked || primary
 
     implicitHeight: tall ? 52 : 44
     implicitWidth: Math.max(implicitHeight, row.implicitWidth + 2 * horizontalPadding)
-    horizontalPadding: tall ? 24 : 16
+    horizontalPadding: tall ? 24 : compact ? 12 : 16
     focusPolicy: Qt.NoFocus
     Accessible.name: text
 
-    background: Rectangle {
-        radius: height / 2
-        color: pill.filled ? Kirigami.Theme.textColor
-                           : Qt.alpha(Kirigami.Theme.textColor, pill.down ? 0.16 : 0.07)
-        border.width: pill.filled ? 0 : 1
-        border.color: Qt.alpha(Kirigami.Theme.textColor, 0.35)
+    background: Item {
+        Rectangle {
+            objectName: "face"
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+            height: pill.compact ? 30 : parent.height
+            radius: height / 2
+            color: pill.filled ? Kirigami.Theme.textColor
+                               : Qt.alpha(Kirigami.Theme.textColor, pill.down ? 0.16 : 0.07)
+            border.width: pill.filled ? 0 : 1
+            border.color: Qt.alpha(Kirigami.Theme.textColor, 0.35)
+        }
     }
 
     contentItem: Item {
@@ -44,7 +53,7 @@ QQC2.AbstractButton {
             QQC2.Label {
                 id: label
                 text: pill.text
-                font.pixelSize: pill.tall ? 15 : 14
+                font.pixelSize: pill.tall ? 15 : pill.compact ? 13 : 14
                 font.weight: pill.primary ? Font.Bold : Font.DemiBold
                 color: pill.filled ? Kirigami.Theme.backgroundColor : Kirigami.Theme.textColor
                 elide: Text.ElideMiddle

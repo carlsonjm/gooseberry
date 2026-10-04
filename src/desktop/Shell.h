@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #pragma once
 
+#include "Capture.h"
+
 #include <QObject>
 #include <QPointer>
 
@@ -9,7 +11,6 @@ class QQuickWindow;
 
 namespace Gooseberry {
 
-class Capture;
 class NoteStore;
 class PlaceNotes;
 class Places;
@@ -35,15 +36,25 @@ public:
     PlaceNotes *notes() const { return m_notes; }
     NoteStore *store() const { return m_store; }
 
-    // Answers a start or a later tap: no arguments or --board for the board,
-    // --capture for the quick-note card, --background to get ready without
-    // showing anything.
+    // Answers a start or a later tap: no arguments or --capture for the
+    // quick-note card, --board for the board, --background to get ready
+    // without showing anything.
     void handle(const QStringList &arguments);
 
     Q_INVOKABLE void showCapture();
     Q_INVOKABLE void showBoard();
+    // The board as a window, on the place the note sits in, or on Today.
+    void showBoardOn(const QString &noteId);
+    // What is in front now, for a note started from the search.
+    CaptureContext currentContext() const;
+    // The application's name, as its desktop file gives it.
+    Q_INVOKABLE QString applicationName() const;
     Q_INVOKABLE void openNote(const QString &id);
     Q_INVOKABLE void newNoteIn(const QString &placeKey);
+
+Q_SIGNALS:
+    // The board's window drew its first frame after being asked for.
+    void boardShown();
 
 private:
     QObject *captureObject() const;

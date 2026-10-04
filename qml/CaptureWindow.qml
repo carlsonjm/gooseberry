@@ -154,6 +154,7 @@ Window {
             anchors.fill: parent
             capture: root.shell.capture
             projects: root.shell.places.projects
+            title: root.shell.applicationName()
             surface: card.color
             opacity: root.expanded ? 0 : 1
             visible: opacity > 0
@@ -180,7 +181,6 @@ Window {
                     duration: 160
                 }
             }
-            onCollapseRequested: root.collapse()
         }
     }
 

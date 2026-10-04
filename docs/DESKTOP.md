@@ -18,11 +18,13 @@ A dock, a panel or Search starts Gooseberry by its desktop file,
 
 | To | Start |
 | --- | --- |
-| Open the board, as a window | The desktop file, or `gooseberry` |
-| Capture a note, on the quick-note card | Its Capture action, New note, or `gooseberry --capture` |
+| Capture a note, on the quick-note card | The desktop file, or `gooseberry` |
+| The same | Its Capture action, New note, or `gooseberry --capture` |
+| Open the board, as a window | Its Board action, All notes, or `gooseberry --board` |
 
 The quick-note card is not a window: a desktop that waits for an opened
-application's window does not wait for it.
+application's window does not wait for it. A search that hosts the quick note
+itself uses the interface in § Tettegouche instead.
 
 Every start reaches the one running Gooseberry, which comes up with the
 session.
@@ -78,6 +80,64 @@ Tettegouche is the bridge that makes them look like notes.
   written, opening the note rather than a file.
 - Matching handwritten notes by the text read from their ink.
 
+### The quick note in Search
+
+Search hosts the quick note as one of its modes (`DECISIONS.md`). It draws the
+note pad in its own window and keeps nothing: Gooseberry keeps the note, and
+offers it on the session bus. Search loads none of Gooseberry's code.
+
+- **Service:** `io.github.carlsonjm.gooseberry`, owned by the one running
+  Gooseberry. A call before Gooseberry has started starts it, from its bus
+  service file, and is answered once it is ready.
+- **Object:** `/QuickNote`. **Interface:**
+  `io.github.carlsonjm.Gooseberry.QuickNote`.
+- **Version:** `ProtocolVersion()` returns `1`. A caller uses the interface only
+  when the number is one it knows. A method or a key added later, which a
+  version-1 caller can ignore, keeps the number; any other change raises it.
+
+The quick note in Search is a session of its own, apart from the note on
+Gooseberry's card. Every method that changes the note writes it to the folder
+before it returns, and every method returns the note as Gooseberry keeps it, a
+dictionary of strings to variants:
+
+| Key | Type | What it is |
+| --- | --- | --- |
+| `open` | `b` | A note is open in this session |
+| `id` | `s` | The note's id; empty until it has text and is kept |
+| `kept` | `b` | The note is in the folder |
+| `text` | `s` | The note's text |
+| `colour` | `s` | Its colour's name |
+| `colours`, `colourHexes` | `as`, `as` | The five colours in order, and their colours as `#RRGGBB` |
+| `belongs` | `s` | `window`, `project`, `workspace` or `loose` |
+| `project`, `window`, `workspace` | `s` | Its project, and the window and workspace it was written on |
+| `choices` | `av` | The Belongs to choices in order, each a dictionary: `kind`, `label` (the words to show), `project` (for a project), `chosen` (`b`) |
+| `readOnly` | `b` | The note or folder is kept by a newer Gooseberry and is not changed |
+| `problem` | `s` | Why the last change could not be kept; empty when it was |
+
+| Method | What it does |
+| --- | --- |
+| `ProtocolVersion() → u` | The version, `1` |
+| `Start() → a{sv}` | Starts a note, belonging to the window in front, or resumes the one the last `Start` began and nothing has finished |
+| `State() → a{sv}` | The note as it is |
+| `SetText(s text) → a{sv}` | Sets the text. Search sends it at each pause, as Gooseberry's card writes; the first text keeps the note |
+| `SetColour(s name) → a{sv}` | One of the five colours; another name is refused |
+| `SetBelongs(s kind, s project) → a{sv}` | Belongs to; a project needs its name, and a new name makes the project |
+| `Done() → a{sv}` | Finishes the note, as Done on the card; a note left empty goes to the trash. The next `Start` begins a new one |
+| `TuckAway() → a{sv}` | Tucks the note away and finishes it |
+| `Remove() → a{sv}` | Moves the note to the desktop's trash and finishes it; nothing is deleted |
+| `UndoRemove() → a{sv}` | Brings back the note `Remove` sent to the trash; the reply's `restored` says whether it did |
+| `OpenBoard(s noteId, s requestToken) → b` | Opens the board as an ordinary window, on the place that note sits in, or on Today for an empty id |
+
+| Signal | When |
+| --- | --- |
+| `Changed(a{sv})` | The open note changed other than by a call here: on the board, on Gooseberry's card, or by another program writing its file |
+| `BoardShown(s requestToken)` | The board's window, asked for by `OpenBoard` with that token, has drawn its first frame |
+
+For All notes, Search calls `OpenBoard` with a token of its own and waits for
+`BoardShown` with that token: from then the board's window, whose application
+is `io.github.carlsonjm.Gooseberry`, is on screen, and Search can hand the
+moment to Kadunce so the window takes the card's place.
+
 ## Split Rock
 
 Where Split Rock is installed and set up, Gooseberry is one of its tools: the
@@ -97,5 +157,5 @@ None is assumed.
 | Kadunce | A way to show a companion's count on a card in Spread | Notes in Spread |
 | Kadunce | Its request interface, to stack a companion with a card | Stacking without a hand gesture |
 | Tettegouche | A notes source for Search, with a Notes tab | Notes in Search |
-| Tettegouche | A Notes door on Search's first screen, behind a checkbox, shown only when Gooseberry is installed | Opening Gooseberry from Search |
+| Tettegouche | The quick note as one of Search's modes, over § The quick note in Search, behind a checkbox and only when Gooseberry is installed | Writing a note from Search |
 | Split Rock | Use Gooseberry's notes tool where present | The notes tool |

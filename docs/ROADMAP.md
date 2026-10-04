@@ -16,7 +16,9 @@ in `mockup/`, then tested against the proof (`DECISIONS.md`).
 
 - The quick-note card: one tap, cursor ready, saved as written, Belongs to and
   colour in one tap each, kept above the on-screen keys, grown into the board
-  by All notes, Done by going back to the work.
+  by All notes, Done by going back to the work. Gooseberry's icon opens it.
+- The quick note offered to a desktop's search on the session bus, so the
+  search can host it as one of its modes.
 - The board: Loose, Today, Tucked away, by window or document, by project, by
   workspace.
 - Tuck away and bring back. Removing sends a note to the trash.

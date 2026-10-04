@@ -20,3 +20,17 @@ gooseberry_test(tst_keep core/tst_keep.cpp KF6::CoreAddons)
 gooseberry_test(tst_screens screens/tst_screens.cpp
     gooseberry-screensplugin Qt6::Gui Qt6::Quick KF6::I18n KF6::I18nQml)
 set_target_properties(tst_screens PROPERTIES QT_QML_MODULE_NO_IMPORT_SCAN ON)
+
+# The quick note's bus interface, driven by a client that loads none of
+# Gooseberry's code, against the real Gooseberry on a bus of the test's own.
+find_program(DBUS_RUN_SESSION dbus-run-session REQUIRED)
+add_executable(tst_quicknote_bus bus/tst_quicknote_bus.cpp)
+target_link_libraries(tst_quicknote_bus PRIVATE Qt6::DBus Qt6::Test)
+target_compile_definitions(tst_quicknote_bus PRIVATE GOOSEBERRY_BINARY="$<TARGET_FILE:gooseberry>")
+add_dependencies(tst_quicknote_bus gooseberry)
+add_test(NAME tst_quicknote_bus COMMAND ${DBUS_RUN_SESSION}
+    --config-file=${CMAKE_CURRENT_SOURCE_DIR}/bus/private-bus.conf -- $<TARGET_FILE:tst_quicknote_bus>)
+set_tests_properties(tst_quicknote_bus PROPERTIES
+    ENVIRONMENT "GOOSEBERRY_PRIVATE_BUS=1"
+    SKIP_RETURN_CODE 77
+    TIMEOUT 120)

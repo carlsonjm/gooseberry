@@ -7,12 +7,12 @@ Kadunce's own hold and let go; stepping back to the card puts them away.
 
 | Task | Touch | Keyboard |
 | --- | --- | --- |
-| Capture a note | Hold Gooseberry, then tap New note | None yet |
+| Capture a note | Tap Gooseberry | None yet |
 | Finish a note | Tap the work around the card | `Esc` |
 | Choose where it belongs | Tap a place under Belongs to | None yet |
 | Write with a pen | Tap Pen | None yet |
 | Set a reminder | Tap Remind | None yet |
-| Open the board | Tap Gooseberry | None yet |
+| Open the board | Tap All notes on the card | None yet |
 | Open a note | Tap the note on the board | None yet |
 | Tuck a note away | Tap Tuck away on the note | None yet |
 | Bring a note back | Tap Tucked away on the board, then the note | None yet |
@@ -23,12 +23,14 @@ Kadunce's own hold and let go; stepping back to the card puts them away.
 
 | Input | What happens |
 | --- | --- |
-| Hold Gooseberry, then tap New note | The quick-note card opens in the middle of the screen, the size of the desktop's search, with the cursor in it. What you write is kept from its first letter. |
+| Tap Gooseberry | The quick-note card opens in the middle of the screen, the size of the desktop's search, with the cursor in it. What you write is kept from its first letter. |
+| Hold Gooseberry, then tap New note | The same. |
 | Tap New note on the board | The same, for a note that belongs to the place the board is showing. |
 
 Gooseberry is its entry in the launcher or a search, or its button pinned to
-the panel or the dock; holding it opens its menu. A desktop can add a one-tap
-way to capture, such as a Notes tab in its search (`DESKTOP.md`).
+the panel or the dock; holding it opens its menu, with New note and All notes.
+A desktop's search can host the quick note itself, drawn in its own window and
+kept by Gooseberry (`DESKTOP.md`).
 
 ## Finish a note
 
@@ -75,9 +77,8 @@ Not yet built: Milestone 1.
 
 | Input | What happens |
 | --- | --- |
-| Tap Gooseberry | The board opens on Today, as an ordinary window. |
-| Tap All notes on the card | The card grows into the board, on Today, as Apps and Files grow the desktop's search. |
-| Tap Back to the note, on the board in the card | The card returns to the note, as it was. |
+| Tap All notes on the card | The card grows to the whole work area and the board takes its place, on Today, as Apps and Files grow the desktop's search. A note opened or started there, or `Esc`, brings the card back. |
+| Hold Gooseberry, then tap All notes | The board opens on Today, as an ordinary window. |
 
 ## Open a note
 

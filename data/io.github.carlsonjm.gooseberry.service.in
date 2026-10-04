@@ -1,0 +1,3 @@
+[D-BUS Service]
+Name=io.github.carlsonjm.gooseberry
+Exec=@CMAKE_INSTALL_FULL_BINDIR@/gooseberry --background
