@@ -75,4 +75,5 @@ None is assumed.
 | Kadunce | A way to show a companion's count on a card in Spread | Notes in Spread |
 | Kadunce | Its request interface, to stack a companion with a card | Stacking without a hand gesture |
 | Tettegouche | A notes source for Search, with a Notes tab | Notes in Search |
+| Tettegouche | A Notes door on Search's first screen, behind a checkbox, shown only when Gooseberry is installed | Opening Gooseberry from Search |
 | Split Rock | Use Gooseberry's notes tool where present | The notes tool |
