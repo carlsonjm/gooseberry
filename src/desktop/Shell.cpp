@@ -76,9 +76,10 @@ QObject *Shell::storeObject() const
 void Shell::handle(const QStringList &arguments)
 {
     QCommandLineParser parser;
+    const QCommandLineOption capture(QStringLiteral("capture"));
     const QCommandLineOption board(QStringLiteral("board"));
     const QCommandLineOption background(QStringLiteral("background"));
-    parser.addOptions({board, background});
+    parser.addOptions({capture, board, background});
     parser.parse(arguments);
 
     if (parser.isSet(background)) {
@@ -87,11 +88,13 @@ void Shell::handle(const QStringList &arguments)
         captureWindow();
         return;
     }
-    if (parser.isSet(board)) {
-        showBoard();
+    if (parser.isSet(capture)) {
+        showCapture();
         return;
     }
-    showCapture();
+    // Opening Gooseberry, from a launcher, a search or a pinned button, opens
+    // the board as an ordinary window; --board says the same.
+    showBoard();
 }
 
 QQuickWindow *Shell::create(const QString &name)
@@ -195,6 +198,9 @@ void Shell::showBoard()
         return;
     }
     QMetaObject::invokeMethod(window, "present");
+    // The launcher's activation token, handed over with this start, lets the
+    // board come to the front rather than wait behind the window in use.
+    KWindowSystem::updateStartupId(window);
     KWindowSystem::activateWindow(window);
 }
 

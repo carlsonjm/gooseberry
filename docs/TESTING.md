@@ -27,17 +27,18 @@ with capture fast enough that nothing is written elsewhere instead
 (`ROADMAP.md`). These checks come first, once, after installing; then the week
 of use.
 
-1. Tap Gooseberry's button over a document. The sheet rises with the cursor in
-   the note and the on-screen keys up; "This window" names the document.
+1. Over a document, hold Gooseberry and tap New note. The sheet rises with the
+   cursor in the note and the on-screen keys up; "This window" names the
+   document. Tap Gooseberry itself: the board opens as an ordinary window.
 2. Type one letter and nothing else, then tap the work behind the sheet. Open
    the board: the note is there under Today.
 3. Write a note, choose a colour and a project, and finish it. Each choice is
    one tap; the note is on the board in that colour, under the project.
 4. Write a note, pause a moment, and while the sheet is still up, end
-   Gooseberry the hard way (`pkill -9 gooseberry` in a terminal). Tap the
-   button again; the note is on the board, whole.
+   Gooseberry the hard way (`pkill -9 gooseberry` in a terminal). Open
+   Gooseberry again; the note is on the board, whole.
 5. Write a note and log out without closing the sheet. Log in: the note is on
-   the board, and the first tap brings the sheet up at once.
+   the board, and New note brings the sheet up at once.
 6. Tuck a note away from the board; it waits only under Tucked away. Tap it
    there; it goes back where it was.
 7. Remove a note. It is in the desktop's trash, and the trash can put it back.

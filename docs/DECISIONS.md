@@ -148,11 +148,22 @@ Rejected: an ordinary window, which the window manager places where it
 chooses, so it could not rise from the bottom edge; and a panel widget, which
 exists only where a panel holds it.
 
+## Opening Gooseberry opens the board
+
+Gooseberry's entry, in a launcher, a search or pinned to a dock, opens the board
+as an ordinary window; capture is New note in its menu, on the board, and any
+one-tap way a desktop adds, such as a Notes tab in its search. (The maintainer,
+3 October.)
+
+Rejected: the entry opening the capture sheet. The sheet is not a window, so a
+card workspace waiting for the opened application to arrive never sees it, and
+the application has nothing to show on a dock.
+
 ## Gooseberry stays ready
 
 Gooseberry starts with the session, showing nothing, and keeps running between
-notes; closing the board or the sheet only puts it away. Every tap of its button
-reaches the one running Gooseberry. This is engineering's choice: speed to the
+notes; closing the board or the sheet only puts it away. Every start, from its
+entry or its menu, reaches the one running Gooseberry. This is engineering's choice: speed to the
 cursor is the product, and a program starting from cold takes a moment the
 thought may not last.
 

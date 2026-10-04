@@ -35,8 +35,9 @@ public:
     PlaceNotes *notes() const { return m_notes; }
     NoteStore *store() const { return m_store; }
 
-    // Answers a start or a later tap: no arguments for capture, --board for
-    // the board, --background to get ready without showing anything.
+    // Answers a start or a later tap: no arguments or --board for the board,
+    // --capture for the capture sheet, --background to get ready without
+    // showing anything.
     void handle(const QStringList &arguments);
 
     Q_INVOKABLE void showCapture();

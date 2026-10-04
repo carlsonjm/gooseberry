@@ -7,12 +7,12 @@ Kadunce's own hold and let go; stepping back to the card puts them away.
 
 | Task | Touch | Keyboard |
 | --- | --- | --- |
-| Capture a note | Tap Gooseberry's button | None yet |
+| Capture a note | Hold Gooseberry, then tap New note | None yet |
 | Finish a note | Tap the work behind the sheet | `Esc` |
 | Choose where it belongs | Tap a place under Belongs to | None yet |
 | Write with a pen | Tap Pen | None yet |
 | Set a reminder | Tap Remind | None yet |
-| Open the board | Tap Gooseberry's button and hold | None yet |
+| Open the board | Tap Gooseberry | None yet |
 | Open a note | Tap the note on the board | None yet |
 | Tuck a note away | Tap Tuck away on the note | None yet |
 | Bring a note back | Tap Tucked away on the board, then the note | None yet |
@@ -23,11 +23,12 @@ Kadunce's own hold and let go; stepping back to the card puts them away.
 
 | Input | What happens |
 | --- | --- |
-| Tap Gooseberry's button | The capture sheet rises from the bottom with the cursor in it. What you write is kept from its first letter. |
+| Hold Gooseberry, then tap New note | The capture sheet rises from the bottom with the cursor in it. What you write is kept from its first letter. |
 | Tap New note on the board | The same, for a note that belongs to the place the board is showing. |
 
-Gooseberry's button is Gooseberry in the launcher, or pinned to the panel or
-the dock.
+Gooseberry is its entry in the launcher or a search, or its button pinned to
+the panel or the dock; holding it opens its menu. A desktop can add a one-tap
+way to capture, such as a Notes tab in its search (`DESKTOP.md`).
 
 ## Finish a note
 
@@ -70,7 +71,7 @@ Not yet built: Milestone 1.
 
 | Input | What happens |
 | --- | --- |
-| Tap Gooseberry's button and hold | The board opens on Today. On Plasma's own launcher and panel, the hold opens the button's menu; tap Open the board. |
+| Tap Gooseberry | The board opens on Today, as an ordinary window. |
 | Tap All notes on the capture sheet | The sheet goes down and the board opens on Today. |
 
 ## Open a note
