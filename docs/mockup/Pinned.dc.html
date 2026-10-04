@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Shuffle Notes — pinned beside a card</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#F8F8FF}a:hover{color:#FFFFFF}
+.ico{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.ico.s{width:16px;height:16px}
+.ico.xs{width:14px;height:14px}
+button{font-family:Manrope,sans-serif;cursor:pointer}
+.band{position:absolute;left:0;right:0;bottom:0;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;box-sizing:border-box;color:#F8F8FF}
+.island{height:40px;border-radius:20px;background:#141414;border:1px solid #333;display:flex;align-items:center;gap:10px;padding:0 16px 0 5px;font-size:13px;box-sizing:border-box}
+.dock{display:flex;gap:6px;align-items:center;background:#141414;border:1px solid #333;border-radius:16px;padding:5px}
+.dk{width:44px;height:44px;border-radius:12px;background:#242424;display:flex;align-items:center;justify-content:center;border:0;color:#F8F8FF;position:relative;padding:0}
+.status{display:flex;align-items:center;gap:14px;height:40px;padding:0 6px 0 14px;border-radius:20px;background:#141414;border:1px solid #333;font-size:13px;box-sizing:border-box}
+.tb{height:32px;background:#1C1C1C;display:flex;align-items:center;justify-content:space-between;padding:0 4px 0 10px;font-size:13px;color:#F8F8FF;flex:none}
+.tbb{width:34px;height:22px;border-radius:11px;background:#242424;display:inline-flex;align-items:center;justify-content:center;border:0;color:#F8F8FF;padding:0;margin:0 4px}
+.code{font-family:'JetBrains Mono',monospace;font-size:13px;line-height:22px;color:#D6D6DE;white-space:pre;margin:0}
+.k{color:#F2A65A}.t{color:#8FD3C7}.c{color:#7D7D86}.n{color:#E8B4A8}
+.chip{display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 10px;border-radius:13px;background:rgba(0,0,0,0.09);font-size:11px;font-weight:700;color:#1A1A1A;border:0}
+.hl{background:rgba(242,217,138,0.16);display:inline-block;width:100%}
+</style>
+</helmet>
+<div style="width: 1280px; height: 800px; position: relative; overflow: hidden; font-family: Manrope, sans-serif; color: #F8F8FF; background: #1F2F38">
+  <div style="position: absolute; inset: 0; background: linear-gradient(180deg, #4A6676 0%, #34505F 48%, #233741 80%, #3B302A 100%)"></div>
+
+  <div style="position: absolute; left: 10px; top: 10px; bottom: 74px; width: 990px; background: #141414; border-radius: 8px; overflow: hidden; display: flex; flex-direction: column">
+    <div class="tb">
+      <div style="width: 160px"><svg class="ico s" viewBox="0 0 24 24"><path d="m16 18 6-6-6-6"/><path d="m8 6-6 6 6 6"/></svg></div>
+      <div style="display: flex; align-items: center; gap: 8px">
+        <span>SpreadGesture.qml — Kate</span>
+        <span style="display: inline-flex; align-items: center; gap: 4px; height: 20px; padding: 0 8px; border-radius: 10px; background: #F2D98A; color: #1A1A1A; font-size: 11px; font-weight: 700"><svg class="ico xs" viewBox="0 0 24 24"><path d="M16 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8Z"/><path d="M15 3v4a2 2 0 0 0 2 2h4"/></svg>3</span>
+      </div>
+      <div style="display: flex; justify-content: flex-end; width: 160px">
+        <button class="tbb" aria-label="Minimize"><svg class="ico xs" viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button>
+        <button class="tbb" aria-label="Maximize"><svg class="ico xs" viewBox="0 0 24 24"><rect width="14" height="14" x="5" y="5" rx="2"/></svg></button>
+        <button class="tbb" aria-label="Close"><svg class="ico xs" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+      </div>
+    </div>
+    <div style="flex: 1; display: flex; min-height: 0">
+      <div style="width: 52px; background: #1C1C1C; padding: 16px 0; box-sizing: border-box; text-align: right">
+        <pre class="code" style="color: #5A5A62; padding-right: 12px">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27</pre>
+      </div>
+      <div style="flex: 1; padding: 16px 20px; overflow: hidden; position: relative">
+<pre class="code"><span class="k">import</span> QtQuick
+<span class="k">import</span> org.kde.kadunce.spread
+
+<span class="t">Item</span> {
+    <span class="n">id</span>: gesture
+
+    <span class="c">// Distance the finger travels before Spread commits.</span>
+    <span class="k">property real</span> <span class="n">commitFraction</span>: 0.5
+<span class="hl">    <span class="k">property real</span> <span class="n">flickVelocity</span>: 1400   <span class="c">// px/s</span></span>
+    <span class="k">property bool</span> <span class="n">following</span>: false
+
+    <span class="k">signal</span> <span class="n">committed</span>()
+    <span class="k">signal</span> <span class="n">cancelled</span>()
+
+    <span class="t">DragHandler</span> {
+        <span class="n">id</span>: drag
+        <span class="n">target</span>: null
+        <span class="n">yAxis.enabled</span>: true
+        <span class="n">onActiveChanged</span>: {
+            <span class="k">if</span> (active) { gesture.following = true; <span class="k">return</span> }
+            <span class="k">const</span> v = drag.centroid.velocity.y
+            <span class="k">if</span> (-v &gt; gesture.flickVelocity
+                    || progress &gt; gesture.commitFraction)
+                gesture.committed()
+            <span class="k">else</span>
+                gesture.cancelled()
+        }
+    }
+}</pre>
+        <span style="position: absolute; left: 520px; top: 168px; width: 22px; height: 22px; border-radius: 6px; background: #F2D98A; display: flex; align-items: center; justify-content: center; color: #1A1A1A"><svg class="ico xs" viewBox="0 0 24 24"><path d="M16 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8Z"/><path d="M15 3v4a2 2 0 0 0 2 2h4"/></svg></span>
+      </div>
+    </div>
+  </div>
+
+  <div style="position: absolute; right: 10px; top: 10px; bottom: 74px; width: 260px; display: flex; flex-direction: column; gap: 10px">
+    <div style="height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 0 4px 0 14px; background: #141414; border-radius: 12px; font-size: 13px; font-weight: 700; flex: none">
+      <span>On this card · 3</span>
+      <div style="display: flex">
+        <button class="tbb" aria-label="New sticky on this card" style="width: 36px; height: 36px; border-radius: 10px; margin: 0 2px"><svg class="ico s" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5v14"/></svg></button>
+        <button class="tbb" aria-label="Fold the rail" style="width: 36px; height: 36px; border-radius: 10px; margin: 0 2px"><svg class="ico s" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button>
+      </div>
+    </div>
+
+    <div style="background: #F2D98A; color: #1A1A1A; border-radius: 12px; padding: 14px 16px; font-size: 15px; line-height: 1.4; font-weight: 500">
+      <div>Flick threshold feels short on the Z13. Measure the real velocity before touching 1400.</div>
+      <div style="margin-top: 10px; display: flex; gap: 6px; flex-wrap: wrap">
+        <span class="chip">Line 9</span>
+        <button class="chip" style="background: #1A1A1A; color: #F2D98A"><svg class="ico xs" viewBox="0 0 24 24"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/></svg>Next step</button>
+      </div>
+    </div>
+
+    <div style="background: #C9D89A; color: #1A1A1A; border-radius: 12px; padding: 14px 16px; font-size: 15px; line-height: 1.4; font-weight: 500">
+      <div style="font-weight: 700; margin-bottom: 6px">Before handing over</div>
+      <label style="display: flex; align-items: center; gap: 10px; min-height: 34px"><input type="checkbox" checked style="width: 20px; height: 20px; accent-color: #1A1A1A; margin: 0"><span style="text-decoration: line-through; opacity: 0.6">verify-band-load.sh</span></label>
+      <label style="display: flex; align-items: center; gap: 10px; min-height: 34px"><input type="checkbox" style="width: 20px; height: 20px; accent-color: #1A1A1A; margin: 0"><span>sync-input.py --check</span></label>
+      <label style="display: flex; align-items: center; gap: 10px; min-height: 34px"><input type="checkbox" style="width: 20px; height: 20px; accent-color: #1A1A1A; margin: 0"><span>One exact install command</span></label>
+      <div style="margin-top: 8px; display: flex; gap: 6px"><span class="chip">Project · Shuffle</span></div>
+    </div>
+
+    <div style="background: #E8B4A8; color: #1A1A1A; border-radius: 12px; padding: 12px 16px 14px; font-size: 15px; line-height: 1.4; font-weight: 500">
+      <svg viewBox="0 0 228 70" style="width: 100%; height: 70px" fill="none" stroke="#1A1A1A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M6 30c4-14 10-18 12-10s-4 18 2 18 8-16 12-16-2 16 4 16"/>
+        <path d="M46 20c-6 0-8 18 2 18s8-12 4-18M60 12c-2 10 0 22 0 26M60 26c6-6 12-4 12 4s0 8 2 8"/>
+        <path d="M88 24c-6-2-10 4-6 8s10 4 6-2M86 38c8 2 12-8 16-16"/>
+        <path d="M118 24c3 7 5 14 8 14s6-18 9-18 3 18 8 18"/>
+        <path d="M160 12c-3 12-3 20 0 26M154 24h14M178 26c2 6 0 12 2 12M178 16v2"/>
+        <path d="M194 38c3-8 3-14 0-16M194 24c6-4 10 0 10 7s0 7 2 7"/>
+        <path d="M8 56c40-4 90-4 140 0"/>
+      </svg>
+      <div style="margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap">
+        <span class="chip"><svg class="ico xs" viewBox="0 0 24 24"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg>Today 4:00 PM</span>
+        <span class="chip">Ask Sam</span>
+      </div>
+    </div>
+
+    <div style="flex: 1"></div>
+    <button style="height: 44px; border-radius: 12px; background: #141414; border: 1px dashed #5A5A5A; color: #AFAFAF; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; flex: none">
+      <svg class="ico s" viewBox="0 0 24 24"><rect width="20" height="5" x="2" y="3" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/></svg>2 tucked away
+    </button>
+  </div>
+
+  <div class="band">
+    <div class="island">
+      <span style="width: 30px; height: 30px; border-radius: 15px; background: #242424; display: flex; align-items: center; justify-content: center"><svg class="ico xs" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></span>
+      <span>Low Tide · Shoreline</span>
+    </div>
+    <div class="dock">
+      <button class="dk" aria-label="Search" style="background: transparent"><span style="width: 14px; height: 14px; border-radius: 7px; background: #F8F8FF"></span></button>
+      <button class="dk" aria-label="Files"><svg class="ico" viewBox="0 0 24 24"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg></button>
+      <button class="dk" aria-label="Firefox"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg></button>
+      <button class="dk" aria-label="Kate"><svg class="ico" viewBox="0 0 24 24"><path d="m16 18 6-6-6-6"/><path d="m8 6-6 6 6 6"/></svg><span style="position: absolute; bottom: 3px; width: 4px; height: 4px; border-radius: 2px; background: #F8F8FF"></span></button>
+      <button class="dk" aria-label="Terminal"><svg class="ico" viewBox="0 0 24 24"><path d="m4 17 6-6-6-6"/><path d="M12 19h8"/></svg></button>
+      <button class="dk" aria-label="Notes" style="background: #F2D98A; color: #1A1A1A"><svg class="ico" viewBox="0 0 24 24"><path d="M16 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8Z"/><path d="M15 3v4a2 2 0 0 0 2 2h4"/></svg></button>
+    </div>
+    <div class="status">
+      <svg class="ico s" viewBox="0 0 24 24"><path d="M12 20h.01"/><path d="M2 8.82a15 15 0 0 1 20 0"/><path d="M5 12.859a10 10 0 0 1 14 0"/><path d="M8.5 16.429a5 5 0 0 1 7 0"/></svg>
+      <svg class="ico s" viewBox="0 0 24 24"><rect width="16" height="10" x="2" y="7" rx="2"/><path d="M22 11v2"/><path d="M6 11v2"/><path d="M10 11v2"/></svg>
+      <span style="font-weight: 600">2:43 PM</span>
+      <button class="dk" aria-label="Notifications" style="width: 30px; height: 30px; border-radius: 15px"><svg class="ico xs" viewBox="0 0 24 24"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg></button>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

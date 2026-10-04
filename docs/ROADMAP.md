@@ -8,7 +8,8 @@ at the end, each named with what it holds up.
 
 ## Milestone 0: capture and keep
 
-Gooseberry on its own, on any Plasma desktop.
+Gooseberry on its own, on any Plasma desktop. Built in one pass to the mock-up
+in `mockup/`, then tested against the proof (`DECISIONS.md`).
 
 - The capture sheet: one tap, cursor ready, saved as written, Belongs to and
   colour in one tap each, Done by going back to the work.

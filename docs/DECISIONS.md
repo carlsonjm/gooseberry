@@ -109,6 +109,23 @@ the start. (The maintainer, 3 October.)
 Rejected: building for the desktop first and separating later, which turns a
 companion into a second app.
 
+## The mock-up is the approved visual direction
+
+The six screens in `mockup/` are the approved layout and behaviour: what each
+place holds, its sizes and touch targets, the note colours, and how capture,
+the board and the planner work. An agent builds to them without asking again.
+Where the mock-up and a later ruling disagree, the ruling wins: the rail beside
+the card is superseded by notes stacked behind it. (The maintainer, 4 October.)
+
+## Milestone 0 is built in one pass
+
+The concept, these decisions and the mock-up are the approval for Milestone 0.
+It is built whole, then handed over for testing against its proof, rather than
+brought back screen by screen. A question the documents do not answer still
+comes to the maintainer before it is guessed. (The maintainer, 4 October.)
+
+Rejected: options before each screen, which the mock-up already settles.
+
 ## Window arrangement is requested, never done directly
 
 To show notes beside or with a window, Gooseberry asks the window manager, which

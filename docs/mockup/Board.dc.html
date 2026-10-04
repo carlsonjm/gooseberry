@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Shuffle Notes — board and planner</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#F8F8FF}a:hover{color:#FFFFFF}
+.ico{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.ico.s{width:16px;height:16px}
+.ico.xs{width:14px;height:14px}
+button{font-family:Manrope,sans-serif;cursor:pointer}
+input{font-family:Manrope,sans-serif}
+.band{position:absolute;left:0;right:0;bottom:0;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;box-sizing:border-box;color:#F8F8FF}
+.island{height:40px;border-radius:20px;background:#141414;border:1px solid #333;display:flex;align-items:center;gap:10px;padding:0 16px 0 5px;font-size:13px;box-sizing:border-box}
+.dock{display:flex;gap:6px;align-items:center;background:#141414;border:1px solid #333;border-radius:16px;padding:5px}
+.dk{width:44px;height:44px;border-radius:12px;background:#242424;display:flex;align-items:center;justify-content:center;border:0;color:#F8F8FF;position:relative;padding:0}
+.status{display:flex;align-items:center;gap:14px;height:40px;padding:0 6px 0 14px;border-radius:20px;background:#141414;border:1px solid #333;font-size:13px;box-sizing:border-box}
+.tb{height:32px;background:#1C1C1C;display:flex;align-items:center;justify-content:space-between;padding:0 4px 0 10px;font-size:13px;color:#F8F8FF;flex:none}
+.tbb{width:34px;height:22px;border-radius:11px;background:#242424;display:inline-flex;align-items:center;justify-content:center;border:0;color:#F8F8FF;padding:0;margin:0 4px}
+.nav{height:40px;border-radius:8px;border:0;background:transparent;color:#F8F8FF;display:flex;align-items:center;gap:10px;padding:0 10px;font-size:14px;font-weight:600;width:100%;text-align:left}
+.nav .ct{margin-left:auto;font-size:12px;color:#AFAFAF;font-weight:600}
+.sec{font-size:11px;font-weight:800;color:#8A8A90;letter-spacing:0.06em;padding:14px 10px 4px}
+.chip{display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 9px;border-radius:12px;background:rgba(0,0,0,0.09);font-size:11px;font-weight:700;color:#1A1A1A}
+.dchip{display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 9px;border-radius:12px;background:#242424;font-size:11px;font-weight:700;color:#C8C8CE}
+.st{border-radius:12px;padding:14px 16px;color:#1A1A1A;font-size:15px;line-height:1.4;font-weight:500;break-inside:avoid;margin-bottom:12px}
+.day{width:64px;height:64px;border-radius:14px;border:0;background:#1C1C1C;color:#F8F8FF;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:11px;font-weight:700}
+.day b{font-size:20px;font-weight:700}
+.row{display:flex;gap:14px;padding:12px 14px;border-radius:12px;background:#1C1C1C;align-items:flex-start}
+</style>
+</helmet>
+<div style="width: 1280px; height: 800px; position: relative; overflow: hidden; font-family: Manrope, sans-serif; color: #F8F8FF; background: #1F2F38">
+  <div style="position: absolute; inset: 0; background: linear-gradient(180deg, #4A6676 0%, #34505F 48%, #233741 80%, #3B302A 100%)"></div>
+
+  <div style="position: absolute; left: 10px; top: 10px; right: 10px; bottom: 74px; background: #141414; border-radius: 8px; overflow: hidden; display: flex; flex-direction: column">
+    <div class="tb">
+      <div style="width: 160px"><svg class="ico s" viewBox="0 0 24 24"><path d="M16 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8Z"/><path d="M15 3v4a2 2 0 0 0 2 2h4"/></svg></div>
+      <span>Notes</span>
+      <div style="display: flex; justify-content: flex-end; width: 160px">
+        <button class="tbb" aria-label="Minimize"><svg class="ico xs" viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button>
+        <button class="tbb" aria-label="Maximize"><svg class="ico xs" viewBox="0 0 24 24"><rect width="14" height="14" x="5" y="5" rx="2"/></svg></button>
+        <button class="tbb" aria-label="Close"><svg class="ico xs" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+      </div>
+    </div>
+    <div style="flex: 1; display: flex; min-height: 0">
+      <nav aria-label="Notes" style="width: 250px; background: #1C1C1C; padding: 14px 12px; box-sizing: border-box; display: flex; flex-direction: column; gap: 2px">
+        <label style="display: flex; align-items: center; gap: 8px; height: 44px; border-radius: 22px; background: #242424; border: 1px solid #5A5A5A; padding: 0 14px; margin-bottom: 10px; color: #AFAFAF">
+          <svg class="ico s" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input placeholder="Search notes" style="background: transparent; border: 0; color: #F8F8FF; font-size: 14px; width: 100%; outline: none">
+        </label>
+        <button class="nav"><svg class="ico s" viewBox="0 0 24 24"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>Loose<span class="ct">4</span></button>
+        <button class="nav" style="background: rgba(248,248,255,0.24)"><svg class="ico s" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>Today<span class="ct" style="color: #F8F8FF">3</span></button>
+        <button class="nav"><svg class="ico s" viewBox="0 0 24 24"><rect width="20" height="5" x="2" y="3" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/></svg>Tucked away<span class="ct">9</span></button>
+        <div class="sec">ON CARDS</div>
+        <button class="nav"><svg class="ico s" viewBox="0 0 24 24"><path d="m16 18 6-6-6-6"/><path d="m8 6-6 6 6 6"/></svg>SpreadGesture.qml<span class="ct">3</span></button>
+        <button class="nav"><svg class="ico s" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>Bug 412 · GitHub<span class="ct">1</span></button>
+        <div class="sec">PROJECTS</div>
+        <button class="nav"><svg class="ico s" viewBox="0 0 24 24"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>Shuffle<span class="ct">12</span></button>
+        <button class="nav"><svg class="ico s" viewBox="0 0 24 24"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>Split Rock<span class="ct">5</span></button>
+        <button class="nav"><svg class="ico s" viewBox="0 0 24 24"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>Home<span class="ct">2</span></button>
+        <div class="sec">WORKSPACE</div>
+        <button class="nav"><svg class="ico s" viewBox="0 0 24 24"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>Desk · Workspace 1<span class="ct">6</span></button>
+      </nav>
+
+      <main style="flex: 1; padding: 22px 28px 0; display: flex; flex-direction: column; gap: 18px; min-width: 0; overflow: hidden">
+        <div style="display: flex; align-items: center; justify-content: space-between">
+          <div>
+            <div style="font-size: 13px; color: #AFAFAF; font-weight: 600">Saturday</div>
+            <h1 style="margin: 0; font-size: 30px; font-weight: 800; letter-spacing: -0.01em">3 October</h1>
+          </div>
+          <div style="display: flex; gap: 6px">
+            <button class="day"><span>THU</span><b>1</b></button>
+            <button class="day"><span>FRI</span><b>2</b></button>
+            <button class="day" style="background: #F8F8FF; color: #141414"><span>SAT</span><b>3</b></button>
+            <button class="day"><span>SUN</span><b>4</b></button>
+            <button class="day"><span>MON</span><b>5</b><span style="width: 5px; height: 5px; border-radius: 3px; background: #F2A65A"></span></button>
+            <button class="day"><span>TUE</span><b>6</b></button>
+          </div>
+          <button style="height: 52px; border-radius: 26px; padding: 0 22px; background: #F8F8FF; color: #141414; border: 0; font-size: 15px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px">
+            <svg class="ico s" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5v14"/></svg>New note
+          </button>
+        </div>
+
+        <div style="display: flex; gap: 24px; flex: 1; min-height: 0">
+          <section style="width: 360px; display: flex; flex-direction: column; gap: 10px">
+            <h2 style="margin: 0 0 4px; font-size: 13px; font-weight: 800; color: #AFAFAF; letter-spacing: 0.06em">PLANNER · TODAY</h2>
+            <div class="row">
+              <div style="width: 58px; font-size: 13px; font-weight: 700; color: #AFAFAF; padding-top: 2px">Done</div>
+              <div style="flex: 1">
+                <div style="font-size: 15px; font-weight: 600; text-decoration: line-through; color: #8A8A90">Record Z13 flick samples</div>
+                <div style="margin-top: 6px; display: flex; gap: 6px"><span class="dchip">SpreadGesture.qml</span></div>
+              </div>
+            </div>
+            <div class="row" style="background: #242424; box-shadow: inset 0 0 0 1px #5A5A5A">
+              <div style="width: 58px; font-size: 13px; font-weight: 800; color: #F2A65A; padding-top: 2px">4:00 PM</div>
+              <div style="flex: 1">
+                <div style="font-size: 15px; font-weight: 600">Ask Sam about a mouse way to move Spread on from Search</div>
+                <div style="margin-top: 6px; display: flex; gap: 6px"><span class="dchip">Project · Shuffle</span><span class="dchip">Handwritten</span></div>
+              </div>
+            </div>
+            <div class="row">
+              <div style="width: 58px; font-size: 13px; font-weight: 700; color: #AFAFAF; padding-top: 2px">7:30 PM</div>
+              <div style="flex: 1">
+                <div style="font-size: 15px; font-weight: 600">Call about the cabin weekend</div>
+                <div style="margin-top: 6px; display: flex; gap: 6px"><span class="dchip">Home</span></div>
+              </div>
+            </div>
+            <div style="height: 6px"></div>
+            <h2 style="margin: 0 0 4px; font-size: 13px; font-weight: 800; color: #AFAFAF; letter-spacing: 0.06em">MONDAY</h2>
+            <div class="row">
+              <div style="width: 58px; font-size: 13px; font-weight: 700; color: #AFAFAF; padding-top: 2px">9:00 AM</div>
+              <div style="flex: 1">
+                <div style="font-size: 15px; font-weight: 600">Split Rock — Milestone 0 review</div>
+                <div style="margin-top: 6px; display: flex; gap: 6px"><span class="dchip">Project · Split Rock</span></div>
+              </div>
+            </div>
+          </section>
+
+          <section style="flex: 1; min-width: 0">
+            <h2 style="margin: 0 0 14px; font-size: 13px; font-weight: 800; color: #AFAFAF; letter-spacing: 0.06em">IDEAS · NO DATE NEEDED</h2>
+            <div style="columns: 3; column-gap: 12px">
+              <div class="st" style="background: #F2D98A">Flick threshold feels short on the Z13. Measure the real velocity before touching 1400.<div style="margin-top: 8px"><span class="chip">SpreadGesture.qml</span></div></div>
+              <div class="st" style="background: #9ED6CB">Notes stack on a card's corner in Spread — count, not content.<div style="margin-top: 8px"><span class="chip">Shuffle</span></div></div>
+              <div class="st" style="background: #D9D4CC">Wallpaper idea: Palisade Head at dusk, rhyolite red.</div>
+              <div class="st" style="background: #C9D89A"><div style="font-weight: 700; margin-bottom: 4px">Groceries</div>coffee · oats · lemons · tape</div>
+              <div class="st" style="background: #E8B4A8">
+                <svg viewBox="0 0 200 54" style="width: 100%; height: 54px" fill="none" stroke="#1A1A1A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 26c4-12 9-16 11-9s-4 16 2 16 7-14 11-14-2 14 4 14"/><path d="M44 18c-5 0-7 16 2 16s7-10 3-16M58 10c-2 10 0 20 0 24M58 24c5-5 11-4 11 4s0 6 2 6"/><path d="M90 22c3 6 4 12 7 12s5-16 8-16 3 16 7 16"/><path d="M130 10c-3 10-3 18 0 24M124 22h13M150 24c2 5 0 10 2 10"/><path d="M8 46c40-4 80-4 120 0"/></svg>
+                <div style="margin-top: 6px"><span class="chip">Handwritten</span></div>
+              </div>
+              <div class="st" style="background: #F2D98A">What if Bento remembered which notes were open per pane?</div>
+              <div class="st" style="background: #9ED6CB">Genie: draft README section for Notes once it is approved.<div style="margin-top: 8px"><span class="chip">Split Rock</span></div></div>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <div class="band">
+    <div class="island">
+      <span style="width: 30px; height: 30px; border-radius: 15px; background: #242424; display: flex; align-items: center; justify-content: center"><svg class="ico xs" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></span>
+      <span>Low Tide · Shoreline</span>
+    </div>
+    <div class="dock">
+      <button class="dk" aria-label="Search" style="background: transparent"><span style="width: 14px; height: 14px; border-radius: 7px; background: #F8F8FF"></span></button>
+      <button class="dk" aria-label="Files"><svg class="ico" viewBox="0 0 24 24"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg></button>
+      <button class="dk" aria-label="Firefox"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg></button>
+      <button class="dk" aria-label="Kate"><svg class="ico" viewBox="0 0 24 24"><path d="m16 18 6-6-6-6"/><path d="m8 6-6 6 6 6"/></svg></button>
+      <button class="dk" aria-label="Terminal"><svg class="ico" viewBox="0 0 24 24"><path d="m4 17 6-6-6-6"/><path d="M12 19h8"/></svg></button>
+      <button class="dk" aria-label="Notes" style="background: #F2D98A; color: #1A1A1A"><svg class="ico" viewBox="0 0 24 24"><path d="M16 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8Z"/><path d="M15 3v4a2 2 0 0 0 2 2h4"/></svg><span style="position: absolute; bottom: 3px; width: 4px; height: 4px; border-radius: 2px; background: #1A1A1A"></span></button>
+    </div>
+    <div class="status">
+      <svg class="ico s" viewBox="0 0 24 24"><path d="M12 20h.01"/><path d="M2 8.82a15 15 0 0 1 20 0"/><path d="M5 12.859a10 10 0 0 1 14 0"/><path d="M8.5 16.429a5 5 0 0 1 7 0"/></svg>
+      <svg class="ico s" viewBox="0 0 24 24"><rect width="16" height="10" x="2" y="7" rx="2"/><path d="M22 11v2"/><path d="M6 11v2"/><path d="M10 11v2"/></svg>
+      <span style="font-weight: 600">2:52 PM</span>
+      <button class="dk" aria-label="Notifications" style="width: 30px; height: 30px; border-radius: 15px"><svg class="ico xs" viewBox="0 0 24 24"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg></button>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

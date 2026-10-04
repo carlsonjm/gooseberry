@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Shuffle Notes — Spread</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#F8F8FF}a:hover{color:#FFFFFF}
+.ico{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.ico.s{width:16px;height:16px}
+.ico.xs{width:14px;height:14px}
+button{font-family:Manrope,sans-serif;cursor:pointer}
+.band{position:absolute;left:0;right:0;bottom:0;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;box-sizing:border-box;color:#F8F8FF}
+.island{height:40px;border-radius:20px;background:#141414;border:1px solid #333;display:flex;align-items:center;gap:10px;padding:0 16px 0 5px;font-size:13px;box-sizing:border-box}
+.dock{display:flex;gap:6px;align-items:center;background:#141414;border:1px solid #333;border-radius:16px;padding:5px}
+.dk{width:44px;height:44px;border-radius:12px;background:#242424;display:flex;align-items:center;justify-content:center;border:0;color:#F8F8FF;position:relative;padding:0}
+.status{display:flex;align-items:center;gap:14px;height:40px;padding:0 6px 0 14px;border-radius:20px;background:#141414;border:1px solid #333;font-size:13px;box-sizing:border-box}
+.mini{position:absolute;top:0;width:360px;height:250px;background:#141414;border-radius:8px;overflow:hidden;display:flex;flex-direction:column}
+.mtb{height:24px;background:#1C1C1C;font-size:11px;display:flex;align-items:center;justify-content:center;flex:none}
+.bar{height:8px;border-radius:4px;background:#2E2E33}
+.label{position:absolute;top:266px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px}
+</style>
+</helmet>
+<div style="width: 1280px; height: 800px; position: relative; overflow: hidden; font-family: Manrope, sans-serif; color: #F8F8FF; background: #1F2F38">
+  <div style="position: absolute; inset: 0; background: linear-gradient(180deg, #4A6676 0%, #34505F 48%, #233741 80%, #3B302A 100%)"></div>
+  <div style="position: absolute; inset: 0; background: rgba(10,14,16,0.35)"></div>
+
+  <div style="position: absolute; left: 0; right: 0; top: 200px; height: 300px">
+
+    <div class="mini" style="left: 40px; outline: 2px dashed #F8F8FF; outline-offset: 6px">
+      <div class="mtb">Bug 412 · Spread flick — GitHub</div>
+      <div style="padding: 18px; display: flex; flex-direction: column; gap: 10px">
+        <div class="bar" style="width: 70%; height: 12px; background: #3A3A40"></div>
+        <div class="bar" style="width: 92%"></div>
+        <div class="bar" style="width: 85%"></div>
+        <div class="bar" style="width: 60%"></div>
+        <div style="height: 10px"></div>
+        <div class="bar" style="width: 88%"></div>
+        <div class="bar" style="width: 74%"></div>
+      </div>
+      <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 64px; display: flex; align-items: center; justify-content: center; gap: 8px; background: rgba(20,20,20,0.92); font-size: 13px; font-weight: 700">
+        <svg class="ico s" viewBox="0 0 24 24"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/></svg>Let go to pin here
+      </div>
+      <div style="position: absolute; right: 10px; top: 34px; width: 30px; height: 30px; border-radius: 8px; background: #9ED6CB; color: #1A1A1A; font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center">1</div>
+    </div>
+    <div class="label" style="left: 40px"><svg class="ico s" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>Firefox</div>
+
+    <div class="mini" style="left: 460px">
+      <div class="mtb">SpreadGesture.qml — Kate</div>
+      <div style="display: flex; flex: 1">
+        <div style="flex: 1; padding: 16px; display: flex; flex-direction: column; gap: 9px">
+          <div class="bar" style="width: 40%; background: #4A3D2C"></div>
+          <div class="bar" style="width: 55%"></div>
+          <div class="bar" style="width: 30%; background: #2C4743"></div>
+          <div class="bar" style="width: 72%"></div>
+          <div class="bar" style="width: 66%; background: #4A3D2C"></div>
+          <div class="bar" style="width: 50%"></div>
+          <div class="bar" style="width: 80%"></div>
+          <div class="bar" style="width: 44%; background: #2C4743"></div>
+          <div class="bar" style="width: 62%"></div>
+        </div>
+        <div style="width: 86px; padding: 8px 8px 8px 0; display: flex; flex-direction: column; gap: 6px; box-sizing: border-box">
+          <div style="height: 40px; border-radius: 6px; background: #C9D89A"></div>
+          <div style="height: 34px; border-radius: 6px; background: #E8B4A8"></div>
+        </div>
+      </div>
+      <div style="position: absolute; right: 10px; top: 34px; display: none"></div>
+    </div>
+    <div class="label" style="left: 460px"><svg class="ico s" viewBox="0 0 24 24"><path d="m16 18 6-6-6-6"/><path d="m8 6-6 6 6 6"/></svg>Kate<span style="display: inline-flex; align-items: center; gap: 4px; height: 22px; padding: 0 8px; border-radius: 11px; background: #242424; font-size: 11px; font-weight: 700; color: #AFAFAF">2 notes · 1 lifted</span></div>
+
+    <div class="mini" style="left: 880px">
+      <div class="mtb">Notes</div>
+      <div style="display: flex; flex: 1">
+        <div style="width: 74px; background: #1C1C1C; padding: 10px 8px; display: flex; flex-direction: column; gap: 8px; box-sizing: border-box">
+          <div class="bar" style="width: 100%; height: 14px; border-radius: 7px; background: #333"></div>
+          <div class="bar" style="width: 80%"></div>
+          <div class="bar" style="width: 70%"></div>
+          <div class="bar" style="width: 85%"></div>
+        </div>
+        <div style="flex: 1; padding: 10px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; align-content: start">
+          <div style="height: 58px; border-radius: 6px; background: #F2D98A"></div>
+          <div style="height: 58px; border-radius: 6px; background: #9ED6CB"></div>
+          <div style="height: 58px; border-radius: 6px; background: #D9D4CC"></div>
+          <div style="height: 58px; border-radius: 6px; background: #E8B4A8"></div>
+          <div style="height: 58px; border-radius: 6px; background: #C9D89A"></div>
+          <div style="height: 58px; border-radius: 6px; background: #F2D98A"></div>
+          <div style="height: 58px; border-radius: 6px; background: #D9D4CC"></div>
+        </div>
+      </div>
+    </div>
+    <div class="label" style="left: 880px"><svg class="ico s" viewBox="0 0 24 24"><path d="M16 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8Z"/><path d="M15 3v4a2 2 0 0 0 2 2h4"/></svg>Notes</div>
+
+    <div style="position: absolute; left: 352px; top: 30px; width: 190px; padding: 14px 16px; box-sizing: border-box; background: #F2D98A; color: #1A1A1A; border-radius: 12px; font-size: 14px; line-height: 1.4; font-weight: 600; outline: 2px solid #F8F8FF; outline-offset: 3px; transform: rotate(-3deg)">
+      Flick threshold feels short on the Z13. Measure before touching 1400.
+    </div>
+    <div style="position: absolute; left: 480px; top: 118px; width: 56px; height: 56px; border-radius: 28px; background: rgba(248,248,255,0.22); border: 2px solid rgba(248,248,255,0.7); box-sizing: border-box"></div>
+  </div>
+
+  <div style="position: absolute; left: 0; right: 0; top: 560px; display: flex; justify-content: center">
+    <div style="display: flex; align-items: center; gap: 10px; height: 48px; padding: 0 8px 0 18px; border-radius: 24px; background: #141414; border: 1px solid #333; font-size: 14px">
+      <span style="color: #AFAFAF">Loose notes</span>
+      <span style="width: 26px; height: 26px; border-radius: 6px; background: #D9D4CC"></span>
+      <span style="width: 26px; height: 26px; border-radius: 6px; background: #F2D98A"></span>
+      <span style="width: 26px; height: 26px; border-radius: 6px; background: #9ED6CB"></span>
+      <span style="width: 26px; height: 26px; border-radius: 6px; background: #E8B4A8"></span>
+      <button style="height: 36px; padding: 0 14px; border-radius: 18px; background: #242424; border: 0; color: #F8F8FF; font-size: 13px; font-weight: 600">Open board</button>
+    </div>
+  </div>
+
+  <div class="band">
+    <div class="island">
+      <span style="width: 30px; height: 30px; border-radius: 15px; background: #242424; display: flex; align-items: center; justify-content: center"><svg class="ico xs" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></span>
+      <span>Low Tide · Shoreline</span>
+    </div>
+    <div class="dock">
+      <button class="dk" aria-label="Search" style="background: transparent"><span style="width: 14px; height: 14px; border-radius: 7px; background: #F8F8FF"></span></button>
+      <button class="dk" aria-label="Files"><svg class="ico" viewBox="0 0 24 24"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg></button>
+      <button class="dk" aria-label="Firefox"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg></button>
+      <button class="dk" aria-label="Kate"><svg class="ico" viewBox="0 0 24 24"><path d="m16 18 6-6-6-6"/><path d="m8 6-6 6 6 6"/></svg></button>
+      <button class="dk" aria-label="Terminal"><svg class="ico" viewBox="0 0 24 24"><path d="m4 17 6-6-6-6"/><path d="M12 19h8"/></svg></button>
+      <button class="dk" aria-label="Notes" style="background: #F2D98A; color: #1A1A1A"><svg class="ico" viewBox="0 0 24 24"><path d="M16 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8Z"/><path d="M15 3v4a2 2 0 0 0 2 2h4"/></svg></button>
+    </div>
+    <div class="status">
+      <svg class="ico s" viewBox="0 0 24 24"><path d="M12 20h.01"/><path d="M2 8.82a15 15 0 0 1 20 0"/><path d="M5 12.859a10 10 0 0 1 14 0"/><path d="M8.5 16.429a5 5 0 0 1 7 0"/></svg>
+      <svg class="ico s" viewBox="0 0 24 24"><rect width="16" height="10" x="2" y="7" rx="2"/><path d="M22 11v2"/><path d="M6 11v2"/><path d="M10 11v2"/></svg>
+      <span style="font-weight: 600">2:47 PM</span>
+      <button class="dk" aria-label="Notifications" style="width: 30px; height: 30px; border-radius: 15px"><svg class="ico xs" viewBox="0 0 24 24"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg></button>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>
