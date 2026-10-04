@@ -321,6 +321,7 @@ Item {
                                 model: board.notes
                                 delegate: NoteCard {
                                     showPlace: board.searching || !board.notes.place.includes(":")
+                                    searchText: board.searching ? search.text : ""
                                     onTapped: tucked ? board.bringBack(noteId, placeLabel) : board.shell.openNote(noteId)
                                     onTuckRequested: board.tuckAway(noteId)
                                 }

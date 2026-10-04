@@ -6,10 +6,11 @@ Write a thought down in one tap. Keep it beside the work it belongs to, put it
 on the planner when it has a time, or tuck it away without losing it. Nothing
 asks for a title, a folder or a save before an idea is kept.
 
-**Status:** Milestone 0, capture and keep, and Milestone 1, the planner, are
-built and waiting on their proof: the quick-note card, the board, tucking away
-and removing; reminders at a time or the next time a document opens, the
-planner and checklists. The pen comes next. The concept is in [docs/CONCEPT.md](docs/CONCEPT.md) and
+**Status:** Milestone 0, capture and keep, is built and waiting on its proof;
+Milestone 1, the planner, has passed. Milestone 2, the pen, is built and
+waiting on its proof: handwriting with three inks and an eraser, read on the
+computer so a handwritten note is found by a word in it. Notes on cards come
+next. The concept is in [docs/CONCEPT.md](docs/CONCEPT.md) and
 the plan in [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## What it does
@@ -33,14 +34,16 @@ the plan in [docs/ROADMAP.md](docs/ROADMAP.md).
 Gooseberry needs KDE Plasma 6 with Qt 6.9 and KDE Frameworks 6.17 or newer, and
 their development files to build: CMake, Extra CMake Modules, Kirigami,
 KCoreAddons, KDBusAddons, KI18n, KWindowSystem, Layer Shell Qt and Plasma's
-task manager library.
+task manager library. Reading handwriting also needs ONNX Runtime; without it
+handwriting is kept and shown, but not found by what it says.
 
 ```sh
 ./install.sh
 ```
 
-It builds Gooseberry, runs every check, and installs it for every account on
-the computer, asking once for a password. Gooseberry is then in the launcher,
+It fetches the handwriting reader once (about 60 MB; reading itself never uses
+the network), builds Gooseberry, runs every check, and installs it for every
+account on the computer, asking once for a password. Gooseberry is then in the launcher,
 and starts by itself, out of sight, from the next login. `./uninstall.sh`
 removes it again; notes stay.
 

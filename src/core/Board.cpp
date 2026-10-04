@@ -5,6 +5,7 @@
 #include "NoteStore.h"
 
 #include <QDateTime>
+#include <QUrl>
 
 #include <algorithm>
 
@@ -276,8 +277,11 @@ QStringList PlaceNotes::wanted() const
         if (needle.isEmpty() && m_place == Today && note.remind.isValid()) {
             continue;
         }
+        // Handwriting is found by what was read from it, and by the reader's
+        // runner-up words.
         if (!needle.isEmpty() && !note.text.contains(needle, Qt::CaseInsensitive)
-            && !note.placeLabel().contains(needle, Qt::CaseInsensitive)) {
+            && !note.placeLabel().contains(needle, Qt::CaseInsensitive) && !note.read.contains(needle, Qt::CaseInsensitive)
+            && !note.readAlso.contains(needle, Qt::CaseInsensitive)) {
             continue;
         }
         notes.append(note);
@@ -369,6 +373,16 @@ QVariant PlaceNotes::data(const QModelIndex &index, int role) const
         return note->changed;
     case ReadOnlyRole:
         return note->newerFormat() || m_store->readOnly();
+    case InkRole:
+        // The drawing beside the note, with its change time, so the board
+        // draws it again when it changes.
+        return note->ink.isEmpty() ? QString()
+                                   : QUrl::fromLocalFile(m_store->inkPathFor(note->id)).toString() + QStringLiteral("#")
+                + QString::number(note->changed.toMSecsSinceEpoch());
+    case ReadRole:
+        return note->read;
+    case ReadAlsoRole:
+        return note->readAlso;
     case ChecklistRole:
         return Checklist::contains(note->text);
     case ChecklistHeadingRole:
@@ -400,6 +414,9 @@ QHash<int, QByteArray> PlaceNotes::roleNames() const
         {TuckedRole, "tucked"},
         {ChangedRole, "changed"},
         {ReadOnlyRole, "readOnly"},
+        {InkRole, "drawing"},
+        {ReadRole, "reading"},
+        {ReadAlsoRole, "readingAlso"},
         {ChecklistRole, "checklist"},
         {ChecklistHeadingRole, "checklistHeading"},
         {ChecklistItemsRole, "checklistItems"},

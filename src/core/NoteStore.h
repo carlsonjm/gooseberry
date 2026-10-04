@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #pragma once
 
+#include "Ink.h"
 #include "Note.h"
 
 #include <QFileSystemWatcher>
@@ -51,6 +52,11 @@ public:
     };
     // Writes a changed note.
     bool save(Note note, Touch touch = Touch::Changed);
+    // The note's handwriting, empty for a note with none.
+    Ink ink(const QString &id) const;
+    // Writes the handwriting beside the note, then the note with what was
+    // read from it. With every stroke gone, the drawing goes to the trash.
+    bool saveInk(Note note, const Ink &ink, Touch touch = Touch::Changed);
     // Moves the note, and its ink when it has any, to the desktop's trash.
     // Returns the note's place in the trash, so it can be put back.
     std::optional<QString> trash(const QString &id);
@@ -85,6 +91,8 @@ private:
     bool m_readOnly = false;
     QHash<QString, Note> m_notes;
     QHash<QString, Seen> m_seen;
+    // Where a removed note's ink went in the trash, to bring it back with it.
+    QHash<QString, QString> m_inkInTrash;
     QFileSystemWatcher m_watcher;
     QTimer m_rescan;
 };

@@ -47,7 +47,7 @@ QuickNoteService::QuickNoteService(Shell *shell, NoteStore *store, QObject *pare
         }
     });
     for (auto signal : {&Capture::textChanged, &Capture::colourChanged, &Capture::belongingChanged,
-                        &Capture::noteChanged, &Capture::reminderChanged}) {
+                        &Capture::noteChanged, &Capture::reminderChanged, &Capture::inkChanged}) {
         connect(m_capture, signal, this, &QuickNoteService::changedElsewhere);
     }
     connect(m_shell, &Shell::boardShown, this, [this] {
@@ -270,6 +270,8 @@ QVariantMap QuickNoteService::state(bool open) const
         {QStringLiteral("remindChoices"), remindChoices},
         {QStringLiteral("checklist"), m_capture->checklist()},
         {QStringLiteral("lines"), m_capture->lines()},
+        {QStringLiteral("ink"), m_capture->kept() && m_capture->hasInk() ? m_store->inkPathFor(m_capture->noteId()) : QString()},
+        {QStringLiteral("read"), m_capture->readText()},
     };
 }
 

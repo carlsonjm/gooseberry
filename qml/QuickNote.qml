@@ -29,9 +29,58 @@ Item {
     property bool choosingReminder: false
     property bool pickingTime: false
     property var reminderChoices: []
+    // Pen: adding ink under the words, rather than typing them. The ink the
+    // pen writes in, or the eraser instead.
+    property bool writing: false
+    property string ink: "black"
+    property bool erasing: false
+    // Typing the right words for what the handwriting was read as.
+    property bool fixing: false
+
+    // A note of ink alone opens in Pen; any other in Type.
+    function startMode() {
+        fixing = false;
+        erasing = false;
+        writing = capture.hasInk && capture.text.length === 0;
+    }
+
+    function penMode() {
+        if (capture.readOnly) {
+            return;
+        }
+        writing = true;
+        Qt.inputMethod.hide();
+    }
+
+    function typeMode() {
+        writing = false;
+        erasing = false;
+        focusText();
+    }
+
+    function startFixing() {
+        fixField.text = capture.readText;
+        fixing = true;
+        fixField.forceActiveFocus();
+        fixField.selectAll();
+        Qt.inputMethod.show();
+    }
+
+    function finishFixing() {
+        if (!fixing) {
+            return;
+        }
+        fixing = false;
+        if (fixField.text.trim().length > 0 && fixField.text.trim() !== capture.readText) {
+            capture.fixReading(fixField.text);
+        }
+    }
 
     function focusText() {
         choosingProject = false;
+        if (writing) {
+            return;
+        }
         if (capture.checklist) {
             checklistPad.focusLast();
         } else {
@@ -215,45 +264,246 @@ Item {
                 color: quick.capture.hexFor(quick.capture.colour)
                 clip: true
 
-                ChecklistPad {
-                    id: checklistPad
-                    objectName: "checklistPad"
+                ColumnLayout {
                     anchors.fill: parent
-                    visible: quick.capture.checklist
-                    capture: quick.capture
-                }
+                    spacing: 0
 
-                QQC2.ScrollView {
-                    anchors.fill: parent
-                    visible: !quick.capture.checklist
-                    QQC2.TextArea {
-                        id: area
-                        text: quick.capture.text
-                        onTextChanged: {
-                            if (text !== quick.capture.text) {
-                                quick.capture.text = text;
+                    // The typed words, above the ink.
+                    Item {
+                        id: typed
+                        objectName: "typed"
+                        readonly property real wanted: quick.capture.checklist ? checklistPad.contentHeight + 24 : area.implicitHeight
+                        Layout.fillWidth: true
+                        Layout.fillHeight: !quick.writing
+                        Layout.preferredHeight: quick.writing ? Math.min(wanted, page.height * 0.3) : -1
+                        visible: !quick.writing || quick.capture.text.length > 0
+
+                        ChecklistPad {
+                            id: checklistPad
+                            objectName: "checklistPad"
+                            anchors.fill: parent
+                            visible: quick.capture.checklist
+                            enabled: !quick.writing
+                            capture: quick.capture
+                        }
+
+                        QQC2.ScrollView {
+                            anchors.fill: parent
+                            visible: !quick.capture.checklist
+                            QQC2.TextArea {
+                                id: area
+                                text: quick.capture.text
+                                onTextChanged: {
+                                    if (text !== quick.capture.text) {
+                                        quick.capture.text = text;
+                                    }
+                                }
+                                readOnly: quick.capture.readOnly || quick.writing
+                                placeholderText: quick.capture.hasInk ? "" : i18n("Write it down…")
+                                placeholderTextColor: Qt.rgba(0.1, 0.1, 0.1, 0.45)
+                                color: "#1A1A1A"
+                                selectionColor: Qt.rgba(0, 0, 0, 0.2)
+                                selectedTextColor: "#1A1A1A"
+                                wrapMode: TextEdit.Wrap
+                                textFormat: TextEdit.PlainText
+                                font.pixelSize: 22
+                                font.weight: Font.Medium
+                                leftPadding: 20
+                                rightPadding: 20
+                                topPadding: 18
+                                bottomPadding: 18
+                                background: null
+                                Accessible.name: i18n("Note")
                             }
                         }
-                        readOnly: quick.capture.readOnly
-                        placeholderText: i18n("Write it down…")
-                        placeholderTextColor: Qt.rgba(0.1, 0.1, 0.1, 0.45)
-                        color: "#1A1A1A"
-                        selectionColor: Qt.rgba(0, 0, 0, 0.2)
-                        selectedTextColor: "#1A1A1A"
-                        wrapMode: TextEdit.Wrap
-                        textFormat: TextEdit.PlainText
-                        font.pixelSize: 22
-                        font.weight: Font.Medium
-                        leftPadding: 20
-                        rightPadding: 20
-                        topPadding: 18
-                        bottomPadding: 18
-                        background: null
-                        Accessible.name: i18n("Note")
+
+                        // In Pen, a finger on the words goes back to typing.
+                        TapHandler {
+                            enabled: quick.writing
+                            acceptedDevices: PointerDevice.TouchScreen | PointerDevice.Mouse
+                            onTapped: quick.typeMode()
+                        }
+                    }
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        implicitHeight: 1
+                        color: Qt.rgba(0, 0, 0, 0.12)
+                        visible: typed.visible && inkPage.visible
+                    }
+
+                    // The ink, under the words.
+                    InkPage {
+                        id: inkPage
+                        objectName: "inkPage"
+                        Layout.fillWidth: true
+                        Layout.fillHeight: quick.writing
+                        Layout.preferredHeight: quick.writing ? -1 : Math.min(canvas.pageHeight, page.height * 0.45)
+                        visible: quick.writing || quick.capture.hasInk
+                        capture: quick.capture
+                        writing: quick.writing
+                        ink: quick.ink
+                        erasing: quick.erasing
+                        bottomRoom: inkFoot.visible ? inkFoot.height + 8 : 0
+                        onPenArrived: quick.penMode()
+                        onErased: count => {
+                            if (count > 0) {
+                                notice.show(i18np("Erased", "Erased %1 strokes", count), i18n("Undo"), () => quick.capture.undoErase());
+                            }
+                        }
                     }
                 }
-            }
 
+                // Under the ink: what was read from it, to fix, and in Pen the
+                // palette.
+                Item {
+                    id: inkFoot
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.bottom: parent.bottom
+                    anchors.margins: 6
+                    height: 44
+                    visible: inkPage.visible && (quick.writing || quick.capture.readText.length > 0)
+
+                    QQC2.AbstractButton {
+                        id: reading
+                        objectName: "readAs"
+                        anchors.left: parent.left
+                        anchors.right: palette.visible ? palette.left : parent.right
+                        anchors.rightMargin: 8
+                        height: 44
+                        visible: quick.capture.readText.length > 0 && !quick.fixing
+                        enabled: !quick.capture.readOnly
+                        focusPolicy: Qt.NoFocus
+                        Accessible.name: i18n("Read as “%1”. Fix", quick.capture.readText)
+                        onClicked: quick.startFixing()
+                        contentItem: QQC2.Label {
+                            leftPadding: 14
+                            verticalAlignment: Text.AlignVCenter
+                            text: i18n("Read as “%1”", quick.capture.readText)
+                            elide: Text.ElideRight
+                            color: Qt.rgba(0.1, 0.1, 0.1, 0.6)
+                            font.pixelSize: 13
+                            font.weight: Font.DemiBold
+                        }
+                    }
+
+                    QQC2.TextField {
+                        id: fixField
+                        objectName: "fixReading"
+                        anchors.left: parent.left
+                        anchors.right: palette.visible ? palette.left : parent.right
+                        anchors.rightMargin: 8
+                        height: 44
+                        visible: quick.fixing
+                        leftPadding: 14
+                        rightPadding: 14
+                        color: "#1A1A1A"
+                        placeholderText: i18n("What it says")
+                        Accessible.name: i18n("What the handwriting says")
+                        onAccepted: quick.finishFixing()
+                        onActiveFocusChanged: {
+                            if (!activeFocus && quick.fixing) {
+                                quick.finishFixing();
+                            }
+                        }
+                        background: Rectangle {
+                            radius: 22
+                            color: Qt.rgba(1, 1, 1, 0.55)
+                            border.width: 1
+                            border.color: Qt.rgba(0, 0, 0, 0.25)
+                        }
+                    }
+
+                    Row {
+                        id: palette
+                        objectName: "palette"
+                        anchors.right: parent.right
+                        anchors.verticalCenter: parent.verticalCenter
+                        visible: quick.writing
+                        spacing: 0
+
+                        Repeater {
+                            model: quick.capture.inks
+                            delegate: QQC2.AbstractButton {
+                                id: inkButton
+                                required property string modelData
+                                readonly property bool chosen: !quick.erasing && quick.ink === modelData
+                                objectName: "ink-" + modelData
+                                width: 44
+                                height: 44
+                                focusPolicy: Qt.NoFocus
+                                Accessible.name: modelData
+                                Accessible.role: Accessible.RadioButton
+                                Accessible.checked: chosen
+                                onClicked: {
+                                    quick.ink = modelData;
+                                    quick.erasing = false;
+                                }
+                                contentItem: Item {
+                                    Rectangle {
+                                        anchors.centerIn: parent
+                                        width: 30
+                                        height: 30
+                                        radius: 15
+                                        color: quick.capture.inkHexFor(inkButton.modelData)
+                                        border.width: inkButton.chosen ? 3 : 0
+                                        border.color: "#F8F8FF"
+                                    }
+                                    Rectangle {
+                                        anchors.centerIn: parent
+                                        visible: inkButton.chosen
+                                        width: 34
+                                        height: 34
+                                        radius: 17
+                                        color: "transparent"
+                                        border.width: 1
+                                        border.color: "#1A1A1A"
+                                    }
+                                }
+                            }
+                        }
+
+                        QQC2.AbstractButton {
+                            id: eraserButton
+                            objectName: "eraser"
+                            width: 44
+                            height: 44
+                            focusPolicy: Qt.NoFocus
+                            Accessible.name: i18n("Eraser")
+                            Accessible.role: Accessible.CheckBox
+                            Accessible.checked: quick.erasing
+                            onClicked: quick.erasing = !quick.erasing
+                            contentItem: Item {
+                                Rectangle {
+                                    anchors.centerIn: parent
+                                    width: 34
+                                    height: 34
+                                    radius: 17
+                                    color: quick.erasing ? "#1A1A1A" : Qt.rgba(0, 0, 0, 0.08)
+                                    Kirigami.Icon {
+                                        anchors.centerIn: parent
+                                        width: 18
+                                        height: 18
+                                        source: Qt.resolvedUrl("icons/eraser.svg")
+                                        color: quick.erasing ? "#F8F8FF" : "#1A1A1A"
+                                        isMask: true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Notice {
+                    id: notice
+                    objectName: "inkNotice"
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.top: parent.top
+                    anchors.topMargin: 8
+                    z: 2
+                }
+            }
 
             // Checklist and Remind, under the note.
             ColumnLayout {
@@ -265,6 +515,20 @@ Item {
                     spacing: 8
                     enabled: !quick.capture.readOnly
 
+                    Pill {
+                        objectName: "type"
+                        text: i18n("Type")
+                        iconName: "insert-text"
+                        checked: !quick.writing
+                        onClicked: quick.typeMode()
+                    }
+                    Pill {
+                        objectName: "pen"
+                        text: i18n("Pen")
+                        iconName: "draw-freehand"
+                        checked: quick.writing
+                        onClicked: quick.penMode()
+                    }
                     Pill {
                         objectName: "checklist"
                         text: i18n("Checklist")

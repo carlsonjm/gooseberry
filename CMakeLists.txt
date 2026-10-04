@@ -16,7 +16,7 @@ include(KDEInstallDirs)
 include(KDECMakeSettings)
 include(KDECompilerSettings NO_POLICY_SCOPE)
 
-find_package(Qt6 6.9 REQUIRED COMPONENTS Core DBus Gui Qml Quick QuickControls2 Widgets Test)
+find_package(Qt6 6.9 REQUIRED COMPONENTS Core DBus Gui Qml Quick QuickControls2 Widgets Test Xml)
 find_package(KF6 6.17 REQUIRED COMPONENTS CoreAddons DBusAddons I18n Service WindowSystem)
 find_package(KF6Kirigami 6.17 REQUIRED)
 find_package(LayerShellQt 6.4 REQUIRED)
@@ -31,7 +31,9 @@ add_library(gooseberry-core STATIC
     src/core/NoteStore.cpp src/core/NoteStore.h
     src/core/Capture.cpp src/core/Capture.h
     src/core/Checklist.cpp src/core/Checklist.h
+    src/core/Ink.cpp src/core/Ink.h
     src/core/Planner.cpp src/core/Planner.h
+    src/core/Reading.cpp src/core/Reading.h
     src/core/Reminders.cpp src/core/Reminders.h
     src/core/Board.cpp src/core/Board.h
     src/core/Trash.cpp src/core/Trash.h
@@ -45,6 +47,8 @@ qt_add_qml_module(gooseberry-screens
     URI io.github.carlsonjm.gooseberry
     VERSION 1.0
     OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/qml/io/github/carlsonjm/gooseberry
+    SOURCES
+        src/screens/InkCanvas.cpp src/screens/InkCanvas.h
     QML_FILES
         qml/BoardView.qml
         qml/BoardWindow.qml
@@ -54,14 +58,34 @@ qt_add_qml_module(gooseberry-screens
         qml/Masonry.qml
         qml/NoteCard.qml
         qml/Notice.qml
+        qml/InkPage.qml
         qml/Pill.qml
         qml/PlannerColumn.qml
         qml/QuickNote.qml
         qml/TimePicker.qml
     RESOURCES
+        qml/icons/eraser.svg
         qml/icons/note.svg
         qml/icons/tuck.svg
 )
+
+# The handwriting reader, where ONNX Runtime is installed. Without it ink is
+# kept and shown, and only finding it by what it says waits.
+find_package(onnxruntime CONFIG QUIET)
+if(onnxruntime_FOUND)
+    add_library(gooseberry-reading STATIC src/reading/TrOcrReader.cpp src/reading/TrOcrReader.h)
+    target_include_directories(gooseberry-reading PUBLIC src/reading)
+    target_link_libraries(gooseberry-reading PUBLIC gooseberry-core Qt6::Gui onnxruntime::onnxruntime)
+    # ONNX Runtime reports what goes wrong by exceptions; KDE's settings
+    # leave them off elsewhere.
+    kde_target_enable_exceptions(gooseberry-reading PRIVATE)
+    message(STATUS "Handwriting is read with ONNX Runtime ${onnxruntime_VERSION}")
+else()
+    message(WARNING "ONNX Runtime was not found: handwriting will be kept but not read, so not found by search.")
+endif()
+
+target_include_directories(gooseberry-screens PRIVATE src/screens)
+target_link_libraries(gooseberry-screens PRIVATE gooseberry-core Qt6::Quick)
 
 # What the desktop adds around the core: the window in front, the sheet's
 # place on screen, one running copy.
@@ -75,6 +99,10 @@ add_library(gooseberry-desktop STATIC
     src/desktop/WindowContext.cpp src/desktop/WindowContext.h
 )
 target_include_directories(gooseberry-desktop PUBLIC src/desktop)
+if(TARGET gooseberry-reading)
+    target_link_libraries(gooseberry-desktop PUBLIC gooseberry-reading)
+    target_compile_definitions(gooseberry-desktop PUBLIC GOOSEBERRY_READING=1)
+endif()
 target_link_libraries(gooseberry-desktop PUBLIC
     gooseberry-core Qt6::DBus Qt6::Gui Qt6::Qml Qt6::Quick
     KF6::I18n KF6::Service KF6::WindowSystem LayerShellQt::Interface PW::LibTaskManager)
@@ -100,6 +128,10 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${GOOSEBERRY_APP_ID}.desktop DESTINATI
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${GOOSEBERRY_APP_ID}-autostart.desktop
     DESTINATION ${KDE_INSTALL_AUTOSTARTDIR} RENAME ${GOOSEBERRY_APP_ID}.desktop)
 install(FILES data/${GOOSEBERRY_APP_ID}.svg DESTINATION ${KDE_INSTALL_FULL_ICONDIR}/hicolor/scalable/apps)
+# The handwriting reader install.sh fetched, where it was fetched.
+if(TARGET gooseberry-reading AND EXISTS ${CMAKE_BINARY_DIR}/reader/tokenizer.json)
+    install(DIRECTORY ${CMAKE_BINARY_DIR}/reader/ DESTINATION ${KDE_INSTALL_DATADIR}/gooseberry/reader)
+endif()
 
 if(BUILD_TESTING)
     add_subdirectory(tests)

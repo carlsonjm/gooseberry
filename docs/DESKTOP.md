@@ -13,7 +13,9 @@ a note belongs to by default, and the current workspace's name. From Milestone
 1 it also notices a window opening on a document, for "next time this opens",
 and shows reminders through the desktop's standard notifications
 (`org.freedesktop.Notifications` on the session bus), so whatever shows
-notifications on that desktop shows them. Both come from
+notifications on that desktop shows them. From Milestone 2 it takes the pen as
+Qt reports it on any Plasma desktop, pressure and eraser end included, and
+reads handwriting on the computer with ONNX Runtime, where it is installed. Both come from
 Plasma's own window list, which Plasma opens to Gooseberry because its desktop
 file asks for it. Where the desktop says nothing, a note starts Loose.
 
@@ -163,6 +165,8 @@ dictionary of strings to variants:
 | `remindChoices` | `av` | What Remind offers, in the card's order, each a dictionary: `kind` (`later`, `evening`, `tomorrow`, `opens` or `pick`), `label` (the words to show) and `time` (ISO 8601, for the first three; empty otherwise). `opens` only for a note written on a window; `pick` is for the search's own way to choose a day and time. From Milestone 1 |
 | `checklist` | `b` | The note is a checklist. From Milestone 1 |
 | `lines` | `av` | Every line of the text in order, each a dictionary: `text` (without the box), `item` (`b`, it has a box) and `checked` (`b`). From Milestone 1 |
+| `ink` | `s` | The note's handwriting, as the path of its drawing (`FORMAT.md` § Ink), to show; empty for none. From Milestone 2 |
+| `read` | `s` | What was read from the handwriting, or the person's own words for it; empty for none. From Milestone 2 |
 
 | Method | What it does |
 | --- | --- |
@@ -197,6 +201,10 @@ words typed in an item go with `SetText` as any typing does, the text keeping
 its `- [ ] ` and `- [x] ` markers. The reminder itself is Gooseberry's to show,
 wherever the note was written. `Changed` also tells a reminder or a tick made
 elsewhere.
+
+**Added in Milestone 2, within version 1.** The keys `ink` and `read`, so a
+search can show a note's handwriting and what it says. Writing by pen is
+Gooseberry's own card's; a search shows the ink and keeps typing above it.
 
 For All notes, Search calls `OpenBoard` with a token of its own and waits for
 `BoardShown` with that token: from then the board's window, whose application

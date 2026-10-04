@@ -28,7 +28,8 @@ bool sameNote(const Note &a, const Note &b)
     return a.text == b.text && a.colour == b.colour && a.belongs == b.belongs && a.window == b.window
         && a.app == b.app && a.project == b.project && a.workspace == b.workspace && a.tucked == b.tucked
         && a.format == b.format && a.extra == b.extra && a.created == b.created && a.changed == b.changed
-        && a.remind == b.remind && a.remindOnOpen == b.remindOnOpen && a.reminded == b.reminded && a.done == b.done;
+        && a.remind == b.remind && a.remindOnOpen == b.remindOnOpen && a.reminded == b.reminded && a.done == b.done
+        && a.ink == b.ink && a.read == b.read && a.readAlso == b.readAlso;
 }
 
 // Times are kept to the second, as the header writes them, so a note in
@@ -240,6 +241,51 @@ bool NoteStore::save(Note note, Touch touch)
     return true;
 }
 
+Ink NoteStore::ink(const QString &id) const
+{
+    QFile file(inkPathFor(id));
+    if (!file.open(QIODevice::ReadOnly)) {
+        return {};
+    }
+    return Ink::fromSvg(file.readAll());
+}
+
+bool NoteStore::saveInk(Note note, const Ink &ink, Touch touch)
+{
+    if (!m_notes.contains(note.id)) {
+        m_lastError = QStringLiteral("That note is no longer in the folder.");
+        return false;
+    }
+    if (m_readOnly || note.newerFormat()) {
+        m_lastError = QStringLiteral("This note was kept by a newer Gooseberry, so it is not changed here.");
+        return false;
+    }
+    const QString path = inkPathFor(note.id);
+    if (ink.isEmpty()) {
+        // Every stroke erased: the drawing goes to the trash, never deleted.
+        if (QFile::exists(path) && Trash::move(path).isEmpty()) {
+            m_lastError = QStringLiteral("The empty drawing could not be moved to the trash.");
+            return false;
+        }
+        note.ink.clear();
+        note.read.clear();
+        note.readAlso.clear();
+        return save(note, touch);
+    }
+    // The drawing first, whole or not at all; then the note that names it.
+    QSaveFile file(path);
+    file.setDirectWriteFallback(false);
+    const QByteArray bytes = ink.toSvg();
+    if (!file.open(QIODevice::WriteOnly) || file.write(bytes) != bytes.size() || !file.commit()) {
+        m_lastError = file.errorString();
+        return false;
+    }
+    note.ink = QFileInfo(path).fileName();
+    note.read = ink.readText();
+    note.readAlso = ink.readAlso();
+    return save(note, touch);
+}
+
 std::optional<QString> NoteStore::trash(const QString &id)
 {
     if (m_readOnly) {
@@ -255,10 +301,14 @@ std::optional<QString> NoteStore::trash(const QString &id)
             return std::nullopt;
         }
     }
-    // Ink goes with its note, so the trash holds the whole of it.
+    // Ink goes with its note, so the trash holds the whole of it, and comes
+    // back with it.
     const QString ink = inkPathFor(id);
     if (QFile::exists(ink)) {
-        Trash::move(ink);
+        const QString inkInTrash = Trash::move(ink);
+        if (!inkInTrash.isEmpty()) {
+            m_inkInTrash.insert(id, inkInTrash);
+        }
     }
     m_watcher.removePath(path);
     m_seen.remove(id);
@@ -270,6 +320,11 @@ std::optional<QString> NoteStore::trash(const QString &id)
 
 bool NoteStore::restore(const QString &id, const QString &pathInTrash)
 {
+    // The ink first, so the note never comes back without it.
+    const QString inkInTrash = m_inkInTrash.take(id);
+    if (!inkInTrash.isEmpty()) {
+        Trash::restore(inkInTrash, inkPathFor(id));
+    }
     if (!Trash::restore(pathInTrash, pathFor(id))) {
         m_lastError = QStringLiteral("The note could not be brought back from the trash.");
         return false;

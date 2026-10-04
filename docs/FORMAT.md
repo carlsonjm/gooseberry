@@ -6,7 +6,7 @@ same folder, the file index, Search and any other program depend on it, so it
 is versioned, and a change that breaks it raises the version.
 
 **Folder format:** 1. **Note format:** 1. Both from Milestone 0; the note
-format gained keys a reader can ignore in Milestone 1.
+format gained keys a reader can ignore in Milestones 1 and 2.
 
 ## Where the folder is
 
@@ -37,7 +37,7 @@ folder. It is for tests and trials.
 | --- | --- |
 | `.gooseberry` | The folder format, as the line `format: 1` |
 | `<id>.md` | One note: the header, then the note's text |
-| `<id>.svg` | The note's ink, when it has any, as a drawing; from Milestone 2 |
+| `<id>.svg` | The note's ink, when it has any, as a drawing (§ Ink); from Milestone 2 |
 
 - **The id** is the moment the note was started, in local time, and four
   letters to tell apart notes started in the same second:
@@ -88,6 +88,9 @@ Times are ISO 8601 with their offset from UTC, to the second.
 | `remind` | no | The reminder: a time, which also puts the note on the planner on that day, or `opens` for the next time a window opens on the note's `window` in its `app` |
 | `reminded` | no | When the reminder was shown |
 | `done` | no | When the note was marked done on the planner |
+| `ink` | no | The note's drawing beside it, by its file name, `<id>.svg` |
+| `read` | no | What was read from the ink, as one line of words, or the person's own words for it |
+| `read-also` | no | The reader's runner-up words, so a word first read wrong is still found |
 
 - **Belongs** says which place on the board the note sits in. `window`,
   `project` and `workspace` name theirs in the key of the same name; a note
@@ -108,6 +111,44 @@ Times are ISO 8601 with their offset from UTC, to the second.
 - **A checklist** is Markdown task lines in the text, `- [ ] oats` for an item
   and `- [x] oats` for one ticked, as other Markdown programs write them. Any
   other line is plain text; the first, above the items, is the list's heading.
+
+## Ink
+
+A note's handwriting is an SVG drawing beside it, so any image viewer and file
+manager shows it as written. The page is 716 units wide, ruled every 42; the
+drawing is as tall as the writing on it.
+
+```xml
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:gooseberry="https://github.com/carlsonjm/gooseberry/ink"
+     width="716" height="92" viewBox="0 0 716 92" gooseberry:format="1">
+ <title>Handwriting</title>
+ <desc>measure flick velocity</desc>
+ <g gooseberry:row="0" gooseberry:read="measure flack velocity"
+    gooseberry:also="flick" gooseberry:digest="3f2a9c0d1e77">
+  <path fill="#1A1A1A" d="M20 18.2 L…Z" gooseberry:ink="black"
+        gooseberry:points="20,20,0.42 24,21.5,0.5 …"/>
+ </g>
+</svg>
+```
+
+- **Each stroke** is a `path` filled in its ink, its outline as wide as the pen
+  pressed. `gooseberry:points` keeps the stroke itself, each point as `x,y,pressure`
+  with pressure from 0 to 1, so Gooseberry redraws and erases it exactly.
+  `gooseberry:ink` is `black`, `blue` or `red`.
+- **Each ruled line** with ink is a `g`, its strokes those whose middle sits on
+  it. What was read from it is on the `g`: `gooseberry:read`, the runner-up
+  words in `gooseberry:also`, and `gooseberry:digest`, a fingerprint of its
+  strokes when read; a line whose strokes no longer match is read again.
+  `gooseberry:fixed="true"` marks the person's own words, which no reading
+  replaces. `desc` holds the whole reading.
+- **The note's header** names the drawing in `ink` and repeats the reading in
+  `read` and `read-also`, so what finds Markdown finds handwriting.
+- **Kept as typing is:** a new note from its first stroke; after that at each
+  pause of the pen. The drawing is written first, whole or not at all, then the
+  note that names it. Erased bare, the drawing goes to the trash.
+- **Reading is not a change the person made:** recording a reading leaves
+  `changed` as it was.
 
 ## How notes are kept
 
@@ -142,3 +183,4 @@ Times are ISO 8601 with their offset from UTC, to the second.
 | --- | --- | --- |
 | 1 | Milestone 0 | The first format |
 | 1 | Milestone 1 | `remind`, `reminded` and `done` added, and checklists written down; a reader of the first format ignores them, so the version stays |
+| 1 | Milestone 2 | `ink`, `read` and `read-also` added, and the ink drawing written down; a reader of the first format ignores them, so the version stays |

@@ -2,8 +2,8 @@
 
 Every tap and key Gooseberry answers, and what you see happen. Milestone 0
 builds capture, the board, tucking away and removing; Milestone 1 builds
-reminders, the planner and checklists; Pen arrives with its milestone and is
-marked so below. A card's notes join its Stack by
+reminders, the planner and checklists; Milestone 2 builds writing by pen and
+reading it. A card's notes join its Stack by
 Kadunce's own hold and let go; stepping back to the card puts them away.
 
 | Task | Touch | Keyboard |
@@ -61,12 +61,32 @@ of its text and closed goes to the desktop's trash.
 
 ## Write with a pen
 
-Not yet built: Milestone 2.
+Type and Pen sit with Checklist and Remind under the note. A note holds both:
+the typed words at the top, the ruled ink page under them.
 
 | Input | What happens |
 | --- | --- |
-| Tap Pen | The page takes ink. A pen touching the page does the same. |
-| Tap Type | The page takes typing again. |
+| Tap Pen | The ruled page under the words takes ink, and the palette comes up at its corner. A pen touching the page out of Pen does the same. |
+| Write with the pen | Ink, wider the harder the pen presses. The page grows a line as the writing reaches its last. |
+| Write with a finger | The same, while no pen is near the screen. With the pen near, a hand resting on the page writes nothing, and a finger scrolls the page. |
+| Tap an ink in the palette | The pen writes in it: black, blue or red. |
+| Tap Eraser in the palette, then touch the ink | Each whole stroke touched goes. Tap an ink to write again. |
+| Turn the pen over and touch the ink with its eraser end | The same, in Pen or out of it, on a pen that has one. |
+| Tap Undo, in the message after erasing | The strokes come back. |
+| Tap Type, or tap the words | The words take typing again; the ink stays under them. |
+
+A note of ink alone opens in Pen. Ink is kept as typing is: a new note from its
+first stroke, then at each pause of the pen.
+
+## Read handwriting
+
+When the card is put away, Gooseberry reads the ink written on it, on the
+computer and out of sight. Under the ink on the card it then says what it read.
+
+| Input | What happens |
+| --- | --- |
+| Tap "Read as …" under the ink | The reading can be typed over, to say what the ink really says. |
+| Type the right words, then press Enter | They are kept as the reading of the lines written so far, and nothing read later replaces them. Lines written after are read as usual. |
 
 ## Set a reminder
 
@@ -162,3 +182,4 @@ today again.
 | Input | What happens |
 | --- | --- |
 | Type in Search notes on the board | The board shows every note with those words, tucked away ones too, whatever place was chosen. Clearing the search goes back to the place. |
+| The same, for handwriting | A note found by what its ink was read as shows the ink, with "Read as …" under it and the word found marked. A word the reader thought likely but did not choose finds the note too. |

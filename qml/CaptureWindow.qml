@@ -59,6 +59,7 @@ Window {
         shown = true;
         note.choosingReminder = false;
         note.pickingTime = false;
+        note.startMode();
         requestActivate();
         Qt.callLater(note.focusText);
     }

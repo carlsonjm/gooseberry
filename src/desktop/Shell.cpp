@@ -6,10 +6,14 @@
 #include "NoteStore.h"
 #include "Notifier.h"
 #include "Planner.h"
+#include "Reading.h"
 #include "ReminderWords.h"
 #include "Reminders.h"
 #include "SpreadGuest.h"
 #include "WindowContext.h"
+#ifdef GOOSEBERRY_READING
+#include "TrOcrReader.h"
+#endif
 #include "Log.h"
 
 #include <KService>
@@ -48,7 +52,16 @@ Shell::Shell(NoteStore *store, QQmlEngine *engine, QObject *parent)
     , m_planner(new Planner(store, this))
     , m_reminders(new Reminders(store, this))
     , m_notifier(new Notifier(store, m_reminders, this))
+    , m_reading(new Reading(store, reader(), this))
 {
+    // Handwriting is read when the card is put away, out of sight, so writing
+    // never waits; and once, a little after starting, whatever was not read.
+    connect(m_capture, &Capture::finished, this, [this] {
+        if (m_capture->kept() && m_capture->hasInk()) {
+            m_reading->request(m_capture->noteId());
+        }
+    });
+    QTimer::singleShot(5000, m_reading, &Reading::requestUnread);
     // A reminder tapped opens its note on the card.
     connect(m_notifier, &Notifier::openRequested, this, &Shell::openNote);
     connect(m_context, &WindowContext::documentOpened, m_reminders, &Reminders::documentOpened);
@@ -101,6 +114,19 @@ Shell::Shell(NoteStore *store, QQmlEngine *engine, QObject *parent)
     });
     // A session ending asks for unsaved work first.
     connect(qApp, &QGuiApplication::commitDataRequest, m_capture, &Capture::flush);
+}
+
+std::unique_ptr<InkReader> Shell::reader()
+{
+#ifdef GOOSEBERRY_READING
+    const QString folder = TrOcrReader::defaultFolder();
+    if (TrOcrReader::installedAt(folder)) {
+        qCDebug(DESKTOP) << "handwriting is read with the model in" << folder;
+        return std::make_unique<TrOcrReader>(folder);
+    }
+    qCDebug(DESKTOP) << "no handwriting reader installed: ink is kept, not read";
+#endif
+    return nullptr;
 }
 
 Shell::~Shell()

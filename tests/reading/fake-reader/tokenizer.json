@@ -1,0 +1,61 @@
+{
+ "added_tokens": [
+  {
+   "id": 0,
+   "content": "<s>",
+   "special": true
+  },
+  {
+   "id": 1,
+   "content": "<pad>",
+   "special": true
+  },
+  {
+   "id": 2,
+   "content": "</s>",
+   "special": true
+  },
+  {
+   "id": 3,
+   "content": "<unk>",
+   "special": true
+  }
+ ],
+ "model": {
+  "type": "Unigram",
+  "vocab": [
+   [
+    "<s>",
+    0.0
+   ],
+   [
+    "<pad>",
+    0.0
+   ],
+   [
+    "</s>",
+    0.0
+   ],
+   [
+    "<unk>",
+    0.0
+   ],
+   [
+    "▁measure",
+    0.0
+   ],
+   [
+    "▁flick",
+    0.0
+   ],
+   [
+    "▁flack",
+    0.0
+   ],
+   [
+    "▁velocity",
+    0.0
+   ]
+  ]
+ }
+}

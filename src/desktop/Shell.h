@@ -7,6 +7,8 @@
 #include <QPointer>
 #include <QTimer>
 
+#include <memory>
+
 class QQmlEngine;
 class QQuickWindow;
 
@@ -18,6 +20,8 @@ class PlaceNotes;
 class Places;
 class Planner;
 class Reminders;
+class Reading;
+class InkReader;
 class SpreadGuest;
 class WindowContext;
 
@@ -47,6 +51,7 @@ public:
     SpreadGuest *guest() const { return m_guest; }
     Planner *planner() const { return m_planner; }
     Reminders *reminders() const { return m_reminders; }
+    Reading *reading() const { return m_reading; }
     bool handingOff() const { return m_handingOff; }
 
     // Answers a start or a later tap: no arguments or --capture for the
@@ -88,6 +93,8 @@ private Q_SLOTS:
     void sleeping(bool goingToSleep);
 
 private:
+    // The handwriting reader, where one is installed.
+    static std::unique_ptr<InkReader> reader();
     QObject *captureObject() const;
     QObject *placesObject() const;
     QObject *notesObject() const;
@@ -115,6 +122,7 @@ private:
     Planner *m_planner;
     Reminders *m_reminders;
     Notifier *m_notifier;
+    Reading *m_reading;
     bool m_handingOff = false;
     QString m_handOffToken;
     QTimer m_handOffTimeout;

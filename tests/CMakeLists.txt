@@ -21,6 +21,7 @@ gooseberry_test(tst_note core/tst_note.cpp)
 gooseberry_test(tst_store core/tst_store.cpp)
 gooseberry_test(tst_keep core/tst_keep.cpp KF6::CoreAddons)
 gooseberry_test(tst_planner core/tst_planner.cpp)
+gooseberry_test(tst_ink core/tst_ink.cpp Qt6::Xml)
 gooseberry_test(tst_screens screens/tst_screens.cpp
     gooseberry-desktop gooseberry-screensplugin Qt6::Gui Qt6::Quick KF6::I18n KF6::I18nQml)
 set_target_properties(tst_screens PROPERTIES QT_QML_MODULE_NO_IMPORT_SCAN ON)
@@ -65,3 +66,24 @@ set_tests_properties(tst_reminders_bus PROPERTIES
     ENVIRONMENT "GOOSEBERRY_PRIVATE_BUS=1"
     SKIP_RETURN_CODE 77
     TIMEOUT 120)
+
+# Reading handwriting: the real reader on a stand-in model of the real one's
+# shape, and the reading of notes line by line.
+if(TARGET gooseberry-reading)
+    gooseberry_test(tst_reading reading/tst_reading.cpp gooseberry-reading Qt6::Gui)
+    target_compile_definitions(tst_reading PRIVATE FAKE_READER="${CMAKE_CURRENT_SOURCE_DIR}/reading/fake-reader")
+
+    # The real Gooseberry reading what it has not read, a little after it starts.
+    add_executable(tst_reading_bus bus/tst_reading_bus.cpp)
+    target_link_libraries(tst_reading_bus PRIVATE Qt6::DBus Qt6::Test)
+    target_compile_definitions(tst_reading_bus PRIVATE
+        GOOSEBERRY_BINARY="$<TARGET_FILE:gooseberry>"
+        FAKE_READER="${CMAKE_CURRENT_SOURCE_DIR}/reading/fake-reader")
+    add_dependencies(tst_reading_bus gooseberry)
+    add_test(NAME tst_reading_bus COMMAND ${DBUS_RUN_SESSION}
+        --config-file=${CMAKE_CURRENT_SOURCE_DIR}/bus/private-bus.conf -- $<TARGET_FILE:tst_reading_bus>)
+    set_tests_properties(tst_reading_bus PROPERTIES
+        ENVIRONMENT "GOOSEBERRY_PRIVATE_BUS=1;TZ=America/Chicago"
+        SKIP_RETURN_CODE 77
+        TIMEOUT 120)
+endif()

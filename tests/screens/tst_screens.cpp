@@ -3,6 +3,7 @@
 // test's own home, and used by tapping and typing as a person would.
 #include "Board.h"
 #include "Capture.h"
+#include "Ink.h"
 #include "NoteStore.h"
 #include "Planner.h"
 #include "ReminderWords.h"
@@ -13,7 +14,10 @@
 
 #include <QGuiApplication>
 #include <QColor>
+#include <QHash>
 #include <QIcon>
+#include <QPointingDevice>
+#include <QTabletEvent>
 #include <QQmlComponent>
 #include <QRegularExpression>
 #include <QQmlEngine>
@@ -134,6 +138,65 @@ void picture(QQuickWindow *window, const QString &name)
     }
 }
 
+// A pen, and its eraser end, as the tablet reports them: a pen of its own for
+// each case, as each case has a card of its own.
+int penRound = 0;
+
+const QPointingDevice *penDevice(QPointingDevice::PointerType type)
+{
+    static QHash<int, QPointingDevice *> devices;
+    const int key = penRound * 2 + (type == QPointingDevice::PointerType::Eraser ? 1 : 0);
+    if (!devices.contains(key)) {
+        const qint64 id = 9000 + penRound;
+        devices.insert(key, new QPointingDevice(QStringLiteral("test pen %1").arg(key), id, QInputDevice::DeviceType::Stylus, type,
+                                                QInputDevice::Capability::Position | QInputDevice::Capability::Pressure
+                                                    | QInputDevice::Capability::Hover,
+                                                1, 2, QString(), QPointingDeviceUniqueId::fromNumericId(id)));
+    }
+    return devices.value(key);
+}
+
+void penEvent(QQuickWindow *window, QEvent::Type type, const QPointF &at, qreal pressure,
+              QPointingDevice::PointerType end = QPointingDevice::PointerType::Pen)
+{
+    const bool down = type == QEvent::TabletPress || (type == QEvent::TabletMove && pressure > 0);
+    QTabletEvent event(type, penDevice(end), at, window->mapToGlobal(at), pressure, 0, 0, 0, 0, 0, Qt::NoModifier,
+                       type == QEvent::TabletMove ? Qt::NoButton : Qt::LeftButton, down ? Qt::LeftButton : Qt::NoButton);
+    QCoreApplication::sendEvent(window, &event);
+}
+
+// A stroke by the pen across an item, from one fraction of it to another,
+// pressing as given.
+void penStroke(QQuickWindow *window, QQuickItem *item, QPointF from, QPointF to, qreal pressure,
+               QPointingDevice::PointerType end = QPointingDevice::PointerType::Pen)
+{
+    auto at = [item](QPointF f) { return item->mapToScene(QPointF(item->width() * f.x(), item->height() * f.y())); };
+    penEvent(window, QEvent::TabletMove, at(from) - QPointF(0, 4), 0, end);
+    penEvent(window, QEvent::TabletPress, at(from), pressure, end);
+    for (int step = 1; step <= 12; ++step) {
+        penEvent(window, QEvent::TabletMove, at(from + (to - from) * step / 12.0), pressure, end);
+        QTest::qWait(5);
+    }
+    penEvent(window, QEvent::TabletRelease, at(to), 0, end);
+    // Lifted away, out of the screen's reach.
+    penEvent(window, QEvent::TabletLeaveProximity, at(to), 0, end);
+}
+
+// A stroke by a finger across an item.
+void fingerStroke(QQuickWindow *window, QQuickItem *item, QPointF from, QPointF to)
+{
+    static QPointingDevice *finger = QTest::createTouchDevice();
+    auto at = [item](QPointF f) {
+        return item->mapToScene(QPointF(item->width() * f.x(), item->height() * f.y())).toPoint();
+    };
+    QTest::touchEvent(window, finger).press(0, at(from), window);
+    for (int step = 1; step <= 12; ++step) {
+        QTest::touchEvent(window, finger).move(0, at(from + (to - from) * step / 12.0), window);
+        QTest::qWait(5);
+    }
+    QTest::touchEvent(window, finger).release(0, at(to), window);
+}
+
 void tap(QQuickWindow *window, QQuickItem *item)
 {
     QVERIFY(item);
@@ -172,6 +235,7 @@ private Q_SLOTS:
         QTest::failOnWarning(QRegularExpression(QStringLiteral("ReferenceError|TypeError|Unable to assign|is not a type|Cannot read property")));
         static int round = 0;
         const QString folder = m_home->path() + QStringLiteral("/screens-%1").arg(++round);
+        penRound = round;
         QVERIFY(m_home->holds(folder));
         m_store = std::make_unique<NoteStore>(folder);
         QVERIFY(m_store->open());
@@ -374,9 +438,12 @@ private Q_SLOTS:
         tap(m_view.get(), named(QStringLiteral("dayOn")));
         tap(m_view.get(), named(QStringLiteral("hourOn")));
         tap(m_view.get(), named(QStringLiteral("minutesOn")));
+        // The day the steps landed on, in the picker's words: late in the
+        // evening the hour stepped on is already the day after.
+        const QDate landed = start.addDays(1).addSecs(75 * 60).date();
+        const qint64 ahead = QDate::currentDate().daysTo(landed);
         QCOMPARE(named(QStringLiteral("pickedDay"))->property("text").toString(),
-                 start.date().addDays(1) == QDate::currentDate().addDays(1) ? QStringLiteral("Tomorrow")
-                                                                            : named(QStringLiteral("pickedDay"))->property("text").toString());
+                 ahead == 1 ? QStringLiteral("Tomorrow") : QLocale().toString(landed, QStringLiteral("dddd")));
         tap(m_view.get(), named(QStringLiteral("setTime")));
         QCOMPARE(m_capture->remindAt(), start.addDays(1).addSecs(75 * 60));
         QVERIFY(!named(QStringLiteral("timePicker"))->isVisible());
@@ -446,6 +513,157 @@ private Q_SLOTS:
         QVERIFY(!m_capture->checklist());
         QCOMPARE(m_store->note(m_capture->noteId())->text, QStringLiteral("Groceries\ncoffee\noats\nlemons"));
         QVERIFY(!pad->isVisible());
+    }
+
+    // Pen: the ruled page under the words takes ink, as wide as the pen
+    // presses, in the ink chosen. The first stroke keeps the note at once,
+    // drawing and all; the words stay above.
+    void penWritesUnderTheWords()
+    {
+        m_view->resize(806, 640);
+        type(m_view.get(), QStringLiteral("Flick"));
+        tap(m_view.get(), named(QStringLiteral("pen")));
+        QQuickItem *page = named(QStringLiteral("inkCanvas"));
+        QTRY_VERIFY(page && page->isVisible());
+        // The card makes room for the page before it is written on.
+        QTest::qWait(300);
+        QVERIFY(named(QStringLiteral("palette"))->isVisible());
+        QVERIFY(named(QStringLiteral("typed"))->isVisible());
+        // The words stay above the page.
+        QTRY_VERIFY(named(QStringLiteral("typed"))->mapToScene(QPointF()).y() + named(QStringLiteral("typed"))->height()
+                    <= page->mapToScene(QPointF()).y());
+
+        penStroke(m_view.get(), page, {0.05, 0.2}, {0.4, 0.22}, 0.15);
+        QTRY_COMPARE(m_capture->ink().strokes.size(), 1);
+        const QString id = m_capture->noteId();
+        // The note was kept by its first letter; the stroke waits for the
+        // pen to pause, as typing does.
+        QTRY_VERIFY_WITH_TIMEOUT(QFile::exists(m_store->inkPathFor(id)), Capture::PauseMs * 4);
+        QCOMPARE(m_capture->ink().strokes.first().points.first().pressure, 0.15);
+
+        tap(m_view.get(), named(QStringLiteral("ink-blue")));
+        penStroke(m_view.get(), page, {0.05, 0.4}, {0.4, 0.42}, 0.95);
+        QTRY_COMPARE(m_capture->ink().strokes.size(), 2);
+        QCOMPARE(m_capture->ink().strokes.at(1).colour, QStringLiteral("blue"));
+        QVERIFY(m_capture->ink().strokes.at(1).points.at(3).pressure > 0.9);
+        m_capture->flush();
+        QCOMPARE(m_store->ink(id).strokes.size(), 2);
+        picture(m_view.get(), QStringLiteral("note-pen"));
+        for (const QString &name : {QStringLiteral("ink-black"), QStringLiteral("ink-blue"), QStringLiteral("ink-red"),
+                                    QStringLiteral("eraser")}) {
+            QCOMPARE(named(name)->width(), 44.0);
+            QCOMPARE(named(name)->height(), 44.0);
+        }
+    }
+
+    // A finger writes in Pen while no pen is near; with the pen near the
+    // screen, a finger on the page writes nothing.
+    void fingerWritesUntilThePenIsNear()
+    {
+        m_view->resize(806, 640);
+        tap(m_view.get(), named(QStringLiteral("pen")));
+        QQuickItem *page = named(QStringLiteral("inkCanvas"));
+        QTRY_VERIFY(page && page->isVisible());
+        // The card makes room for the page before it is written on.
+        QTest::qWait(300);
+        fingerStroke(m_view.get(), page, {0.1, 0.2}, {0.5, 0.25});
+        QTRY_COMPARE(m_capture->ink().strokes.size(), 1);
+
+        // The pen comes near, hovering over the page.
+        const QPointF over = page->mapToScene(QPointF(page->width() * 0.7, page->height() * 0.3));
+        penEvent(m_view.get(), QEvent::TabletEnterProximity, over, 0);
+        penEvent(m_view.get(), QEvent::TabletMove, over, 0);
+        penEvent(m_view.get(), QEvent::TabletMove, over + QPointF(3, 0), 0);
+        QTRY_VERIFY(named(QStringLiteral("inkPage"))->property("penNear").toBool());
+        fingerStroke(m_view.get(), page, {0.1, 0.5}, {0.5, 0.55});
+        QTest::qWait(100);
+        QCOMPARE(m_capture->ink().strokes.size(), 1);
+    }
+
+    // The pen's eraser end takes the whole stroke it touches, and Undo, in
+    // the message that follows, puts it back; Eraser in the palette does the
+    // same with the pen's point.
+    void eraserTakesWholeStrokes()
+    {
+        m_view->resize(806, 640);
+        tap(m_view.get(), named(QStringLiteral("pen")));
+        QQuickItem *page = named(QStringLiteral("inkCanvas"));
+        QTRY_VERIFY(page && page->isVisible());
+        // The card makes room for the page before it is written on.
+        QTest::qWait(300);
+        penStroke(m_view.get(), page, {0.05, 0.2}, {0.5, 0.2}, 0.5);
+        penStroke(m_view.get(), page, {0.05, 0.6}, {0.5, 0.6}, 0.5);
+        QTRY_COMPARE(m_capture->ink().strokes.size(), 2);
+
+        penStroke(m_view.get(), page, {0.2, 0.15}, {0.2, 0.25}, 0.5, QPointingDevice::PointerType::Eraser);
+        QTRY_COMPARE(m_capture->ink().strokes.size(), 1);
+        QQuickItem *undo = named(QStringLiteral("noticeAction"));
+        QTRY_VERIFY(undo && undo->isVisible());
+        picture(m_view.get(), QStringLiteral("note-erased"));
+        tap(m_view.get(), undo);
+        QCOMPARE(m_capture->ink().strokes.size(), 2);
+
+        tap(m_view.get(), named(QStringLiteral("eraser")));
+        penStroke(m_view.get(), page, {0.3, 0.55}, {0.3, 0.65}, 0.5);
+        QTRY_COMPARE(m_capture->ink().strokes.size(), 1);
+        tap(m_view.get(), named(QStringLiteral("ink-black")));
+        penStroke(m_view.get(), page, {0.05, 0.6}, {0.5, 0.6}, 0.5);
+        QTRY_COMPARE(m_capture->ink().strokes.size(), 2);
+    }
+
+    // Under the ink, what it was read as; tapped, the right words can be
+    // typed, and they are kept as the person's own.
+    void readingCanBeFixed()
+    {
+        m_view->resize(806, 640);
+        tap(m_view.get(), named(QStringLiteral("pen")));
+        QQuickItem *page = named(QStringLiteral("inkCanvas"));
+        QTRY_VERIFY(page && page->isVisible());
+        // The card makes room for the page before it is written on.
+        QTest::qWait(300);
+        penStroke(m_view.get(), page, {0.05, 0.2}, {0.5, 0.2}, 0.5);
+        QTRY_COMPARE(m_capture->ink().strokes.size(), 1);
+        const QString id = m_capture->noteId();
+        Ink ink = m_store->ink(id);
+        const int line = ink.rows().first();
+        QVERIFY(ink.setReading(line, ink.digest(line), QStringLiteral("measure flack velocity"), {}));
+        QVERIFY(m_store->saveInk(*m_store->note(id), ink, NoteStore::Touch::Kept));
+        QTRY_COMPARE(m_capture->readText(), QStringLiteral("measure flack velocity"));
+        QQuickItem *readAs = named(QStringLiteral("readAs"));
+        QTRY_VERIFY(readAs->isVisible());
+        picture(m_view.get(), QStringLiteral("note-read-as"));
+        tap(m_view.get(), readAs);
+        QQuickItem *field = named(QStringLiteral("fixReading"));
+        QTRY_VERIFY(field->isVisible() && field->hasActiveFocus());
+        QCOMPARE(field->property("text").toString(), QStringLiteral("measure flack velocity"));
+        QMetaObject::invokeMethod(field, "selectAll");
+        type(m_view.get(), QStringLiteral("measure flick velocity"));
+        QTest::keyClick(m_view.get(), Qt::Key_Return);
+        QCOMPARE(m_capture->readText(), QStringLiteral("measure flick velocity"));
+        QCOMPARE(m_store->note(id)->read, QStringLiteral("measure flick velocity"));
+        QVERIFY(m_store->ink(id).readings.first().fixed);
+        QTRY_VERIFY(readAs->isVisible());
+    }
+
+    // Out of Pen, the ink shows under the words, and a pen touching it
+    // switches to Pen.
+    void penTouchSwitchesToPen()
+    {
+        m_view->resize(806, 640);
+        tap(m_view.get(), named(QStringLiteral("pen")));
+        QQuickItem *page = named(QStringLiteral("inkCanvas"));
+        QTRY_VERIFY(page && page->isVisible());
+        // The card makes room for the page before it is written on.
+        QTest::qWait(300);
+        penStroke(m_view.get(), page, {0.05, 0.2}, {0.5, 0.2}, 0.5);
+        tap(m_view.get(), named(QStringLiteral("type")));
+        QVERIFY(!note()->property("writing").toBool());
+        QTRY_VERIFY(page->isVisible());
+        QVERIFY(!named(QStringLiteral("palette"))->isVisible());
+        const QPointF on = page->mapToScene(QPointF(page->width() * 0.6, page->height() * 0.5));
+        penEvent(m_view.get(), QEvent::TabletPress, on, 0.5);
+        penEvent(m_view.get(), QEvent::TabletRelease, on, 0);
+        QTRY_VERIFY(note()->property("writing").toBool());
     }
 
     void doneFinishes()
@@ -578,6 +796,67 @@ private Q_SLOTS:
         QCOMPARE(finished.count(), 1);
         QTest::mouseClick(window, Qt::LeftButton, {}, QPoint(60, 60));
         QCOMPARE(finished.count(), 2);
+    }
+
+    // The board shows handwriting as it was written, marked Handwritten; a
+    // search finds it by what it was read as, or a runner-up word, and says
+    // what it was read as with the word marked.
+    void boardShowsHandwriting()
+    {
+        Capture written(m_store.get());
+        written.startNewIn(QStringLiteral("project:Shuffle"));
+        written.setColour(QStringLiteral("rhyolite"));
+        for (int row = 0; row < 2; ++row) {
+            const qreal y = row * Ink::RowHeight + Ink::RowHeight / 2;
+            written.beginStroke(20, y, 0.5, QStringLiteral("black"));
+            for (qreal x = 24; x < 300; x += 6) {
+                written.extendStroke(x, y + std::sin(x / 9) * 8, 0.5 + 0.3 * std::sin(x / 40));
+            }
+            written.endStroke();
+        }
+        written.finish();
+        const QString id = written.noteId();
+        Ink ink = m_store->ink(id);
+        QVERIFY(ink.setReading(0, ink.digest(0), QStringLiteral("measure flack"), {QStringLiteral("flick")}));
+        QVERIFY(ink.setReading(1, ink.digest(1), QStringLiteral("velocity"), {}));
+        QVERIFY(m_store->saveInk(*m_store->note(id), ink, NoteStore::Touch::Kept));
+
+        Places places(m_store.get());
+        PlaceNotes notes(m_store.get());
+        FakeShell shell(m_store.get(), m_capture.get(), &places, &notes);
+        QQmlEngine engine;
+        KLocalization::setupLocalizedContext(&engine);
+        QQmlComponent component(&engine, QStringLiteral("io.github.carlsonjm.gooseberry"), QStringLiteral("BoardWindow"));
+        std::unique_ptr<QObject> object(component.createWithInitialProperties({{QStringLiteral("shell"), QVariant::fromValue<QObject *>(&shell)}}));
+        QVERIFY2(object, qPrintable(component.errorString()));
+        auto *board = qobject_cast<QQuickWindow *>(object.get());
+        QMetaObject::invokeMethod(board, "present", Q_ARG(QVariant, QVariant()));
+        QVERIFY(QTest::qWaitForWindowExposed(board));
+        board->resize(1260, 716);
+        auto find = [board](const QString &name) { return itemNamed(board->contentItem(), name); };
+        tap(board, find(QStringLiteral("place-project:Shuffle")));
+        QTRY_VERIFY(find(QStringLiteral("note-") + id));
+        QQuickItem *card = find(QStringLiteral("note-") + id);
+        QQuickItem *drawing = itemNamed(card, QStringLiteral("drawing"));
+        QVERIFY(drawing->isVisible());
+        QTRY_COMPARE(drawing->property("status").toInt(), 1); // Ready: the drawing is a picture any viewer draws.
+        QTRY_VERIFY(drawing->height() > 20);
+        QVERIFY(itemNamed(card, QStringLiteral("handwritten"))->isVisible());
+        QVERIFY(!itemNamed(card, QStringLiteral("readAs"))->isVisible());
+        picture(board, QStringLiteral("board-ink"));
+
+        QQuickItem *search = find(QStringLiteral("search"));
+        tap(board, search);
+        type(board, QStringLiteral("flick"));
+        QTRY_VERIFY(find(QStringLiteral("note-") + id));
+        card = find(QStringLiteral("note-") + id);
+        QQuickItem *readAs = itemNamed(card, QStringLiteral("readAs"));
+        QTRY_VERIFY(readAs->isVisible());
+        QCOMPARE(readAs->property("text").toString(), QStringLiteral("Read as “measure flack velocity”, or “<b><u>flick</u></b>”"));
+        picture(board, QStringLiteral("board-ink-search"));
+        search->setProperty("text", QStringLiteral("veloc"));
+        QTRY_COMPARE(itemNamed(find(QStringLiteral("note-") + id), QStringLiteral("readAs"))->property("text").toString(),
+                     QStringLiteral("Read as “measure flack <b><u>veloc</u></b>ity”"));
     }
 
     void boardGathersAndActs()

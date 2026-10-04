@@ -6,6 +6,9 @@
 
 #include <QCoreApplication>
 
+#include <algorithm>
+#include <cmath>
+
 namespace Gooseberry {
 
 Capture::Capture(NoteStore *store, QObject *parent)
@@ -63,7 +66,7 @@ void Capture::leaveEmpty()
 {
     // A note left with no text is not kept: it goes to the trash, however the
     // card was left.
-    if (kept() && !readOnly() && m_note.text.trimmed().isEmpty()) {
+    if (kept() && !readOnly() && m_note.text.trimmed().isEmpty() && m_ink.isEmpty()) {
         stopWaiting();
         m_store->trash(m_note.id);
         m_note.id.clear();
@@ -77,6 +80,13 @@ void Capture::reset(const Note &note, bool editing)
     leaveEmpty();
     m_note = note;
     m_editing = editing;
+    m_ink = note.ink.isEmpty() || note.id.isEmpty() ? Ink() : m_store->ink(note.id);
+    m_inkDirty = false;
+    m_stroking = false;
+    m_erasing.clear();
+    m_erased.clear();
+    ++m_inkVersion;
+    Q_EMIT inkChanged();
     setProblem({});
     Q_EMIT noteChanged();
     Q_EMIT textChanged();
@@ -149,9 +159,9 @@ void Capture::keep()
         return;
     }
     if (m_note.id.isEmpty()) {
-        if (m_note.text.trimmed().isEmpty()) {
+        if (m_note.text.trimmed().isEmpty() && m_ink.isEmpty()) {
             // Nothing written yet: a colour or a place chosen first waits for
-            // the first letter.
+            // the first letter or stroke.
             return;
         }
         const QString id = m_store->create(m_note);
@@ -160,16 +170,147 @@ void Capture::keep()
             return;
         }
         m_note = *m_store->note(id);
-        setProblem({});
         Q_EMIT noteChanged();
-        return;
+        if (m_ink.isEmpty()) {
+            setProblem({});
+            return;
+        }
     }
-    if (!m_store->save(m_note)) {
+    const bool saved = m_inkDirty ? m_store->saveInk(m_note, m_ink) : m_store->save(m_note);
+    if (!saved) {
         setProblem(m_store->lastError());
         return;
     }
-    m_note.changed = m_store->note(m_note.id)->changed;
+    m_inkDirty = false;
+    const auto kept = m_store->note(m_note.id);
+    m_note.changed = kept->changed;
+    m_note.ink = kept->ink;
+    m_note.read = kept->read;
+    m_note.readAlso = kept->readAlso;
     setProblem({});
+}
+
+void Capture::waitToKeep()
+{
+    // Later changes wait for the writing to pause, so a note is written once
+    // per pause rather than once per letter or stroke, and never waits longer
+    // than the longest wait while writing goes on.
+    if (!m_waiting) {
+        m_waiting = true;
+        m_waitingSince.start();
+    }
+    if (m_waitingSince.elapsed() >= m_longestWaitMs) {
+        keep();
+        return;
+    }
+    m_pause.start();
+}
+
+void Capture::inkTouched()
+{
+    m_inkDirty = true;
+    ++m_inkVersion;
+    Q_EMIT inkChanged();
+}
+
+namespace {
+
+InkPoint inkPoint(qreal x, qreal y, qreal pressure)
+{
+    return {std::clamp(x, 0.0, Ink::PageWidth), std::max(0.0, y), std::clamp(pressure, 0.0, 1.0)};
+}
+
+} // namespace
+
+void Capture::beginStroke(qreal x, qreal y, qreal pressure, const QString &ink)
+{
+    if (readOnly()) {
+        return;
+    }
+    // While the pen is down nothing is written, so no half stroke is kept.
+    m_pause.stop();
+    InkStroke stroke;
+    stroke.colour = inkNames().contains(ink) ? ink : inkNames().first();
+    stroke.points.append(inkPoint(x, y, pressure));
+    m_ink.strokes.append(stroke);
+    m_stroking = true;
+    inkTouched();
+}
+
+void Capture::extendStroke(qreal x, qreal y, qreal pressure)
+{
+    if (!m_stroking || m_ink.strokes.isEmpty()) {
+        return;
+    }
+    auto &points = m_ink.strokes.last().points;
+    const InkPoint point = inkPoint(x, y, pressure);
+    // Points closer than the drawing keeps them add nothing to the line.
+    if (std::hypot(point.x - points.last().x, point.y - points.last().y) < 0.8) {
+        return;
+    }
+    points.append(point);
+    inkTouched();
+}
+
+void Capture::endStroke()
+{
+    if (!m_stroking) {
+        return;
+    }
+    m_stroking = false;
+    m_erased.clear();
+    inkTouched();
+    if (!kept()) {
+        // The first stroke makes the note, at once.
+        keep();
+        return;
+    }
+    waitToKeep();
+}
+
+void Capture::eraseAt(qreal x, qreal y)
+{
+    if (readOnly()) {
+        return;
+    }
+    const QList<InkStroke> taken = m_ink.eraseAt({x, y}, 6);
+    if (taken.isEmpty()) {
+        return;
+    }
+    m_erasing += taken;
+    m_ink.dropEmptyReadings();
+    inkTouched();
+}
+
+int Capture::endErase()
+{
+    const int count = int(m_erasing.size());
+    if (count > 0) {
+        m_erased = std::exchange(m_erasing, {});
+        inkTouched();
+        keep();
+    }
+    return count;
+}
+
+void Capture::undoErase()
+{
+    if (m_erased.isEmpty()) {
+        return;
+    }
+    m_ink.restore(std::exchange(m_erased, {}));
+    inkTouched();
+    keep();
+}
+
+void Capture::fixReading(const QString &text)
+{
+    if (readOnly() || m_ink.isEmpty()) {
+        return;
+    }
+    m_ink.fix(text);
+    inkTouched();
+    keep();
 }
 
 void Capture::setText(const QString &text)
@@ -184,18 +325,7 @@ void Capture::setText(const QString &text)
         keep();
         return;
     }
-    // Later letters wait for the writing to pause, so a note is written once
-    // per pause rather than once per letter, and never waits longer than the
-    // longest wait while typing goes on.
-    if (!m_waiting) {
-        m_waiting = true;
-        m_waitingSince.start();
-    }
-    if (m_waitingSince.elapsed() >= m_longestWaitMs) {
-        keep();
-        return;
-    }
-    m_pause.start();
+    waitToKeep();
 }
 
 bool Capture::checklist() const
@@ -373,6 +503,27 @@ void Capture::setProblem(const QString &problem)
     }
 }
 
+void Capture::takeReadings(const Note &onDisk)
+{
+    if (onDisk.ink.isEmpty() || (onDisk.read == m_note.read && onDisk.readAlso == m_note.readAlso)) {
+        return;
+    }
+    // The handwriting was read while strokes here waited to be written: the
+    // readings of lines that have not changed since are kept with them.
+    const Ink read = m_store->ink(onDisk.id);
+    for (const InkReading &reading : read.readings) {
+        if (reading.fixed) {
+            continue;
+        }
+        m_ink.setReading(reading.row, reading.digest, reading.text, reading.also);
+    }
+    m_note.read = onDisk.read;
+    m_note.readAlso = onDisk.readAlso;
+    m_inkDirty = true;
+    ++m_inkVersion;
+    Q_EMIT inkChanged();
+}
+
 void Capture::storeChanged(const QString &id)
 {
     if (id != m_note.id) {
@@ -391,6 +542,7 @@ void Capture::storeChanged(const QString &id)
                 m_note.remindOnOpen = onDisk->remindOnOpen;
                 Q_EMIT reminderChanged();
             }
+            takeReadings(*onDisk);
         }
         keep();
         return;
@@ -415,6 +567,12 @@ void Capture::storeChanged(const QString &id)
         Q_EMIT belongingChanged();
     }
     const bool reminder = onDisk->remind != m_note.remind || onDisk->remindOnOpen != m_note.remindOnOpen;
+    if (!m_stroking && (onDisk->ink != m_note.ink || onDisk->read != m_note.read || onDisk->readAlso != m_note.readAlso)) {
+        // The handwriting was read, or changed by another program.
+        m_ink = onDisk->ink.isEmpty() ? Ink() : m_store->ink(id);
+        ++m_inkVersion;
+        Q_EMIT inkChanged();
+    }
     m_note = *onDisk;
     if (reminder) {
         Q_EMIT reminderChanged();

@@ -99,7 +99,7 @@ QQC2.ScrollView {
                                 QQC2.Label {
                                     objectName: "planTitle"
                                     Layout.fillWidth: true
-                                    text: row.modelData.title
+                                    text: row.modelData.title.length > 0 ? row.modelData.title : i18n("Handwritten note")
                                     textFormat: Text.PlainText
                                     wrapMode: Text.Wrap
                                     maximumLineCount: 3
@@ -109,23 +109,30 @@ QQC2.ScrollView {
                                     font.strikeout: row.modelData.done
                                     color: row.modelData.done ? Kirigami.Theme.disabledTextColor : Kirigami.Theme.textColor
                                 }
-                                Rectangle {
-                                    implicitHeight: 24
-                                    implicitWidth: Math.min(place.implicitWidth, content.width - 140)
-                                    radius: 12
-                                    color: Qt.alpha(Kirigami.Theme.textColor, 0.10)
-                                    QQC2.Label {
-                                        id: place
-                                        anchors.fill: parent
-                                        leftPadding: 9
-                                        rightPadding: 9
-                                        verticalAlignment: Text.AlignVCenter
-                                        text: row.modelData.place
-                                        elide: Text.ElideRight
-                                        font.pixelSize: 11
-                                        font.weight: Font.Bold
-                                        color: Kirigami.Theme.textColor
-                                        opacity: 0.8
+                                Row {
+                                    spacing: 6
+                                    Repeater {
+                                        model: row.modelData.handwritten ? [row.modelData.place, i18n("Handwritten")] : [row.modelData.place]
+                                        delegate: Rectangle {
+                                            required property string modelData
+                                            implicitHeight: 24
+                                            implicitWidth: Math.min(chip.implicitWidth, content.width - 140)
+                                            radius: 12
+                                            color: Qt.alpha(Kirigami.Theme.textColor, 0.10)
+                                            QQC2.Label {
+                                                id: chip
+                                                anchors.fill: parent
+                                                leftPadding: 9
+                                                rightPadding: 9
+                                                verticalAlignment: Text.AlignVCenter
+                                                text: parent.modelData
+                                                elide: Text.ElideRight
+                                                font.pixelSize: 11
+                                                font.weight: Font.Bold
+                                                color: Kirigami.Theme.textColor
+                                                opacity: 0.8
+                                            }
+                                        }
                                     }
                                 }
                             }

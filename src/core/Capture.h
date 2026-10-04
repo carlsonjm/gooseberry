@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #pragma once
 
+#include "Ink.h"
 #include "Note.h"
 
 #include <QElapsedTimer>
@@ -47,6 +48,13 @@ class Capture : public QObject
     // checked.
     Q_PROPERTY(bool checklist READ checklist NOTIFY textChanged)
     Q_PROPERTY(QVariantList lines READ lines NOTIFY textChanged)
+    // The handwriting under the words, and what was read from it.
+    Q_PROPERTY(bool hasInk READ hasInk NOTIFY inkChanged)
+    Q_PROPERTY(int inkVersion READ inkVersion NOTIFY inkChanged)
+    Q_PROPERTY(qreal inkHeight READ inkHeight NOTIFY inkChanged)
+    Q_PROPERTY(QString readText READ readText NOTIFY inkChanged)
+    Q_PROPERTY(bool canUndoErase READ canUndoErase NOTIFY inkChanged)
+    Q_PROPERTY(QStringList inks READ inks CONSTANT)
 
 public:
     explicit Capture(NoteStore *store, QObject *parent = nullptr);
@@ -83,8 +91,31 @@ public:
     bool checklist() const;
     QVariantList lines() const;
 
+    const Ink &ink() const { return m_ink; }
+    bool hasInk() const { return !m_ink.isEmpty(); }
+    int inkVersion() const { return m_inkVersion; }
+    qreal inkHeight() const { return m_ink.height(); }
+    QString readText() const { return m_ink.readText(); }
+    bool canUndoErase() const { return !m_erased.isEmpty(); }
+    QStringList inks() const { return inkNames(); }
+    Q_INVOKABLE QString inkHexFor(const QString &ink) const { return inkHex(ink); }
+
     void setText(const QString &text);
     void setColour(const QString &colour);
+
+    // Writing by pen, in page units (Ink::PageWidth wide). The first stroke
+    // of a new note keeps it at once; later strokes wait for the pen to
+    // pause, as typing waits.
+    Q_INVOKABLE void beginStroke(qreal x, qreal y, qreal pressure, const QString &ink);
+    Q_INVOKABLE void extendStroke(qreal x, qreal y, qreal pressure);
+    Q_INVOKABLE void endStroke();
+    // The eraser: every stroke it touches goes. endErase says how many went
+    // in the whole movement; undoErase puts them back.
+    Q_INVOKABLE void eraseAt(qreal x, qreal y);
+    Q_INVOKABLE int endErase();
+    Q_INVOKABLE void undoErase();
+    // The person's own words for what the handwriting says.
+    Q_INVOKABLE void fixReading(const QString &text);
 
     // A reminder replaces any the note had, and is shown once more.
     Q_INVOKABLE void setRemindAt(const QDateTime &time);
@@ -131,12 +162,15 @@ Q_SIGNALS:
     void belongingChanged();
     void contextChanged();
     void reminderChanged();
+    void inkChanged();
     void problemChanged();
     void finished();
     void removed();
 
 private:
     void keep();
+    void waitToKeep();
+    void inkTouched();
     void setTextNow(const QString &text);
     void setReminder(const QDateTime &time, bool onOpen);
     void stopWaiting();
@@ -144,9 +178,18 @@ private:
     void setProblem(const QString &problem);
     void reset(const Note &note, bool editing);
     void storeChanged(const QString &id);
+    void takeReadings(const Note &onDisk);
 
     NoteStore *m_store;
     Note m_note;
+    Ink m_ink;
+    // Strokes not yet written, and the version the screen redraws by.
+    bool m_inkDirty = false;
+    int m_inkVersion = 0;
+    bool m_stroking = false;
+    // What the eraser took in its last movement, to put back.
+    QList<InkStroke> m_erasing;
+    QList<InkStroke> m_erased;
     CaptureContext m_context;
     bool m_editing = false;
     QString m_problem;

@@ -31,8 +31,7 @@ note, and with capture fast enough that nothing is written elsewhere instead.
 
 ## Milestone 1: the planner
 
-**Status:** built; waiting on its proof. The checks by hand are in
-`TESTING.md`. Remind, Checklist, the tick on the planner and the reminder's
+**Status:** passed, and on main (the maintainer, 4 October). Remind, Checklist, the tick on the planner and the reminder's
 own buttons were drawn as proposals and approved by the maintainer
 (`DECISIONS.md`).
 
@@ -45,6 +44,10 @@ own buttons were drawn as proposals and approved by the maintainer
 reminder on time, and none shown twice.
 
 ## Milestone 2: pen
+
+**Status:** built on its branch; waiting on its proof. The checks by hand are in
+`TESTING.md`. How the pen writes and how reading behaves were proposed and
+approved by the maintainer before they were built (`DECISIONS.md`).
 
 - Handwritten notes, with the pen palette and an eraser.
 - Handwriting read on the computer, so ink is found by search.

@@ -282,6 +282,9 @@ private Q_SLOTS:
         QVariantMap state = call(QStringLiteral("Start"));
         QCOMPARE(state.value(QStringLiteral("remind")).toString(), QString());
         QVERIFY(!state.value(QStringLiteral("checklist")).toBool());
+        // From Milestone 2: a note typed in the search has no handwriting.
+        QVERIFY(state.contains(QStringLiteral("ink")) && state.value(QStringLiteral("ink")).toString().isEmpty());
+        QVERIFY(state.contains(QStringLiteral("read")) && state.value(QStringLiteral("read")).toString().isEmpty());
         QStringList kinds;
         for (const QVariant &choice : asList(state.value(QStringLiteral("remindChoices")))) {
             const QVariantMap map = asMap(choice);

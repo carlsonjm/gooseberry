@@ -27,6 +27,7 @@ const QStringList KnownKeys = {
     QStringLiteral("colour"), QStringLiteral("belongs"), QStringLiteral("window"),
     QStringLiteral("app"), QStringLiteral("project"), QStringLiteral("workspace"),
     QStringLiteral("tucked"), QStringLiteral("remind"), QStringLiteral("reminded"), QStringLiteral("done"),
+    QStringLiteral("ink"), QStringLiteral("read"), QStringLiteral("read-also"),
 };
 
 const QString OnOpen = QStringLiteral("opens");
@@ -110,7 +111,8 @@ QString Note::title() const
             return plain;
         }
     }
-    return {};
+    // Handwriting only: its first words as they were read.
+    return read.simplified();
 }
 
 QString Note::placeLabel() const
@@ -181,6 +183,15 @@ QByteArray Note::serialize() const
     }
     if (done.isValid()) {
         out += QStringLiteral("done: %1\n").arg(timeText(done));
+    }
+    if (!ink.isEmpty()) {
+        out += QStringLiteral("ink: %1\n").arg(quoted(ink));
+    }
+    if (!read.isEmpty()) {
+        out += QStringLiteral("read: %1\n").arg(quoted(read));
+    }
+    if (!readAlso.isEmpty()) {
+        out += QStringLiteral("read-also: %1\n").arg(quoted(readAlso));
     }
     for (const auto &[key, value] : extra) {
         out += key + QLatin1String(": ") + value + QLatin1Char('\n');
@@ -277,6 +288,12 @@ Note Note::parse(const QByteArray &bytes, const QString &id, const QDateTime &fa
             note.reminded = QDateTime::fromString(value, Qt::ISODate);
         } else if (key == QLatin1String("done")) {
             note.done = QDateTime::fromString(value, Qt::ISODate);
+        } else if (key == QLatin1String("ink")) {
+            note.ink = value;
+        } else if (key == QLatin1String("read")) {
+            note.read = value;
+        } else if (key == QLatin1String("read-also")) {
+            note.readAlso = value;
         }
     }
     return note;

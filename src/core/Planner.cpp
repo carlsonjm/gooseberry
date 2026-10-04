@@ -128,6 +128,7 @@ void Planner::rebuild()
                 {QStringLiteral("next"), note.id == next},
                 {QStringLiteral("colour"), colourHex(note.colour)},
                 {QStringLiteral("readOnly"), note.newerFormat() || m_store->readOnly()},
+                {QStringLiteral("handwritten"), !note.ink.isEmpty()},
             });
         }
         return rows;

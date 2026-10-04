@@ -277,6 +277,79 @@ Search read it as it is. This is engineering's choice.
 Rejected: a header key holding the items, which other programs would not show
 as a list.
 
+## Writing by pen on a note
+
+Proposed and approved before it was built (the maintainer, 4 October):
+
+- **Words above, ink below.** One note holds both: the typed words at the
+  top, the ruled ink page under them. Type and Pen choose which is being added
+  to; the card and the board show both.
+- **The pen palette is the mock-up's three inks and an Eraser.** One pen,
+  whose line thickens as it is pressed harder, as a felt-tip does.
+- **The eraser takes whole strokes.** Eraser in the palette, or the pen's own
+  eraser end, removes each stroke it touches, and Erased · Undo shows for a
+  moment.
+- **A finger writes until the pen is near.** In Pen a finger writes too, for
+  writing without a pen; while the pen is near the screen, a hand resting on
+  the page does not write and a finger scrolls. A pen touching the page
+  switches to Pen by itself.
+
+Rejected: a note that is either typed or handwritten, which cannot take a quick
+sketch beside typed words; a fine pen and a marker as well, which are two more
+choices mid-thought; an eraser that rubs out only what it passes over, which
+leaves fragments the reader misreads; and only the pen writing, which leaves no
+handwriting without a pen.
+
+## Reading handwriting
+
+Proposed and approved before it was built (the maintainer, 4 October):
+
+- **Ink is read when the card is put away**, on the computer and out of
+  sight, so writing never waits and the battery is spared while writing. A
+  note is found by its handwriting once it has been put away.
+- **A search shows the ink itself,** with "Read as" and the reading under it,
+  the found word marked, as the Search mock-up draws it.
+- **A reading can be seen and fixed.** Under the ink on the card, "Read as"
+  and the reading; tapping it lets the right words be typed. A fix is kept
+  and never replaced by a later reading of the same lines; lines written after
+  it are read as usual.
+- Gooseberry also keeps the reader's runner-up guesses for each line, so a word
+  first read wrong can still be found.
+
+Rejected: reading shortly after the pen lifts, which finds a note sooner but
+costs battery while writing (the maintainer's choice); the reading shown as
+text in place of the ink, which hides the hand and makes a misreading look like
+what was written; and a reading that cannot be fixed.
+
+## Handwriting is read by a small model on the computer
+
+The reader is Microsoft's TrOCR model for handwriting, in its small size, run
+by ONNX Runtime, which the major distributions package. Each ruled line of ink
+is drawn as a picture and read; nothing leaves the computer. This is
+engineering's choice: of the readers that run without a network, it is the
+one trained on real handwriting, about four letters in a hundred wrong on its
+published handwriting test, in about 60 MB. It reads English. `install.sh`
+fetches it once; without it, ink is kept and shown and only finding it waits.
+
+Rejected: Tesseract, built for print, which read 12 to 13 words in 20 even of
+handwriting drawn by a font, and some lines not at all; a reader that follows
+the pen's strokes, as Xournal++'s handwriting project is building, which is not
+yet ready to rely on and whose model's terms are unclear; and any reader on a
+server.
+
+## Ink is a drawing beside the note
+
+A note's ink is `<id>.svg` beside it: each stroke a filled shape in its ink, so
+any image viewer and file manager shows it as written, carrying its points and
+pressure so Gooseberry can redraw and erase it stroke by stroke. The reading
+goes in the note's own header, where the file index, Search and the assistant
+already read. Ink is kept as typing is, at each pause of the pen, so a crash
+loses at most the last moment of writing. This is engineering's choice.
+
+Rejected: ink inside the Markdown file, which no Markdown program would show
+and which would bury the words; and a link to the drawing added to the note's
+text, which would change the text the person wrote.
+
 ## Gooseberry stays ready
 
 Gooseberry starts with the session, showing nothing, and keeps running between

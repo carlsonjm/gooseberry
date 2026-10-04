@@ -44,6 +44,12 @@ struct Note {
     QDateTime reminded;
     // When the note was marked done on the planner.
     QDateTime done;
+    // The note's handwriting, as the name of the drawing beside it; empty
+    // for a note with none. What was read from it, as one line of words, and
+    // the reader's runner-up words, so it is found by what it says.
+    QString ink;
+    QString read;
+    QString readAlso;
     int format = NoteFormat;
     // Header keys this version does not know, kept in order so a newer
     // program's fields survive an edit made here.
