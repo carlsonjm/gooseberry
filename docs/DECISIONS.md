@@ -177,18 +177,17 @@ chooses; a panel widget, which exists only where a panel holds it; and the
 layer above the keys, where a surface opened after them covers them and takes
 every touch meant for them, as the desktop's search found.
 
-## Opening Gooseberry opens the quick-note card
+## Opening Gooseberry opens the board, as an ordinary window
 
-Gooseberry's entry, in a launcher, a search or pinned to a dock, opens the
-quick-note card. The board is All notes on the card and All notes in the
-entry's menu, where New note stays too. (The maintainer, 4 October, superseding
-the board opening from the entry, of 3 October.)
+Gooseberry's entry, in a launcher, a search or pinned to a dock, opens the board
+as an ordinary window: it resizes, and a card workspace can place it beside
+another, as any application's window. The quick-note card is New note in the
+entry's menu, and where a desktop's search hosts the quick note (below), that
+is where a quick note is written. (The maintainer, 4 October, after trying the
+card from the dock, superseding the entry opening the card, of the same day.)
 
-Where a desktop's search hosts the quick note (below), the search no longer
-opens Gooseberry and waits for a window to arrive; it draws the note itself.
-
-Rejected: the entry opening the board, which put a window between the person
-and the note they opened Gooseberry to write.
+Rejected: the entry opening the quick-note card, which cannot be resized or
+placed beside another window, so Gooseberry had no window of its own to work in.
 
 ## A desktop's search can host the quick note
 

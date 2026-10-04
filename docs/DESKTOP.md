@@ -18,9 +18,8 @@ A dock, a panel or Search starts Gooseberry by its desktop file,
 
 | To | Start |
 | --- | --- |
-| Capture a note, on the quick-note card | The desktop file, or `gooseberry` |
-| The same | Its Capture action, New note, or `gooseberry --capture` |
-| Open the board, as a window | Its Board action, All notes, or `gooseberry --board` |
+| Open the board, as an ordinary window | The desktop file, `gooseberry`, its Board action, All notes, or `gooseberry --board` |
+| Capture a note, on the quick-note card | Its Capture action, New note, or `gooseberry --capture` |
 
 The quick-note card is not a window: a desktop that waits for an opened
 application's window does not wait for it. A search that hosts the quick note

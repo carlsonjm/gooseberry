@@ -219,13 +219,13 @@ void Shell::handle(const QStringList &arguments)
         captureWindow();
         return;
     }
-    if (parser.isSet(board)) {
-        showBoard();
+    if (parser.isSet(capture)) {
+        showCapture();
         return;
     }
     // Opening Gooseberry, from a launcher, a search or a pinned button, opens
-    // the quick-note card; --capture says the same.
-    showCapture();
+    // the board as an ordinary window; --board says the same.
+    showBoard();
 }
 
 QQuickWindow *Shell::create(const QString &name)
