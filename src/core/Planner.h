@@ -2,6 +2,7 @@
 #pragma once
 
 #include <QDate>
+#include <QDateTime>
 #include <QObject>
 #include <QTimer>
 #include <QVariantList>
@@ -16,8 +17,11 @@ class NoteStore;
 class Planner : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QDate day READ day WRITE setDay NOTIFY changed)
-    Q_PROPERTY(QDate today READ today NOTIFY changed)
+    // Days reach the screen as their noon, in local time. A plain date would
+    // reach it as midnight in UTC, which west of Greenwich is still the day
+    // before, so every day would be named for the one before it.
+    Q_PROPERTY(QDateTime day READ dayShown WRITE showDay NOTIFY changed)
+    Q_PROPERTY(QDateTime today READ todayShown NOTIFY changed)
     // The day strip: each a map of date, today, chosen and planned (it has
     // notes and is not the chosen day).
     Q_PROPERTY(QVariantList strip READ strip NOTIFY changed)
@@ -37,6 +41,11 @@ public:
     QDate day() const { return m_day; }
     void setDay(const QDate &day);
     QDate today() const { return m_today; }
+    QDateTime dayShown() const { return shown(m_day); }
+    void showDay(const QDateTime &day) { setDay(day.toLocalTime().date()); }
+    QDateTime todayShown() const { return shown(m_today); }
+    // A day as the screen is given it: its noon, in local time.
+    static QDateTime shown(const QDate &day) { return QDateTime(day, QTime(12, 0)); }
     QVariantList strip() const { return m_strip; }
     QVariantList days() const { return m_days; }
 

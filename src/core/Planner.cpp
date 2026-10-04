@@ -141,7 +141,7 @@ void Planner::rebuild()
             planned = planned || note.plannedDay() == date;
         }
         strip.append(QVariantMap{
-            {QStringLiteral("date"), date},
+            {QStringLiteral("date"), shown(date)},
             {QStringLiteral("today"), date == m_today},
             {QStringLiteral("chosen"), date == m_day},
             {QStringLiteral("planned"), planned && date != m_day},
@@ -150,7 +150,7 @@ void Planner::rebuild()
 
     QVariantList days;
     days.append(QVariantMap{
-        {QStringLiteral("date"), m_day},
+        {QStringLiteral("date"), shown(m_day)},
         {QStringLiteral("today"), m_day == m_today},
         {QStringLiteral("rows"), rowsFor(m_day)},
     });
@@ -159,7 +159,7 @@ void Planner::rebuild()
         const QVariantList rows = rowsFor(date);
         if (!rows.isEmpty()) {
             days.append(QVariantMap{
-                {QStringLiteral("date"), date},
+                {QStringLiteral("date"), shown(date)},
                 {QStringLiteral("today"), date == m_today},
                 {QStringLiteral("rows"), rows},
             });

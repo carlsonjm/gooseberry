@@ -1,6 +1,9 @@
 # Every test runs in a home of its own (TestHome.h), off screen and with no
 # session, so nothing here can read or change a person's notes or desktop.
+# In a time zone west of Greenwich, where a date given to the screen as
+# midnight in UTC is still the day before.
 set(test_environment
+    TZ=America/Chicago
     QT_QPA_PLATFORM=offscreen
     QT_QUICK_BACKEND=software
     DBUS_SESSION_BUS_ADDRESS=disabled:
