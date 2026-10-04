@@ -62,6 +62,7 @@ add_library(gooseberry-desktop STATIC
     src/desktop/Log.h
     src/desktop/QuickNoteService.cpp src/desktop/QuickNoteService.h
     src/desktop/Shell.cpp src/desktop/Shell.h
+    src/desktop/SpreadGuest.cpp src/desktop/SpreadGuest.h
     src/desktop/WindowContext.cpp src/desktop/WindowContext.h
 )
 target_include_directories(gooseberry-desktop PUBLIC src/desktop)

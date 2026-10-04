@@ -47,6 +47,48 @@ A Stack and a Bento pair are made by hand in Kadunce. Robin can already hold a
 Gooseberry window and let it go on a card to stack them, or drag it to an edge
 to sit beside a card. Gooseberry cannot make either happen itself.
 
+### The quick note in Spread
+
+Kadunce lets an application hold Spread's centre as a companion guest (its
+`docs/TETTEGOUCHE-CONTEXT.md` § Companion guests, protocol 1), and the
+quick-note card does. Each time the card opens, Gooseberry reads Kadunce's
+workspace snapshot:
+
+| Kadunce shows | The card |
+| --- | --- |
+| Spread (`cardStage.presentation` is `cardLine`) | Asks for the centre if `companionGuestProtocolVersion()` is exactly `1`, and if given it is drawn at the reply's `card` rectangle; a press outside the card is Spread's |
+| An Active card (`active`) | Asks for nothing and stands on its own, as without Kadunce |
+| Anything else, or no Kadunce, or an older one | Stands on its own, as without Kadunce |
+
+The card asks with `beginCompanionGuest(its unique bus name, "/CompanionGuest",
+"io.github.carlsonjm.Gooseberry.CompanionGuest")`, and answers there:
+
+| Method | Gooseberry |
+| --- | --- |
+| `dismissGuest()` | Another guest took the centre: the card closes, the note kept. Nothing is asked back |
+| `completeGuestLaunch(s requestToken)` | The board's window has taken the card's place: the card fades out over 190 ms where it stood |
+
+A card that closes on its own, by Done, a tap outside or Esc, calls
+`endLauncherGuest()` once.
+
+**All notes in Spread.** The card calls `setLauncherGuestExpanded(true)` from
+the same bus name; the neighbours fade and the card grows to the reply's
+`active` rectangle. It then calls
+`prepareLauncherGuestLaunch(["io.github.carlsonjm.Gooseberry.desktop"], token)`,
+opens the board, and fades on `completeGuestLaunch(token)`. Where Kadunce
+refuses to grow the card, the guest ends and the card shows the board itself,
+as without Kadunce. Where it will not wait for the board, the guest ends, the
+board opens, and the card fades once the board has drawn. Where the board has
+not arrived after 10 seconds, the card calls `cancelLauncherGuestLaunch()` and
+`endLauncherGuest()` and stays, showing the board itself.
+
+**All notes over an Active card.** No guest: the card grows, the board opens,
+and the grown card stays up until the snapshot reports the board's window,
+application `io.github.carlsonjm.Gooseberry`, as `cardStage.selectedCardId`,
+which is Kadunce putting it in the Active card's place. Then it fades. Gooseberry
+reads the snapshot again on each `workspaceContextChanged`, and stops waiting
+after 10 seconds, leaving the grown card showing the board itself.
+
 ### What Kadunce does not offer
 
 - **Room beside a card.** Kadunce makes room on the Active card for the keys

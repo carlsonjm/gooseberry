@@ -24,6 +24,7 @@ Kadunce's own hold and let go; stepping back to the card puts them away.
 | Input | What happens |
 | --- | --- |
 | Tap Gooseberry | The quick-note card opens in the middle of the screen, the size of the desktop's search, with the cursor in it. What you write is kept from its first letter. |
+| Tap Gooseberry in Kadunce's Spread | The card takes Spread's centre, between the cards on either side, as the desktop's search does. A tap on the cards around it is Spread's. |
 | Hold Gooseberry, then tap New note | The same. |
 | Tap New note on the board | The same, for a note that belongs to the place the board is showing. |
 
@@ -78,6 +79,8 @@ Not yet built: Milestone 1.
 | Input | What happens |
 | --- | --- |
 | Tap All notes on the card | The card grows to the whole work area and the board takes its place, on Today, as Apps and Files grow the desktop's search. A note opened or started there, or `Esc`, brings the card back. |
+| Tap All notes on the card in Kadunce's Spread | The cards beside it fade and the card grows into the Active card's room; the board's window takes its place and the card fades out. |
+| Tap All notes on the card over an Active card in Kadunce | The card grows, the board's window takes the Active card's place, and the card fades out. |
 | Hold Gooseberry, then tap All notes | The board opens on Today, as an ordinary window. |
 
 ## Open a note

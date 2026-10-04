@@ -205,6 +205,16 @@ surfaces for one note, and the search reading or writing the notes folder
 itself, which would make the folder's layout its contract and bypass
 Gooseberry's own keeping.
 
+## In Kadunce, the card takes Spread's centre
+
+Where Kadunce shows Spread, the quick-note card holds Spread's centre, as the
+desktop's search does, and All notes grows it into the Active card's room and
+hands that room to the board's window, which fades the card out. Over an Active
+card it stands on its own, and the board takes the Active card's place before
+the card fades. Without Kadunce, or with one that does not offer this, the card
+is as it always was (`DESKTOP.md` § The quick note in Spread). (The maintainer,
+4 October.)
+
 ## Gooseberry stays ready
 
 Gooseberry starts with the session, showing nothing, and keeps running between

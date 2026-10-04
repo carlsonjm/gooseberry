@@ -4,6 +4,7 @@
 #include "Board.h"
 #include "Capture.h"
 #include "NoteStore.h"
+#include "SpreadGuest.h"
 #include "WindowContext.h"
 #include "Log.h"
 
@@ -20,6 +21,7 @@
 #include <QQuickItem>
 #include <QScreen>
 #include <QTimer>
+#include <QUuid>
 
 Q_LOGGING_CATEGORY(DESKTOP, "gooseberry.desktop", QtWarningMsg)
 
@@ -37,7 +39,35 @@ Shell::Shell(NoteStore *store, QQmlEngine *engine, QObject *parent)
     , m_places(new Places(store, this))
     , m_notes(new PlaceNotes(store, this))
     , m_context(new WindowContext(QGuiApplication::desktopFileName(), this))
+    , m_guest(new SpreadGuest(this))
 {
+    // Another guest took Spread's centre: the card closes, the note kept.
+    connect(m_guest, &SpreadGuest::dismissed, m_capture, &Capture::finish);
+    // A card that closes on its own gives Spread's centre back. One that
+    // handed its place to the board, or was dismissed, holds it no longer.
+    connect(m_capture, &Capture::finished, this, [this] {
+        stopHandOff();
+        m_guest->end();
+    });
+    connect(m_guest, &SpreadGuest::launchCompleted, this, [this](const QString &token) {
+        if (m_handingOff && token == m_handOffToken) {
+            finishHandOff();
+        }
+    });
+    connect(m_guest, &SpreadGuest::boardSelected, this, [this] {
+        if (m_handingOff) {
+            finishHandOff();
+        }
+    });
+    // Not seen in the card's place in time: the grown card stays, showing
+    // the board itself.
+    connect(m_guest, &SpreadGuest::watchGaveUp, this, &Shell::stopHandOff);
+    m_handOffTimeout.setSingleShot(true);
+    connect(&m_handOffTimeout, &QTimer::timeout, this, [this] {
+        qCDebug(DESKTOP) << "the board did not take the card's place in time";
+        stopHandOff();
+        m_guest->end();
+    });
     // On the first tap, before the desktop has said what is in front, a card
     // still empty takes up the window once it does.
     connect(m_context, &WindowContext::firstReported, this, [this] {
@@ -81,6 +111,97 @@ QObject *Shell::notesObject() const
 QObject *Shell::storeObject() const
 {
     return m_store;
+}
+
+QObject *Shell::guestObject() const
+{
+    return m_guest;
+}
+
+QString Shell::boardId() const
+{
+    const QString id = QGuiApplication::desktopFileName();
+    return (id.isEmpty() ? QStringLiteral("io.github.carlsonjm.Gooseberry") : id) + QStringLiteral(".desktop");
+}
+
+void Shell::setHandingOff(bool handingOff)
+{
+    if (handingOff != m_handingOff) {
+        m_handingOff = handingOff;
+        Q_EMIT handingOffChanged();
+    }
+}
+
+void Shell::stopHandOff()
+{
+    m_handOffTimeout.stop();
+    m_guest->stopWatching();
+    m_guest->cancelLaunch();
+    m_handOffToken.clear();
+    setHandingOff(false);
+}
+
+void Shell::finishHandOff()
+{
+    m_handOffTimeout.stop();
+    m_guest->stopWatching();
+    m_handOffToken.clear();
+    Q_EMIT handOffDone();
+}
+
+void Shell::boardFromCard()
+{
+    const QString note = m_capture->noteId();
+    if (m_guest->active()) {
+        // In Spread: the neighbours fade and the card grows to the Active
+        // card's room; then the board opens, and Kadunce says when its window
+        // has taken the card's place.
+        setHandingOff(true);
+        connect(m_guest, &SpreadGuest::expandAnswered, this, [this, note](bool expanded) {
+            if (!m_handingOff) {
+                return;
+            }
+            if (!expanded) {
+                // Refused: the card shows the board itself, as without Kadunce.
+                setHandingOff(false);
+                return;
+            }
+            // The card grows over 220 ms before the board is asked for.
+            QTimer::singleShot(220, this, [this, note] {
+                if (!m_handingOff || !m_guest->active()) {
+                    return;
+                }
+                m_handOffToken = QUuid::createUuid().toString(QUuid::WithoutBraces);
+                if (m_guest->prepareLaunch({boardId()}, m_handOffToken)) {
+                    m_handOffTimeout.start(m_handOffWait);
+                } else {
+                    // Kadunce will not wait for it: the card gives Spread's
+                    // centre back and fades once the board has drawn.
+                    m_handOffToken.clear();
+                    m_guest->end(true);
+                    connect(this, &Shell::boardShown, this, [this] {
+                        if (m_handingOff) {
+                            finishHandOff();
+                        }
+                    }, Qt::SingleShotConnection);
+                }
+                showBoardOn(note);
+            });
+        }, Qt::SingleShotConnection);
+        m_guest->expand();
+    } else if (m_guest->overActiveCard()) {
+        // Over an Active card: the board opens and Kadunce puts it in the
+        // Active card's place; the grown card stays up until it has.
+        setHandingOff(true);
+        m_guest->watchForSelected(boardId(), m_handOffWait);
+        showBoardOn(note);
+    }
+}
+
+void Shell::collapseCard()
+{
+    stopHandOff();
+    m_guest->collapse();
 }
 
 void Shell::handle(const QStringList &arguments)
@@ -129,8 +250,8 @@ QQuickWindow *Shell::captureWindow()
         return nullptr;
     }
     if (QGuiApplication::platformName().startsWith(QLatin1String("wayland"))) {
-        // A surface of the desktop's own, across the room the panels leave,
-        // with the note's card centred on it; a tap on the work around the
+        // A surface of the desktop's own, across the whole display, with the
+        // note's card centred on it; a tap on the work around the
         // card puts it away, and the windows behind are not moved. It is a
         // top-layer surface: KWin keeps the on-screen keys in the overlay
         // layer, and an overlay surface mapped after them would stack above
@@ -139,7 +260,9 @@ QQuickWindow *Shell::captureWindow()
         layer->setLayer(LayerShellQt::Window::LayerTop);
         layer->setAnchors({LayerShellQt::Window::AnchorTop, LayerShellQt::Window::AnchorBottom,
                            LayerShellQt::Window::AnchorLeft, LayerShellQt::Window::AnchorRight});
-        layer->setExclusiveZone(0);
+        // The whole display, as the desktop's search covers it, so Kadunce's
+        // places for the card are taken as they are given.
+        layer->setExclusiveZone(-1);
         layer->setKeyboardInteractivity(LayerShellQt::Window::KeyboardInteractivityExclusive);
         layer->setScreenConfiguration(LayerShellQt::Window::ScreenFromCompositor);
         layer->setScope(QStringLiteral("gooseberry-capture"));
@@ -163,6 +286,19 @@ void Shell::raiseCard()
     QQuickWindow *window = captureWindow();
     if (!window) {
         return;
+    }
+    if (window->isVisible()) {
+        // A note opened from the board in the card: the card comes back to
+        // its size.
+        collapseCard();
+    } else {
+        stopHandOff();
+        // In Kadunce's Spread the card holds its centre, on Kadunce's display.
+        const bool guest = m_guest->begin(window);
+        if (QGuiApplication::platformName().startsWith(QLatin1String("wayland"))) {
+            LayerShellQt::Window::get(window)->setScreenConfiguration(
+                guest ? LayerShellQt::Window::ScreenFromQWindow : LayerShellQt::Window::ScreenFromCompositor);
+        }
     }
     if (!QGuiApplication::platformName().startsWith(QLatin1String("wayland"))) {
         QScreen *screen = QGuiApplication::screenAt(QCursor::pos());

@@ -34,3 +34,17 @@ set_tests_properties(tst_quicknote_bus PROPERTIES
     ENVIRONMENT "GOOSEBERRY_PRIVATE_BUS=1"
     SKIP_RETURN_CODE 77
     TIMEOUT 120)
+
+# The card in Kadunce's card workspace: the real card and board, off screen,
+# against a stand-in Kadunce on a bus of the test's own.
+add_executable(tst_spread spread/tst_spread.cpp TestHome.h)
+target_include_directories(tst_spread PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(tst_spread PRIVATE
+    gooseberry-desktop gooseberry-screensplugin Qt6::DBus Qt6::Test KF6::I18n KF6::I18nQml)
+set_target_properties(tst_spread PROPERTIES QT_QML_MODULE_NO_IMPORT_SCAN ON)
+add_test(NAME tst_spread COMMAND ${DBUS_RUN_SESSION}
+    --config-file=${CMAKE_CURRENT_SOURCE_DIR}/bus/private-bus.conf -- $<TARGET_FILE:tst_spread>)
+set_tests_properties(tst_spread PROPERTIES
+    ENVIRONMENT "GOOSEBERRY_PRIVATE_BUS=1"
+    SKIP_RETURN_CODE 77
+    TIMEOUT 120)

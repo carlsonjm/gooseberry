@@ -2,6 +2,7 @@
 #include "NoteStore.h"
 #include "QuickNoteService.h"
 #include "Shell.h"
+#include "SpreadGuest.h"
 
 #include <KAboutData>
 #include <KDBusService>
@@ -68,6 +69,8 @@ int main(int argc, char *argv[])
     if (!quickNote.publish()) {
         qWarning() << "Gooseberry's quick note is not on the session bus";
     }
+    // Where Kadunce gives the card Spread's centre, it answers here.
+    shell.guest()->publish();
     QObject::connect(&service, &KDBusService::activateRequested, &shell,
                      [&shell](const QStringList &arguments, const QString &) {
                          shell.handle(arguments);

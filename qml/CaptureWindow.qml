@@ -3,12 +3,14 @@ import QtQuick
 import QtQuick.Window
 import org.kde.kirigami as Kirigami
 
-// The quick note's surface: the room the panels leave, with the note on a card
-// the size of the desktop search's, centred. With the on-screen keys up the
-// card rises only as far as it must to stay above them, then shortens. All
-// notes grows the card into the board, as Apps and Files grow the search; a
-// note opened or started there brings the card back to its size. A tap
-// outside the card puts it away; the note is already kept.
+// The quick note's surface: the whole display, with the note on a card the
+// size of the desktop search's, centred. With the on-screen keys up the card
+// rises only as far as it must to stay above them, then shortens. All notes
+// grows the card into the board, as Apps and Files grow the search; a note
+// opened or started there brings the card back to its size. A tap outside the
+// card puts it away; the note is already kept. In Kadunce's Spread the card is
+// drawn where Kadunce gives it Spread's centre, and grown, it hands its place
+// to the board's window.
 Window {
     id: root
 
@@ -16,6 +18,14 @@ Window {
 
     property bool shown: false
     property bool expanded: false
+    // The board's window has taken the card's place: the card fades.
+    property bool fading: false
+    // Where the card may stand: the whole surface, as the desktop's search.
+    property rect area: Qt.rect(0, 0, width, height)
+    // Holding Kadunce's Spread centre, and the place Kadunce gives it.
+    readonly property QtObject guest: shell.guest !== undefined ? shell.guest : null
+    readonly property bool asGuest: guest !== null && guest.placed
+    readonly property rect guestRect: asGuest ? guest.rect : Qt.rect(0, 0, 0, 0)
     // Where the on-screen keys lie over this window, as the compositor reports
     // them to the focused window; empty while they are down. The keys hold no
     // room of their own, so the card keeps above them itself.
@@ -35,12 +45,15 @@ Window {
     readonly property alias note: note
     readonly property alias board: board
 
+    objectName: "quickNoteWindow"
     title: i18n("Gooseberry")
     color: "transparent"
     visible: false
 
     function open() {
         hideTimer.stop();
+        fadeTimer.stop();
+        fading = false;
         expanded = false;
         visible = true;
         shown = true;
@@ -61,11 +74,24 @@ Window {
         board.reset();
         expanded = true;
         Qt.inputMethod.hide();
+        if (shell.boardFromCard !== undefined) {
+            shell.boardFromCard();
+        }
     }
 
     function collapse() {
         expanded = false;
+        if (shell.collapseCard !== undefined) {
+            shell.collapseCard();
+        }
         note.focusText();
+    }
+
+    // The board stands in the card's place: the card fades, and the note is
+    // finished as when the card goes away.
+    function fadeAway() {
+        fading = true;
+        fadeTimer.restart();
     }
 
     // Esc steps back as the search does: the board to the note, then away.
@@ -75,6 +101,12 @@ Window {
         } else {
             shell.capture.finish();
         }
+    }
+
+    Timer {
+        id: fadeTimer
+        interval: 190
+        onTriggered: root.shell.capture.finish()
     }
 
     Timer {
@@ -101,19 +133,38 @@ Window {
         id: card
         objectName: "card"
 
-        readonly property real restHeight: root.expanded ? Math.max(1, root.height - 20) : Math.round(root.height * 0.64)
+        readonly property real restHeight: root.asGuest ? root.guestRect.height
+            : root.expanded ? Math.max(1, root.area.height - 20) : Math.round(root.area.height * 0.64)
         readonly property real keysLine: root.height - root.keysReach
-        readonly property real highest: Math.min(10, Math.round((root.height - restHeight) / 2))
+        // In Spread the card keeps the place Kadunce gave it and only shortens.
+        readonly property real highest: root.asGuest ? root.guestRect.y
+            : root.area.y + Math.min(10, Math.round((root.area.height - restHeight) / 2))
 
         Kirigami.Theme.colorSet: Kirigami.Theme.Window
         Kirigami.Theme.inherit: false
 
-        width: root.expanded ? Math.max(1, root.width - 20)
-                             : Math.min(root.width - 20, Math.max(Math.round(root.width * 0.64), 420))
+        width: root.asGuest ? root.guestRect.width
+             : root.expanded ? Math.max(1, root.area.width - 20)
+             : Math.min(root.area.width - 20, Math.max(Math.round(root.area.width * 0.64), 420))
         height: Math.max(Math.min(restHeight, 160), Math.min(restHeight, keysLine - highest))
-        x: (root.width - width) / 2
-        y: Math.max(highest, Math.min(keysLine - height,
-                                      root.expanded ? 10 : Math.round((root.height - height) / 2)))
+        x: root.asGuest ? root.guestRect.x : root.area.x + (root.area.width - width) / 2
+        y: root.asGuest ? root.guestRect.y
+           : Math.max(highest, Math.min(keysLine - height,
+                                        root.expanded ? root.area.y + 10 : root.area.y + Math.round((root.area.height - height) / 2)))
+        Behavior on x {
+            enabled: root.asGuest
+            NumberAnimation {
+                duration: 220
+                easing.type: Easing.OutCubic
+            }
+        }
+        Behavior on y {
+            enabled: root.asGuest
+            NumberAnimation {
+                duration: 220
+                easing.type: Easing.OutCubic
+            }
+        }
         Behavior on width {
             NumberAnimation {
                 duration: 220
@@ -134,11 +185,11 @@ Window {
         border.width: 1
         border.color: Qt.alpha(Kirigami.Theme.textColor, 0.15)
         clip: true
-        opacity: root.shown ? 1 : 0
+        opacity: root.shown && !root.fading ? 1 : 0
         scale: root.shown ? 1 : 0.96
         Behavior on opacity {
             NumberAnimation {
-                duration: Kirigami.Units.longDuration
+                duration: root.fading ? 190 : Kirigami.Units.longDuration
                 easing.type: Easing.OutCubic
             }
         }
@@ -187,7 +238,9 @@ Window {
     // Where the desktop moves the keyboard elsewhere, the card goes away
     // with it, as when going back to the work.
     onActiveChanged: {
-        if (!active && shown) {
+        // The board's window arriving takes the keyboard; the card waits for
+        // it to take its place, then fades.
+        if (!active && shown && !fading && !(shell.handingOff === true)) {
             shell.capture.finish();
         }
     }
@@ -195,6 +248,14 @@ Window {
     Shortcut {
         sequence: "Esc"
         onActivated: root.back()
+    }
+
+    Connections {
+        target: root.shell
+        ignoreUnknownSignals: true
+        function onHandOffDone() {
+            root.fadeAway();
+        }
     }
 
     Connections {
