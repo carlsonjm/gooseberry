@@ -12,7 +12,11 @@ Paths are from the repository root.
 | `docs/DESKTOP.md` | What Kadunce's cards and Tettegouche's Search add, what Gooseberry reads from them, and what it would need |
 | `docs/mockup/` | The approved mock-up: six screens as design source, and which milestone each applies to |
 | `docs/DECISIONS.md` | Every settled ruling and what it rejected |
+| `docs/FORMAT.md` | The note format: where the folder is, what is in it, each note's header, and its version |
+| `docs/TESTING.md` | What the automated checks prove, and the checks by hand against each milestone's proof |
 | `docs/ROADMAP.md` | What is planned, in order, what is not, and the decisions still open |
 | `docs/INPUT.md` | Every input, opening with its controls map |
 | `tests/verify-public.py` | Keeps public text fit to publish; the same script as the other components |
-| `verify.sh` | Runs every check |
+| `verify.sh` | Runs every check: public text, the build and the tests |
+| `install.sh` | Builds, checks and installs Gooseberry for every account on the computer |
+| `uninstall.sh` | Removes what `install.sh` installed; notes stay |

@@ -11,6 +11,9 @@ at the end, each named with what it holds up.
 Gooseberry on its own, on any Plasma desktop. Built in one pass to the mock-up
 in `mockup/`, then tested against the proof (`DECISIONS.md`).
 
+**Status:** built; waiting on its proof. The checks by hand are in
+`TESTING.md`.
+
 - The capture sheet: one tap, cursor ready, saved as written, Belongs to and
   colour in one tap each, Done by going back to the work.
 - The board: Loose, Today, Tucked away, by window or document, by project, by

@@ -126,6 +126,47 @@ comes to the maintainer before it is guessed. (The maintainer, 4 October.)
 
 Rejected: options before each screen, which the mock-up already settles.
 
+## A project is named once
+
+Under Belongs to, a project's name is typed the first time it is used; after
+that it is one tap, and the project used last is offered first. A project lasts
+as long as a note belongs to it. (The maintainer, 4 October.)
+
+Rejected: working a project out from where the document lives. Plain Plasma
+does not say where most windows' documents are, so the choice would rarely
+appear before notes on cards.
+
+## The capture sheet is a surface of the desktop's own
+
+The sheet is drawn on a layer of the desktop's own, across the room the panels
+leave, with the work dimmed behind it: it rises from the bottom edge, takes the
+keyboard with the cursor in the note, and a tap on the work puts it away. No
+window is moved. On a desktop without such layers it is an ordinary window
+kept above the others. This is engineering's choice.
+
+Rejected: an ordinary window, which the window manager places where it
+chooses, so it could not rise from the bottom edge; and a panel widget, which
+exists only where a panel holds it.
+
+## Gooseberry stays ready
+
+Gooseberry starts with the session, showing nothing, and keeps running between
+notes; closing the board or the sheet only puts it away. Every tap of its button
+reaches the one running Gooseberry. This is engineering's choice: speed to the
+cursor is the product, and a program starting from cold takes a moment the
+thought may not last.
+
+Rejected: starting Gooseberry afresh on each tap.
+
+## Removing a note uses the desktop's trash directly
+
+Gooseberry moves a removed note into the person's trash itself, as the
+freedesktop.org trash specification lays it out, and falls back to Qt's own
+trash only for a note on another disk. This is engineering's choice: Qt alone
+decides which trash to use by working out which disk a folder is on, which some
+systems answer wrongly, and a removal that fails is a note that cannot be
+removed.
+
 ## Window arrangement is requested, never done directly
 
 To show notes beside or with a window, Gooseberry asks the window manager, which

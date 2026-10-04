@@ -1,0 +1,63 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+#include "NoteStore.h"
+#include "Shell.h"
+
+#include <KAboutData>
+#include <KDBusService>
+#include <KLocalizedQmlContext>
+#include <KLocalizedString>
+
+#include <QApplication>
+#include <QIcon>
+#include <QQmlEngine>
+#include <QQuickStyle>
+#include <QSessionManager>
+#include <QtQml/qqmlextensionplugin.h>
+
+Q_IMPORT_QML_PLUGIN(io_github_carlsonjm_gooseberryPlugin)
+
+int main(int argc, char *argv[])
+{
+    QApplication app(argc, argv);
+    KLocalizedString::setApplicationDomain("gooseberry");
+
+    KAboutData about(QStringLiteral("gooseberry"), QStringLiteral("Gooseberry"), QStringLiteral(GOOSEBERRY_VERSION),
+                     QStringLiteral("Notes, stickies and a planner"), KAboutLicense::GPL_V2);
+    about.setOrganizationDomain("carlsonjm.github.io");
+    about.setDesktopFileName(QStringLiteral(GOOSEBERRY_APP_ID));
+    KAboutData::setApplicationData(about);
+    QGuiApplication::setWindowIcon(QIcon::fromTheme(QStringLiteral(GOOSEBERRY_APP_ID)));
+
+    // Gooseberry stays running between notes, so the next tap is answered at
+    // once; closing the board or the sheet only puts it away.
+    app.setQuitOnLastWindowClosed(false);
+    if (qEnvironmentVariableIsEmpty("QT_QUICK_CONTROLS_STYLE")) {
+        QQuickStyle::setStyle(QStringLiteral("org.kde.desktop"));
+    }
+
+    // A second start hands its arguments to the running Gooseberry and ends.
+    KDBusService service(KDBusService::Unique | KDBusService::NoExitOnFailure);
+
+    // Every note is on disk as it is written, so a logout has nothing to wait
+    // for; the session starts Gooseberry again from its autostart entry.
+    QObject::connect(&app, &QGuiApplication::commitDataRequest, [](QSessionManager &manager) {
+        manager.setRestartHint(QSessionManager::RestartNever);
+    });
+
+    Gooseberry::NoteStore store(Gooseberry::NoteStore::defaultFolder());
+    if (!store.open()) {
+        qWarning().noquote() << store.lastError();
+    }
+
+    QQmlEngine engine;
+    KLocalization::setupLocalizedContext(&engine);
+    Gooseberry::Shell shell(&store, &engine);
+    QObject::connect(&service, &KDBusService::activateRequested, &shell,
+                     [&shell](const QStringList &arguments, const QString &) {
+                         shell.handle(arguments);
+                     });
+
+    shell.handle(app.isSessionRestored() ? QStringList{app.arguments().value(0), QStringLiteral("--background")}
+                                         : app.arguments());
+    return app.exec();
+}

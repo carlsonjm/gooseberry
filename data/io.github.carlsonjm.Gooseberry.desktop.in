@@ -1,0 +1,17 @@
+[Desktop Entry]
+Type=Application
+Name=Gooseberry
+GenericName=Notes
+Comment=Write a thought down in one tap
+Exec=@CMAKE_INSTALL_FULL_BINDIR@/gooseberry
+Icon=@GOOSEBERRY_APP_ID@
+Categories=Utility;Office;
+Keywords=note;notes;sticky;stickies;memo;jot;
+StartupNotify=false
+SingleMainWindow=true
+X-KDE-Wayland-Interfaces=org_kde_plasma_window_management,org_kde_plasma_virtual_desktop_management
+Actions=Board;
+
+[Desktop Action Board]
+Name=Open the board
+Exec=@CMAKE_INSTALL_FULL_BINDIR@/gooseberry --board

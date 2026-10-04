@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Gooseberry
+Comment=Ready for a note from the first tap
+Exec=@CMAKE_INSTALL_FULL_BINDIR@/gooseberry --background
+Icon=@GOOSEBERRY_APP_ID@
+NoDisplay=true
+X-KDE-autostart-phase=2

@@ -6,8 +6,10 @@ Write a thought down in one tap. Keep it beside the work it belongs to, put it
 on the planner when it has a time, or tuck it away without losing it. Nothing
 asks for a title, a folder or a save before an idea is kept.
 
-**Status:** early. There is nothing to install yet. The concept is in
-[docs/CONCEPT.md](docs/CONCEPT.md) and the plan in [docs/ROADMAP.md](docs/ROADMAP.md).
+**Status:** Milestone 0, capture and keep, is built and waiting on its proof:
+the capture sheet, the board, tucking away and removing. Reminders, the planner
+and the pen come next. The concept is in [docs/CONCEPT.md](docs/CONCEPT.md) and
+the plan in [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## What it does
 
@@ -24,6 +26,25 @@ asks for a title, a folder or a save before an idea is kept.
 - Ask for a title or a folder before a note is kept.
 - Lose a note. A note you remove goes to the desktop's trash first.
 - Take up room you did not ask it to.
+
+## Installing
+
+Gooseberry needs KDE Plasma 6 with Qt 6.9 and KDE Frameworks 6.17 or newer, and
+their development files to build: CMake, Extra CMake Modules, Kirigami,
+KCoreAddons, KDBusAddons, KI18n, KWindowSystem, Layer Shell Qt and Plasma's
+task manager library.
+
+```sh
+./install.sh
+```
+
+It builds Gooseberry, runs every check, and installs it for every account on
+the computer, asking once for a password. Gooseberry is then in the launcher,
+and starts by itself, out of sight, from the next login. `./uninstall.sh`
+removes it again; notes stay.
+
+Notes are kept in `Gooseberry` in your Documents folder, one Markdown file
+each ([docs/FORMAT.md](docs/FORMAT.md)).
 
 ## With cards and Search
 

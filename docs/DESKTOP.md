@@ -5,6 +5,25 @@ present, what it reads from them, and what it would need from them. Without
 either, Gooseberry is complete on its own; each is found at run time and never
 required.
 
+## What Gooseberry offers any desktop
+
+Milestone 0 needs nothing from Kadunce, Tettegouche or Shuffle. On any Plasma
+desktop it reads two things from the desktop itself: the window in front, which
+a note belongs to by default, and the current workspace's name. Both come from
+Plasma's own window list, which Plasma opens to Gooseberry because its desktop
+file asks for it. Where the desktop says nothing, a note starts Loose.
+
+A dock, a panel or Search starts Gooseberry by its desktop file,
+`io.github.carlsonjm.Gooseberry`:
+
+| To | Start | Shuffle's dock |
+| --- | --- | --- |
+| Capture a note | The desktop file, or `gooseberry` | A tap |
+| Open the board | Its Open the board action, or `gooseberry --board` | A hold |
+
+Every start reaches the one running Gooseberry, which comes up with the
+session.
+
 ## Kadunce: notes that belong to a card
 
 ### What Kadunce offers today
@@ -77,3 +96,4 @@ None is assumed.
 | Tettegouche | A notes source for Search, with a Notes tab | Notes in Search |
 | Tettegouche | A Notes door on Search's first screen, behind a checkbox, shown only when Gooseberry is installed | Opening Gooseberry from Search |
 | Split Rock | Use Gooseberry's notes tool where present | The notes tool |
+| Shuffle Keyboard | Say how tall the keys are, or leave room above them, for a surface of the desktop's own such as the capture sheet | Writing on the sheet with the keys up, if the tablet shows the keys covering it |
