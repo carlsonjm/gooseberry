@@ -19,7 +19,7 @@ struct CaptureContext {
     QString workspace;
 };
 
-// The note on the capture sheet. It is kept from its first letter: the first
+// The note on the quick-note card. It is kept from its first letter: the first
 // change that gives it text writes it to the folder at once. Typing after that
 // is written when the writing pauses, and at least every few seconds while it
 // goes on; every other change, finishing the note and the program ending write
@@ -84,7 +84,7 @@ public:
     // takes its name; the others use what was in front.
     Q_INVOKABLE void setBelongs(const QString &kind, const QString &project = {});
 
-    // The sheet goes down. A note left with no text goes to the trash.
+    // The card goes away. A note left with no text goes to the trash.
     Q_INVOKABLE void finish();
     Q_INVOKABLE void tuckAway();
     Q_INVOKABLE void remove();

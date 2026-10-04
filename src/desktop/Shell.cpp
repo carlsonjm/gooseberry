@@ -37,9 +37,18 @@ Shell::Shell(NoteStore *store, QQmlEngine *engine, QObject *parent)
     , m_notes(new PlaceNotes(store, this))
     , m_context(new WindowContext(QGuiApplication::desktopFileName(), this))
 {
+    // On the first tap, before the desktop has said what is in front, a card
+    // still empty takes up the window once it does.
+    connect(m_context, &WindowContext::firstReported, this, [this] {
+        if (m_captureWindow && m_captureWindow->isVisible() && !m_capture->kept() && !m_capture->editing()
+            && m_capture->text().isEmpty() && m_capture->window().isEmpty()) {
+            m_capture->startNew(m_context->current());
+            qCDebug(DESKTOP) << "the empty card takes up the window in front:" << m_capture->window();
+        }
+    });
     connect(m_context, &WindowContext::workChanged, this, [this] {
         if (m_captureWindow && m_captureWindow->isVisible()) {
-            qCDebug(DESKTOP) << "another window came to the front: the sheet goes down";
+            qCDebug(DESKTOP) << "another window came to the front: the card goes away";
             m_capture->finish();
         }
     });
@@ -84,7 +93,7 @@ void Shell::handle(const QStringList &arguments)
 
     if (parser.isSet(background)) {
         // Started with the session: everything is made ready now, so the first
-        // tap brings the sheet up without waiting.
+        // tap brings the card up without waiting.
         captureWindow();
         return;
     }
@@ -119,18 +128,21 @@ QQuickWindow *Shell::captureWindow()
         return nullptr;
     }
     if (QGuiApplication::platformName().startsWith(QLatin1String("wayland"))) {
-        // A surface of the desktop's own, across the room the panels leave:
-        // the sheet rises from its bottom edge, and a tap on the dimmed work
-        // around it puts the sheet away. The windows behind are not moved.
+        // A surface of the desktop's own, across the room the panels leave,
+        // with the note's card centred on it; a tap on the work around the
+        // card puts it away, and the windows behind are not moved. It is a
+        // top-layer surface: KWin keeps the on-screen keys in the overlay
+        // layer, and an overlay surface mapped after them would stack above
+        // the keys and take every touch meant for them.
         auto *layer = LayerShellQt::Window::get(m_captureWindow);
-        layer->setLayer(LayerShellQt::Window::LayerOverlay);
+        layer->setLayer(LayerShellQt::Window::LayerTop);
         layer->setAnchors({LayerShellQt::Window::AnchorTop, LayerShellQt::Window::AnchorBottom,
                            LayerShellQt::Window::AnchorLeft, LayerShellQt::Window::AnchorRight});
         layer->setExclusiveZone(0);
         layer->setKeyboardInteractivity(LayerShellQt::Window::KeyboardInteractivityExclusive);
         layer->setScreenConfiguration(LayerShellQt::Window::ScreenFromCompositor);
         layer->setScope(QStringLiteral("gooseberry-capture"));
-        qCDebug(DESKTOP) << "sheet on the desktop's own surface";
+        qCDebug(DESKTOP) << "card on the desktop's own surface";
     } else {
         m_captureWindow->setFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::Tool);
     }
@@ -145,7 +157,7 @@ QQuickWindow *Shell::boardWindow()
     return m_boardWindow;
 }
 
-void Shell::raiseSheet()
+void Shell::raiseCard()
 {
     QQuickWindow *window = captureWindow();
     if (!window) {
@@ -163,7 +175,7 @@ void Shell::raiseSheet()
     QMetaObject::invokeMethod(window, "open");
     if (DESKTOP().isDebugEnabled()) {
         QTimer::singleShot(800, window, [window] {
-            qCDebug(DESKTOP) << "sheet shown:" << window->isVisible() << "has the keyboard:" << window->isActive()
+            qCDebug(DESKTOP) << "card shown:" << window->isVisible() << "has the keyboard:" << window->isActive()
                              << "focus on:" << (window->activeFocusItem() ? window->activeFocusItem()->metaObject()->className() : "nothing")
                              << "size:" << window->size();
         });
@@ -175,20 +187,20 @@ void Shell::showCapture()
     const CaptureContext context = m_context->current();
     qCDebug(DESKTOP) << "capture: window" << context.window << "app" << context.app << "workspace" << context.workspace;
     m_capture->startNew(context);
-    raiseSheet();
+    raiseCard();
 }
 
 void Shell::openNote(const QString &id)
 {
     if (m_capture->open(id)) {
-        raiseSheet();
+        raiseCard();
     }
 }
 
 void Shell::newNoteIn(const QString &placeKey)
 {
     m_capture->startNewIn(placeKey);
-    raiseSheet();
+    raiseCard();
 }
 
 void Shell::showBoard()

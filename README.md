@@ -7,7 +7,7 @@ on the planner when it has a time, or tuck it away without losing it. Nothing
 asks for a title, a folder or a save before an idea is kept.
 
 **Status:** Milestone 0, capture and keep, is built and waiting on its proof:
-the capture sheet, the board, tucking away and removing. Reminders, the planner
+the quick-note card, the board, tucking away and removing. Reminders, the planner
 and the pen come next. The concept is in [docs/CONCEPT.md](docs/CONCEPT.md) and
 the plan in [docs/ROADMAP.md](docs/ROADMAP.md).
 

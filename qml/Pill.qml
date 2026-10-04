@@ -5,7 +5,7 @@ import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 
 // A round touch button: a choice under Belongs to, or an action such as Done.
-// Chosen, it turns over to the sheet's own colours.
+// Chosen, it turns over to the card's own colours.
 QQC2.AbstractButton {
     id: pill
 

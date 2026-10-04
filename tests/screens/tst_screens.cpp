@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-// The capture sheet and the board, drawn off screen over a folder in the
+// The quick-note card and the board, drawn off screen over a folder in the
 // test's own home, and used by tapping and typing as a person would.
 #include "Board.h"
 #include "Capture.h"
@@ -118,6 +118,8 @@ void picture(QQuickWindow *window, const QString &name)
 void tap(QQuickWindow *window, QQuickItem *item)
 {
     QVERIFY(item);
+    // Notes are laid out in columns once the list settles; tap where they end up.
+    QTest::qWait(30);
     const QPoint centre = item->mapToScene(QPointF(item->width() / 2, item->height() / 2)).toPoint();
     QTest::mouseClick(window, Qt::LeftButton, {}, centre);
 }
@@ -140,8 +142,8 @@ private:
     std::unique_ptr<Capture> m_capture;
     std::unique_ptr<QQuickView> m_view;
 
-    QQuickItem *sheet() const { return m_view->rootObject(); }
-    QQuickItem *named(const QString &name) const { return itemNamed(sheet(), name); }
+    QQuickItem *note() const { return m_view->rootObject(); }
+    QQuickItem *named(const QString &name) const { return itemNamed(note(), name); }
 
 private Q_SLOTS:
     void init()
@@ -160,12 +162,14 @@ private Q_SLOTS:
         KLocalization::setupLocalizedContext(m_view->engine());
         m_view->setInitialProperties({{QStringLiteral("capture"), QVariant::fromValue<QObject *>(m_capture.get())},
                                       {QStringLiteral("projects"), QStringList{QStringLiteral("Shuffle"), QStringLiteral("Home")}}});
-        m_view->loadFromModule(QStringLiteral("io.github.carlsonjm.gooseberry"), QStringLiteral("CaptureSheet"));
+        m_view->loadFromModule(QStringLiteral("io.github.carlsonjm.gooseberry"), QStringLiteral("QuickNote"));
         QVERIFY2(m_view->status() == QQuickView::Ready, qPrintable(m_view->errors().value(0).toString()));
-        m_view->setResizeMode(QQuickView::SizeViewToRootObject);
+        // The card's size on a tablet: the search's, 64 % of the room.
+        m_view->setResizeMode(QQuickView::SizeRootObjectToView);
+        m_view->resize(806, 471);
         m_view->show();
         QVERIFY(QTest::qWaitForWindowExposed(m_view.get()));
-        QMetaObject::invokeMethod(sheet(), "focusText");
+        QMetaObject::invokeMethod(note(), "focusText");
     }
 
     void cleanup()
@@ -177,7 +181,7 @@ private Q_SLOTS:
 
     void cursorIsReadyAndTypingKeeps()
     {
-        auto *editor = sheet()->property("editor").value<QQuickItem *>();
+        auto *editor = note()->property("editor").value<QQuickItem *>();
         QVERIFY(editor);
         QTRY_VERIFY(editor->hasActiveFocus());
         QVERIFY(!m_capture->kept());
@@ -197,7 +201,7 @@ private Q_SLOTS:
     void everyTargetIsBigEnoughToTouch()
     {
         m_capture->setText(QStringLiteral("kept, so Tuck away and Remove show"));
-        const auto buttons = buttonsIn(sheet());
+        const auto buttons = buttonsIn(note());
         QVERIFY(buttons.size() >= 12);
         for (QQuickItem *button : buttons) {
             QVERIFY2(button->height() >= 44 && button->width() >= 44,
@@ -207,12 +211,12 @@ private Q_SLOTS:
 
     void colourIsOneTap()
     {
-        picture(m_view.get(), QStringLiteral("sheet-empty"));
+        picture(m_view.get(), QStringLiteral("note-empty"));
         tap(m_view.get(), named(QStringLiteral("colour-lichen")));
         QCOMPARE(m_capture->colour(), QStringLiteral("lichen"));
         type(m_view.get(), QStringLiteral("Groceries"));
         QCOMPARE(m_store->note(m_capture->noteId())->colour, QStringLiteral("lichen"));
-        picture(m_view.get(), QStringLiteral("sheet-written"));
+        picture(m_view.get(), QStringLiteral("note-written"));
     }
 
     void belongsToIsOneTap()
@@ -232,7 +236,7 @@ private Q_SLOTS:
         // Another project: one tap to open the list, one to choose.
         tap(m_view.get(), named(QStringLiteral("chooseProject")));
         QQuickItem *home = nullptr;
-        for (QQuickItem *button : buttonsIn(sheet())) {
+        for (QQuickItem *button : buttonsIn(note())) {
             if (button->property("text").toString() == QLatin1String("Home")) {
                 home = button;
             }
@@ -241,7 +245,7 @@ private Q_SLOTS:
         tap(m_view.get(), home);
         QCOMPARE(m_capture->project(), QStringLiteral("Home"));
         // The cursor goes back to the note.
-        QTRY_VERIFY(sheet()->property("editor").value<QQuickItem *>()->hasActiveFocus());
+        QTRY_VERIFY(note()->property("editor").value<QQuickItem *>()->hasActiveFocus());
     }
 
     void newProjectIsNamedOnce()
@@ -249,14 +253,14 @@ private Q_SLOTS:
         tap(m_view.get(), named(QStringLiteral("chooseProject")));
         QQuickItem *field = named(QStringLiteral("projectName"));
         QVERIFY(field->isVisible());
-        picture(m_view.get(), QStringLiteral("sheet-projects"));
+        picture(m_view.get(), QStringLiteral("note-projects"));
         tap(m_view.get(), field);
         QTRY_VERIFY(field->hasActiveFocus());
         type(m_view.get(), QStringLiteral("Cabin"));
         QTest::keyClick(m_view.get(), Qt::Key_Return);
         QCOMPARE(m_capture->belongs(), QStringLiteral("project"));
         QCOMPARE(m_capture->project(), QStringLiteral("Cabin"));
-        QTRY_VERIFY(sheet()->property("editor").value<QQuickItem *>()->hasActiveFocus());
+        QTRY_VERIFY(note()->property("editor").value<QQuickItem *>()->hasActiveFocus());
         type(m_view.get(), QStringLiteral("Book it"));
         QCOMPARE(m_store->note(m_capture->noteId())->project, QStringLiteral("Cabin"));
     }
@@ -279,6 +283,117 @@ private Q_SLOTS:
         tap(m_view.get(), named(QStringLiteral("remove")));
         QVERIFY(m_store->notes().isEmpty());
         QVERIFY(QFile::exists(m_home->trash()));
+    }
+
+    // The card on a tablet's free room: the search's size, centred, the
+    // cursor in the note. With the keys up it rises only as far as it must,
+    // then shortens; it never lies under them.
+    void cardFitsTheRoomAndTheKeys()
+    {
+        Places places(m_store.get());
+        PlaceNotes notes(m_store.get());
+        FakeShell shell(m_store.get(), m_capture.get(), &places, &notes);
+        QQmlEngine engine;
+        KLocalization::setupLocalizedContext(&engine);
+        QQmlComponent component(&engine, QStringLiteral("io.github.carlsonjm.gooseberry"), QStringLiteral("CaptureWindow"));
+        std::unique_ptr<QObject> object(component.createWithInitialProperties({{QStringLiteral("shell"), QVariant::fromValue<QObject *>(&shell)}}));
+        QVERIFY2(object, qPrintable(component.errorString()));
+        auto *window = qobject_cast<QQuickWindow *>(object.get());
+        window->resize(1260, 736);
+        QMetaObject::invokeMethod(window, "open");
+        QVERIFY(QTest::qWaitForWindowExposed(window));
+        auto *card = window->property("card").value<QQuickItem *>();
+        QVERIFY(card);
+        QTRY_COMPARE(card->width(), 806.0);
+        QCOMPARE(card->height(), 471.0);
+        QCOMPARE(card->x(), 227.0);
+        QCOMPARE(card->y(), 133.0);
+        auto *quick = window->property("note").value<QQuickItem *>();
+        QTRY_VERIFY(quick->property("editor").value<QQuickItem *>()->hasActiveFocus());
+        picture(window, QStringLiteral("card"));
+
+        // Low keys leave the card where it is.
+        window->setProperty("keysRect", QRectF(0, 650, 1260, 86));
+        QTest::qWait(300);
+        QCOMPARE(card->y(), 133.0);
+        QCOMPARE(card->height(), 471.0);
+        // Taller keys lift it just clear of them.
+        window->setProperty("keysRect", QRectF(0, 560, 1260, 176));
+        QTRY_COMPARE(card->y(), 79.0);
+        QCOMPARE(card->height(), 471.0);
+        // Taller still: it reaches the top of the room, then shortens.
+        window->setProperty("keysRect", QRectF(0, 436, 1260, 300));
+        QTRY_COMPARE(card->height(), 416.0);
+        QCOMPARE(card->y(), 10.0);
+        QVERIFY(card->y() + card->height() <= 436);
+        picture(window, QStringLiteral("card-keys"));
+        for (QQuickItem *button : buttonsIn(card)) {
+            QVERIFY2(button->height() >= 44 && button->width() >= 44, qPrintable(button->objectName()));
+        }
+        window->setProperty("keysRect", QRectF());
+        QTRY_COMPARE(card->y(), 133.0);
+    }
+
+    // All notes grows the card into the board, as Apps grows the search; a
+    // note opened there, Back to the note or Esc brings the note back, and a
+    // second Esc or a tap outside the card puts it away.
+    void cardGrowsIntoTheBoard()
+    {
+        m_capture->setText(QStringLiteral("Flick threshold"));
+        const QString written = m_capture->noteId();
+        Places places(m_store.get());
+        PlaceNotes notes(m_store.get());
+        FakeShell shell(m_store.get(), m_capture.get(), &places, &notes);
+        QQmlEngine engine;
+        KLocalization::setupLocalizedContext(&engine);
+        QQmlComponent component(&engine, QStringLiteral("io.github.carlsonjm.gooseberry"), QStringLiteral("CaptureWindow"));
+        std::unique_ptr<QObject> object(component.createWithInitialProperties({{QStringLiteral("shell"), QVariant::fromValue<QObject *>(&shell)}}));
+        QVERIFY2(object, qPrintable(component.errorString()));
+        auto *window = qobject_cast<QQuickWindow *>(object.get());
+        window->resize(1260, 736);
+        QMetaObject::invokeMethod(window, "open");
+        QVERIFY(QTest::qWaitForWindowExposed(window));
+        auto *card = window->property("card").value<QQuickItem *>();
+        QTRY_COMPARE(card->width(), 806.0);
+
+        tap(window, itemNamed(card, QStringLiteral("allNotes")));
+        QVERIFY(window->property("expanded").toBool());
+        QTRY_COMPARE(card->width(), 1240.0);
+        QTRY_COMPARE(card->height(), 716.0);
+        QCOMPARE(card->y(), 10.0);
+        QTRY_VERIFY(itemNamed(card, QStringLiteral("note-") + written));
+        QVERIFY(itemNamed(card, QStringLiteral("place-today"))->isVisible());
+        picture(window, QStringLiteral("card-board"));
+        for (QQuickItem *button : buttonsIn(window->property("board").value<QQuickItem *>())) {
+            QVERIFY2(button->height() >= 44 && button->width() >= 44, qPrintable(button->objectName()));
+        }
+
+        // A note tapped on the board opens on the card, back at its size.
+        tap(window, itemNamed(card, QStringLiteral("note-") + written));
+        QCOMPARE(shell.opened, written);
+        QMetaObject::invokeMethod(window, "open"); // As the shell does for it.
+        QVERIFY(!window->property("expanded").toBool());
+        QTRY_COMPARE(card->width(), 806.0);
+
+        // Back to the note, then Esc twice.
+        tap(window, itemNamed(card, QStringLiteral("allNotes")));
+        QTRY_VERIFY(itemNamed(card, QStringLiteral("backToNote"))->isVisible());
+        tap(window, itemNamed(card, QStringLiteral("backToNote")));
+        QVERIFY(!window->property("expanded").toBool());
+        tap(window, itemNamed(card, QStringLiteral("allNotes")));
+        QSignalSpy finished(m_capture.get(), &Capture::finished);
+        QTest::keyClick(window, Qt::Key_Escape);
+        QVERIFY(!window->property("expanded").toBool());
+        QCOMPARE(finished.count(), 0);
+        QTest::keyClick(window, Qt::Key_Escape);
+        QCOMPARE(finished.count(), 1);
+
+        // A tap on the card is the card's; a tap beside it puts it away.
+        QMetaObject::invokeMethod(window, "open");
+        QTest::mouseClick(window, Qt::LeftButton, {}, QPoint(int(card->x()) + 300, int(card->y()) + 20));
+        QCOMPARE(finished.count(), 1);
+        QTest::mouseClick(window, Qt::LeftButton, {}, QPoint(60, 60));
+        QCOMPARE(finished.count(), 2);
     }
 
     void boardGathersAndActs()
@@ -322,7 +437,7 @@ private Q_SLOTS:
         QTRY_VERIFY(find(QStringLiteral("note-") + onWindow));
         QVERIFY(find(QStringLiteral("place-window:SpreadGesture.qml")));
 
-        // Tapping a note opens it on the sheet.
+        // Tapping a note opens it on the card.
         tap(board, find(QStringLiteral("note-") + loose));
         QCOMPARE(shell.opened, loose);
 

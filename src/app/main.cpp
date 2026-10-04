@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
     QGuiApplication::setWindowIcon(QIcon::fromTheme(QStringLiteral(GOOSEBERRY_APP_ID)));
 
     // Gooseberry stays running between notes, so the next tap is answered at
-    // once; closing the board or the sheet only puts it away.
+    // once; closing the board or the card only puts it away.
     app.setQuitOnLastWindowClosed(false);
     if (qEnvironmentVariableIsEmpty("QT_QUICK_CONTROLS_STYLE")) {
         QQuickStyle::setStyle(QStringLiteral("org.kde.desktop"));

@@ -13,7 +13,7 @@ struct Colour {
     const char *hex;
 };
 
-// The mock-up's five note colours, in the order the capture sheet offers them.
+// The mock-up's five note colours, in the order the quick-note card offers them.
 constexpr Colour Colours[] = {
     {"butter", "#F2D98A"},
     {"rhyolite", "#E8B4A8"},

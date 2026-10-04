@@ -100,7 +100,7 @@ Times are ISO 8601 with their offset from UTC, to the second.
   first has text. Typing after that is written when the writing pauses for half
   a second, and at least every three seconds while it goes on; any other
   change, Done, a logout and quitting write it at once. A crash loses at most
-  the typing since the last pause, never the note. A sheet closed with nothing
+  the typing since the last pause, never the note. A quick note closed with nothing
   on it leaves nothing behind.
 - **Whole or not at all.** A change is written to a new file beside the note
   and then put in its place in one step, so a crash leaves the note as it was

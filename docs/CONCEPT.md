@@ -24,10 +24,12 @@ a thought that will not last ten seconds.
 
 Four places, one set of notes.
 
-1. **Capture.** One tap opens a sheet from the bottom of the screen with the
-   cursor already in it. Type, or switch to Pen. It saves as Robin writes. By
-   default the note belongs to whatever Robin is working on; one tap changes
-   that. Going back to the work closes the sheet.
+1. **Capture.** One tap opens a card in the middle of the screen, the size of
+   the desktop's search, with the cursor already in it; with the on-screen
+   keys up it keeps above them. Type, or switch to Pen. It saves as Robin
+   writes. By default the note belongs to whatever Robin is working on; one tap
+   changes that. All notes grows the card into the board. Going back to the
+   work puts the card away.
 2. **Notes on the work.** A window's notes wait behind it in its Stack, shown
    only as a count until Robin steps to them. Stepping back to the work puts
    them away.

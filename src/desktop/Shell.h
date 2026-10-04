@@ -15,8 +15,8 @@ class PlaceNotes;
 class Places;
 class WindowContext;
 
-// The desktop around the core: the capture sheet rising from the bottom of
-// the screen, the board window, and the window in front. One running
+// The desktop around the core: the quick-note card centred over the work,
+// the board window, and the window in front. One running
 // Gooseberry answers every tap of its button.
 class Shell : public QObject
 {
@@ -36,7 +36,7 @@ public:
     NoteStore *store() const { return m_store; }
 
     // Answers a start or a later tap: no arguments or --board for the board,
-    // --capture for the capture sheet, --background to get ready without
+    // --capture for the quick-note card, --background to get ready without
     // showing anything.
     void handle(const QStringList &arguments);
 
@@ -53,7 +53,7 @@ private:
     QQuickWindow *captureWindow();
     QQuickWindow *boardWindow();
     QQuickWindow *create(const QString &name);
-    void raiseSheet();
+    void raiseCard();
 
     NoteStore *m_store;
     QQmlEngine *m_engine;

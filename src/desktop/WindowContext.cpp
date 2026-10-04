@@ -64,10 +64,17 @@ void WindowContext::activeChanged()
         m_appId = appId;
         m_appName = index.data(AbstractTasksModel::AppName).toString();
         m_title = index.data(Qt::DisplayRole).toString();
-        // A new title in the same window is not a change of work.
+        // A new title in the same window is not a change of work, and nor is
+        // the desktop's first report of what is in front, which can arrive
+        // after a card opened on the first tap.
         if (QPersistentModelIndex(index) != m_active) {
+            const bool known = m_active.isValid();
             m_active = index;
-            Q_EMIT workChanged();
+            if (known) {
+                Q_EMIT workChanged();
+            } else {
+                Q_EMIT firstReported();
+            }
         }
         return;
     }

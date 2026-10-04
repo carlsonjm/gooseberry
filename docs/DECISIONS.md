@@ -136,17 +136,35 @@ Rejected: working a project out from where the document lives. Plain Plasma
 does not say where most windows' documents are, so the choice would rarely
 appear before notes on cards.
 
-## The capture sheet is a surface of the desktop's own
+## A quick note is a card the size of the search
 
-The sheet is drawn on a layer of the desktop's own, across the room the panels
-leave, with the work dimmed behind it: it rises from the bottom edge, takes the
-keyboard with the cursor in the note, and a tap on the work puts it away. No
-window is moved. On a desktop without such layers it is an ordinary window
-kept above the others. This is engineering's choice.
+The quick note opens on a card the size of the desktop's search, centred over
+the work, with the cursor in the note. With the on-screen keys up it rises
+only as far as it must to stay above them, then shortens, as the search does.
+All notes grows the card into the board, as Apps and Files grow the search; a
+note opened or started there brings the card back to its size. Gooseberry stays
+an application of its own, not part of the search. (The maintainer, 4 October.)
+
+This supersedes the bottom sheet in `mockup/Capture.dc.html`; what the card
+holds, the size of its controls and the note colours still follow the mock-up.
+
+Rejected: a sheet from the bottom of the screen, where the on-screen keys come
+up over it; and the card growing into a larger page for one note, which leaves
+nothing to browse where Apps and Files have their lists.
+
+## The quick-note card is a surface of the desktop's own
+
+The card is drawn on a layer of the desktop's own, across the room the panels
+leave: it takes the keyboard with the cursor in the note, and a tap on the work
+around it puts it away. No window is moved. The layer is the one below the
+on-screen keys, so they stay above the card and take their own touches. On a
+desktop without such layers it is an ordinary window kept above the others.
+This is engineering's choice.
 
 Rejected: an ordinary window, which the window manager places where it
-chooses, so it could not rise from the bottom edge; and a panel widget, which
-exists only where a panel holds it.
+chooses; a panel widget, which exists only where a panel holds it; and the
+layer above the keys, where a surface opened after them covers them and takes
+every touch meant for them, as the desktop's search found.
 
 ## Opening Gooseberry opens the board
 
@@ -155,14 +173,14 @@ as an ordinary window; capture is New note in its menu, on the board, and any
 one-tap way a desktop adds, such as a Notes tab in its search. (The maintainer,
 3 October.)
 
-Rejected: the entry opening the capture sheet. The sheet is not a window, so a
+Rejected: the entry opening the quick-note card. The card is not a window, so a
 card workspace waiting for the opened application to arrive never sees it, and
 the application has nothing to show on a dock.
 
 ## Gooseberry stays ready
 
 Gooseberry starts with the session, showing nothing, and keeps running between
-notes; closing the board or the sheet only puts it away. Every start, from its
+notes; closing the board or the card only puts it away. Every start, from its
 entry or its menu, reaches the one running Gooseberry. This is engineering's choice: speed to the
 cursor is the product, and a program starting from cold takes a moment the
 thought may not last.

@@ -43,13 +43,14 @@ qt_add_qml_module(gooseberry-screens
     VERSION 1.0
     OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/qml/io/github/carlsonjm/gooseberry
     QML_FILES
+        qml/BoardView.qml
         qml/BoardWindow.qml
-        qml/CaptureSheet.qml
         qml/CaptureWindow.qml
         qml/Masonry.qml
         qml/NoteCard.qml
         qml/Notice.qml
         qml/Pill.qml
+        qml/QuickNote.qml
     RESOURCES
         qml/icons/tuck.svg
 )

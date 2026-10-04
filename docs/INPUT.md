@@ -8,7 +8,7 @@ Kadunce's own hold and let go; stepping back to the card puts them away.
 | Task | Touch | Keyboard |
 | --- | --- | --- |
 | Capture a note | Hold Gooseberry, then tap New note | None yet |
-| Finish a note | Tap the work behind the sheet | `Esc` |
+| Finish a note | Tap the work around the card | `Esc` |
 | Choose where it belongs | Tap a place under Belongs to | None yet |
 | Write with a pen | Tap Pen | None yet |
 | Set a reminder | Tap Remind | None yet |
@@ -23,7 +23,7 @@ Kadunce's own hold and let go; stepping back to the card puts them away.
 
 | Input | What happens |
 | --- | --- |
-| Hold Gooseberry, then tap New note | The capture sheet rises from the bottom with the cursor in it. What you write is kept from its first letter. |
+| Hold Gooseberry, then tap New note | The quick-note card opens in the middle of the screen, the size of the desktop's search, with the cursor in it. What you write is kept from its first letter. |
 | Tap New note on the board | The same, for a note that belongs to the place the board is showing. |
 
 Gooseberry is its entry in the launcher or a search, or its button pinned to
@@ -34,12 +34,16 @@ way to capture, such as a Notes tab in its search (`DESKTOP.md`).
 
 | Input | What happens |
 | --- | --- |
-| Tap the work behind the sheet | The sheet goes down. The note is already kept; there is nothing to confirm. |
+| Tap the work around the card | The card goes away. The note is already kept; there is nothing to confirm. |
 | Tap Done | The same. |
 | Go to another window | The same. |
-| Press `Esc` | The same. |
+| Press `Esc` | The same; with the card grown into the board, the first `Esc` brings the note back. |
 
-A sheet closed with nothing written on it leaves nothing behind. A note emptied
+With the on-screen keys up, the card rises only as far as it must to stay
+above them, then shortens; what does not fit scrolls. It returns as the keys go
+down.
+
+A quick note closed with nothing written on it leaves nothing behind. A note emptied
 of its text and closed goes to the desktop's trash.
 
 ## Choose where it belongs
@@ -72,20 +76,21 @@ Not yet built: Milestone 1.
 | Input | What happens |
 | --- | --- |
 | Tap Gooseberry | The board opens on Today, as an ordinary window. |
-| Tap All notes on the capture sheet | The sheet goes down and the board opens on Today. |
+| Tap All notes on the card | The card grows into the board, on Today, as Apps and Files grow the desktop's search. |
+| Tap Back to the note, on the board in the card | The card returns to the note, as it was. |
 
 ## Open a note
 
 | Input | What happens |
 | --- | --- |
-| Tap the note on the board | The note opens on the capture sheet, to read and change. |
+| Tap the note on the board | The note opens on the quick-note card, to read and change. In the card, the board gives way to it. |
 
 ## Tuck a note away
 
 | Input | What happens |
 | --- | --- |
 | Tap Tuck away on the note | The note leaves view and waits under Tucked away on the board. Bring back, in the message that follows, undoes it. |
-| Tap Tuck away on the capture sheet | The same, for the note on the sheet. |
+| Tap Tuck away on the card | The same, for the note on the card. |
 
 ## Bring a note back
 
@@ -98,7 +103,7 @@ Not yet built: Milestone 1.
 | Input | What happens |
 | --- | --- |
 | Tap the note on the board, then Remove | The note goes to the desktop's trash. Undo, in the message that follows, brings it back. |
-| Tap Remove on the capture sheet | The same, for the note being written. |
+| Tap Remove on the card | The same, for the note being written. |
 
 ## Find a note
 

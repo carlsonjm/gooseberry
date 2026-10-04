@@ -16,10 +16,13 @@ file asks for it. Where the desktop says nothing, a note starts Loose.
 A dock, a panel or Search starts Gooseberry by its desktop file,
 `io.github.carlsonjm.Gooseberry`:
 
-| To | Start | Shuffle's dock |
-| --- | --- | --- |
-| Capture a note | The desktop file, or `gooseberry` | A tap |
-| Open the board | Its Open the board action, or `gooseberry --board` | A hold |
+| To | Start |
+| --- | --- |
+| Open the board, as a window | The desktop file, or `gooseberry` |
+| Capture a note, on the quick-note card | Its Capture action, New note, or `gooseberry --capture` |
+
+The quick-note card is not a window: a desktop that waits for an opened
+application's window does not wait for it.
 
 Every start reaches the one running Gooseberry, which comes up with the
 session.
@@ -96,4 +99,3 @@ None is assumed.
 | Tettegouche | A notes source for Search, with a Notes tab | Notes in Search |
 | Tettegouche | A Notes door on Search's first screen, behind a checkbox, shown only when Gooseberry is installed | Opening Gooseberry from Search |
 | Split Rock | Use Gooseberry's notes tool where present | The notes tool |
-| Shuffle Keyboard | Say how tall the keys are, or leave room above them, for a surface of the desktop's own such as the capture sheet | Writing on the sheet with the keys up, if the tablet shows the keys covering it |

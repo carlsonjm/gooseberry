@@ -17,7 +17,7 @@ Capture::Capture(NoteStore *store, QObject *parent)
             return;
         }
         // Removed by another program while open here. The text stays on the
-        // sheet, and the next change keeps it again as a new note.
+        // card, and the next change keeps it again as a new note.
         m_note.id.clear();
         Q_EMIT noteChanged();
     });
@@ -61,7 +61,7 @@ bool Capture::readOnly() const
 void Capture::leaveEmpty()
 {
     // A note left with no text is not kept: it goes to the trash, however the
-    // sheet was left.
+    // card was left.
     if (kept() && !readOnly() && m_note.text.trimmed().isEmpty()) {
         stopWaiting();
         m_store->trash(m_note.id);
@@ -299,7 +299,7 @@ void Capture::storeChanged(const QString &id)
         return;
     }
     // Saves made here come back as the same note; only a change made by
-    // another program is taken onto the sheet.
+    // another program is taken onto the card.
     if (onDisk->text != m_note.text) {
         m_note.text = onDisk->text;
         Q_EMIT textChanged();

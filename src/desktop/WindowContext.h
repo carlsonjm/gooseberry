@@ -30,6 +30,8 @@ public:
 Q_SIGNALS:
     // Another window came to the front: Robin went back to the work.
     void workChanged();
+    // The desktop said for the first time what is in front.
+    void firstReported();
 
 private:
     void activeChanged();
