@@ -113,13 +113,66 @@ private Q_SLOTS:
         QCOMPARE(onDisk.workspace, QStringLiteral("Desk"));
         QVERIFY(files.first().startsWith(QDate::currentDate().toString(Qt::ISODate)));
 
-        // Every later letter is on disk when the call that typed it returns.
+        // Later letters wait for the writing to pause: typed in a run, they
+        // are written once, not once per letter.
+        const auto textOnDisk = [&] {
+            return Note::parse(readFile(m_store->pathFor(capture.noteId())), {}, {}).text;
+        };
         const QString words = QStringLiteral("Flick threshold");
         for (int i = 2; i <= words.size(); ++i) {
             capture.setText(words.left(i));
-            QCOMPARE(Note::parse(readFile(m_store->pathFor(capture.noteId())), {}, {}).text, words.left(i));
         }
+        QVERIFY(capture.waiting());
+        QCOMPARE(textOnDisk(), QStringLiteral("F"));
+        QTRY_COMPARE_WITH_TIMEOUT(textOnDisk(), words, Capture::PauseMs * 4);
+        QVERIFY(!capture.waiting());
         QCOMPARE(noteFiles(m_folder).size(), 1);
+
+        // Done writes what is waiting at once.
+        capture.setText(words + QStringLiteral(" now"));
+        capture.finish();
+        QCOMPARE(textOnDisk(), words + QStringLiteral(" now"));
+    }
+
+    void longTypingIsWrittenAsItGoes()
+    {
+        Capture capture(m_store.get());
+        capture.setWaits(200, 600);
+        capture.startNew({});
+        const QString words = QStringLiteral("Flick threshold feels short");
+        QString lastWritten;
+        for (int i = 1; i <= words.size(); ++i) {
+            capture.setText(words.left(i));
+            QTest::qWait(40); // Faster than the pause: the writing never rests.
+            lastWritten = Note::parse(readFile(m_store->pathFor(capture.noteId())), {}, {}).text;
+        }
+        // Written on the way, not only at the first letter.
+        QVERIFY2(lastWritten.size() > 1 && words.startsWith(lastWritten), qPrintable(lastWritten));
+    }
+
+    void anyOtherChangeWritesTheTypingAtOnce()
+    {
+        Capture capture(m_store.get());
+        capture.startNew({});
+        capture.setText(QStringLiteral("F"));
+        capture.setText(QStringLiteral("Flick"));
+        capture.setColour(QStringLiteral("lake"));
+        const Note onDisk = Note::parse(readFile(m_store->pathFor(capture.noteId())), {}, {});
+        QCOMPARE(onDisk.text, QStringLiteral("Flick"));
+        QCOMPARE(onDisk.colour, QStringLiteral("lake"));
+        QVERIFY(!capture.waiting());
+    }
+
+    void removingWhileTypingWaitsLeavesNothing()
+    {
+        Capture capture(m_store.get());
+        capture.setWaits(100, 600);
+        capture.startNew({});
+        capture.setText(QStringLiteral("F"));
+        capture.setText(QStringLiteral("Flick"));
+        capture.remove();
+        QTest::qWait(300); // Past the pause, when waiting typing would be written.
+        QVERIFY(noteFiles(m_folder).isEmpty());
     }
 
     void blankIsNotANote()
@@ -345,7 +398,8 @@ private Q_SLOTS:
 
         QTest::qWait(1100); // Change times are kept to the second.
         first.setText(QStringLiteral("one more"));
-        QCOMPARE(board.index(0).data(PlaceNotes::TextRole).toString(), QStringLiteral("one more"));
+        QTRY_COMPARE_WITH_TIMEOUT(board.index(0).data(PlaceNotes::TextRole).toString(), QStringLiteral("one more"),
+                                  Capture::PauseMs * 4);
         QVERIFY(changed.count() >= 1);
         QCOMPARE(reset.count(), 0);
     }
@@ -385,6 +439,7 @@ private Q_SLOTS:
         // Gooseberry's own saves are not taken for changes from elsewhere.
         changed.clear();
         capture.setText(QStringLiteral("Edited elsewhere!!"));
+        capture.flush();
         QTest::qWait(400);
         QCOMPARE(changed.count(), 1);
     }

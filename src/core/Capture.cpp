@@ -3,6 +3,8 @@
 
 #include "NoteStore.h"
 
+#include <QCoreApplication>
+
 namespace Gooseberry {
 
 Capture::Capture(NoteStore *store, QObject *parent)
@@ -20,6 +22,26 @@ Capture::Capture(NoteStore *store, QObject *parent)
         Q_EMIT noteChanged();
     });
     connect(m_store, &NoteStore::readOnlyChanged, this, &Capture::noteChanged);
+
+    m_pause.setSingleShot(true);
+    m_pause.setInterval(PauseMs);
+    connect(&m_pause, &QTimer::timeout, this, &Capture::flush);
+    // However the program is asked to end, typing waiting for a pause is
+    // written first.
+    if (auto *app = QCoreApplication::instance()) {
+        connect(app, &QCoreApplication::aboutToQuit, this, &Capture::flush);
+    }
+}
+
+Capture::~Capture()
+{
+    flush();
+}
+
+void Capture::setWaits(int pauseMs, int longestWaitMs)
+{
+    m_pause.setInterval(pauseMs);
+    m_longestWaitMs = longestWaitMs;
 }
 
 QVariantList Capture::colours() const
@@ -41,6 +63,7 @@ void Capture::leaveEmpty()
     // A note left with no text is not kept: it goes to the trash, however the
     // sheet was left.
     if (kept() && !readOnly() && m_note.text.trimmed().isEmpty()) {
+        stopWaiting();
         m_store->trash(m_note.id);
         m_note.id.clear();
         Q_EMIT noteChanged();
@@ -49,6 +72,7 @@ void Capture::leaveEmpty()
 
 void Capture::reset(const Note &note, bool editing)
 {
+    flush();
     leaveEmpty();
     m_note = note;
     m_editing = editing;
@@ -101,8 +125,24 @@ bool Capture::open(const QString &id)
     return true;
 }
 
+void Capture::stopWaiting()
+{
+    m_pause.stop();
+    m_waiting = false;
+    m_waitingSince.invalidate();
+}
+
+void Capture::flush()
+{
+    if (m_waiting) {
+        keep();
+    }
+}
+
 void Capture::keep()
 {
+    // Whatever is written now includes any typing that was waiting.
+    stopWaiting();
     if (readOnly()) {
         return;
     }
@@ -137,7 +177,23 @@ void Capture::setText(const QString &text)
     }
     m_note.text = text;
     Q_EMIT textChanged();
-    keep();
+    if (!kept()) {
+        // The first letter makes the note, at once.
+        keep();
+        return;
+    }
+    // Later letters wait for the writing to pause, so a note is written once
+    // per pause rather than once per letter, and never waits longer than the
+    // longest wait while typing goes on.
+    if (!m_waiting) {
+        m_waiting = true;
+        m_waitingSince.start();
+    }
+    if (m_waitingSince.elapsed() >= m_longestWaitMs) {
+        keep();
+        return;
+    }
+    m_pause.start();
 }
 
 void Capture::setColour(const QString &colour)
@@ -172,6 +228,7 @@ void Capture::setBelongs(const QString &kind, const QString &project)
 
 void Capture::finish()
 {
+    flush();
     leaveEmpty();
     Q_EMIT finished();
 }
@@ -192,6 +249,7 @@ void Capture::remove()
         Q_EMIT finished();
         return;
     }
+    stopWaiting();
     const QString id = m_note.id;
     const auto inTrash = m_store->trash(id);
     if (!inTrash) {
@@ -228,6 +286,12 @@ void Capture::setProblem(const QString &problem)
 void Capture::storeChanged(const QString &id)
 {
     if (id != m_note.id) {
+        return;
+    }
+    if (m_waiting) {
+        // Another program changed the note while typing here waited for a
+        // pause: what is being typed wins, and is written now.
+        keep();
         return;
     }
     const auto onDisk = m_store->note(id);

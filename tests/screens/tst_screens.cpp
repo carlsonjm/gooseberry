@@ -186,9 +186,12 @@ private Q_SLOTS:
         QVERIFY(m_capture->kept());
         QCOMPARE(m_store->note(m_capture->noteId())->text, QStringLiteral("F"));
         type(m_view.get(), QStringLiteral("lick"));
-        QFile file(m_store->pathFor(m_capture->noteId()));
-        QVERIFY(file.open(QIODevice::ReadOnly));
-        QVERIFY(file.readAll().endsWith("---\nFlick"));
+        // The rest is written when the typing pauses.
+        const auto written = [this] {
+            QFile file(m_store->pathFor(m_capture->noteId()));
+            return file.open(QIODevice::ReadOnly) && file.readAll().endsWith("---\nFlick");
+        };
+        QTRY_VERIFY_WITH_TIMEOUT(written(), Capture::PauseMs * 4);
     }
 
     void everyTargetIsBigEnoughToTouch()

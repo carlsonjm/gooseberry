@@ -3,7 +3,9 @@
 
 #include "Note.h"
 
+#include <QElapsedTimer>
 #include <QObject>
+#include <QTimer>
 #include <QVariantList>
 
 namespace Gooseberry {
@@ -18,8 +20,10 @@ struct CaptureContext {
 };
 
 // The note on the capture sheet. It is kept from its first letter: the first
-// change that gives it text writes it to the folder, and every change after
-// that is written before the call returns.
+// change that gives it text writes it to the folder at once. Typing after that
+// is written when the writing pauses, and at least every few seconds while it
+// goes on; every other change, finishing the note and the program ending write
+// it at once.
 class Capture : public QObject
 {
     Q_OBJECT
@@ -38,6 +42,14 @@ class Capture : public QObject
 
 public:
     explicit Capture(NoteStore *store, QObject *parent = nullptr);
+    ~Capture() override;
+
+    // How long the writing rests before typing is written, and the longest
+    // typing waits while it goes on.
+    static constexpr int PauseMs = 500;
+    static constexpr int LongestWaitMs = 3000;
+    // Shorter waits, so a test need not sit through the real ones.
+    void setWaits(int pauseMs, int longestWaitMs);
 
     QString noteId() const { return m_note.id; }
     bool kept() const { return !m_note.id.isEmpty(); }
@@ -78,6 +90,10 @@ public:
     Q_INVOKABLE void remove();
     // Brings back the note remove() sent to the trash.
     Q_INVOKABLE bool undoRemove();
+    // Writes typing still waiting for a pause. Nothing happens when there is
+    // none.
+    Q_INVOKABLE void flush();
+    bool waiting() const { return m_waiting; }
 
 Q_SIGNALS:
     void noteChanged();
@@ -91,6 +107,7 @@ Q_SIGNALS:
 
 private:
     void keep();
+    void stopWaiting();
     void leaveEmpty();
     void setProblem(const QString &problem);
     void reset(const Note &note, bool editing);
@@ -103,6 +120,11 @@ private:
     QString m_problem;
     QString m_removedId;
     QString m_removedPath;
+    // Typing not yet written, and since when.
+    bool m_waiting = false;
+    QTimer m_pause;
+    QElapsedTimer m_waitingSince;
+    int m_longestWaitMs = LongestWaitMs;
 };
 
 } // namespace Gooseberry

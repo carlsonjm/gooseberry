@@ -43,6 +43,8 @@ Shell::Shell(NoteStore *store, QQmlEngine *engine, QObject *parent)
             m_capture->finish();
         }
     });
+    // A session ending asks for unsaved work first.
+    connect(qApp, &QGuiApplication::commitDataRequest, m_capture, &Capture::flush);
 }
 
 Shell::~Shell()

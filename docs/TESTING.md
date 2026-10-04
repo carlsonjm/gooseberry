@@ -13,8 +13,8 @@ session.
 | Test | What it proves |
 | --- | --- |
 | `tst_note` | The header is written and read exactly as `FORMAT.md` says; keys from a newer version survive an edit; a file with no header is a Loose note; a newer note is not changed; the first words are the title; a window's title gives the document's name |
-| `tst_store` | A note is on disk from its first letter, and every letter after it before the next; nothing is kept for an empty sheet; Belongs to and colour are one change each; removing sends the note and its ink to the trash with the record the trash needs, and undo brings them back; tuck away and bring back; the board's places, counts, order and search; changes made by other programs are read; a missing folder is made again; a folder or note from a newer version is left alone |
-| `tst_keep` | A second copy of the test types a note and is ended as a crash ends a program, after one letter and mid-sentence, and as a logout ends it; the note is all there afterwards, with its colour and place, nothing half-written beside it, and back on the board after a restart |
+| `tst_store` | A note is on disk from its first letter, typing after it once the writing pauses and on the way through long typing, and at once on Done or any other change; nothing is kept for an empty sheet; Belongs to and colour are one change each; removing sends the note and its ink to the trash with the record the trash needs, and undo brings them back; tuck away and bring back; the board's places, counts, order and search; changes made by other programs are read; a missing folder is made again; a folder or note from a newer version is left alone |
+| `tst_keep` | A second copy of the test types a note and is ended as a crash ends a program, after one letter, mid-sentence and after a pause, and as a logout ends it mid-sentence; after a pause or a logout the note is all there, a crash mid-sentence keeps it up to the last pause, nothing half-written is left beside it, and it is back on the board after a restart |
 | `tst_screens` | The capture sheet and the board, drawn off screen and used by tap and keyboard: the cursor is in the note when the sheet opens; typing keeps the note; colour and Belongs to are one tap; a new project is named once; Done; Tuck away and Remove show only for a kept note; the board opens on Today, opens a note, tucks one away and brings it back, and starts a new note in the place shown; every target is at least 44 pixels |
 
 With `GOOSEBERRY_SCREENSHOTS` set to a folder, `tst_screens` saves a picture of
@@ -33,9 +33,9 @@ of use.
    the board: the note is there under Today.
 3. Write a note, choose a colour and a project, and finish it. Each choice is
    one tap; the note is on the board in that colour, under the project.
-4. Write a note, and while the sheet is still up, end Gooseberry the hard way
-   (`pkill -9 gooseberry` in a terminal). Tap the button again; the note is on
-   the board, whole.
+4. Write a note, pause a moment, and while the sheet is still up, end
+   Gooseberry the hard way (`pkill -9 gooseberry` in a terminal). Tap the
+   button again; the note is on the board, whole.
 5. Write a note and log out without closing the sheet. Log in: the note is on
    the board, and the first tap brings the sheet up at once.
 6. Tuck a note away from the board; it waits only under Tucked away. Tap it

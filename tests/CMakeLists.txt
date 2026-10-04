@@ -16,7 +16,7 @@ endfunction()
 
 gooseberry_test(tst_note core/tst_note.cpp)
 gooseberry_test(tst_store core/tst_store.cpp)
-gooseberry_test(tst_keep core/tst_keep.cpp)
+gooseberry_test(tst_keep core/tst_keep.cpp KF6::CoreAddons)
 gooseberry_test(tst_screens screens/tst_screens.cpp
     gooseberry-screensplugin Qt6::Gui Qt6::Quick KF6::I18n KF6::I18nQml)
 set_target_properties(tst_screens PROPERTIES QT_QML_MODULE_NO_IMPORT_SCAN ON)

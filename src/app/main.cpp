@@ -6,6 +6,7 @@
 #include <KDBusService>
 #include <KLocalizedQmlContext>
 #include <KLocalizedString>
+#include <KSignalHandler>
 
 #include <QApplication>
 #include <QIcon>
@@ -13,6 +14,8 @@
 #include <QQuickStyle>
 #include <QSessionManager>
 #include <QtQml/qqmlextensionplugin.h>
+
+#include <csignal>
 
 Q_IMPORT_QML_PLUGIN(io_github_carlsonjm_gooseberryPlugin)
 
@@ -38,11 +41,18 @@ int main(int argc, char *argv[])
     // A second start hands its arguments to the running Gooseberry and ends.
     KDBusService service(KDBusService::Unique | KDBusService::NoExitOnFailure);
 
-    // Every note is on disk as it is written, so a logout has nothing to wait
-    // for; the session starts Gooseberry again from its autostart entry.
+    // The session starts Gooseberry again from its autostart entry. Typing
+    // still waiting for a pause is written when the session asks (Shell).
     QObject::connect(&app, &QGuiApplication::commitDataRequest, [](QSessionManager &manager) {
         manager.setRestartHint(QSessionManager::RestartNever);
     });
+
+    // A logout or shutdown ends Gooseberry with a signal. It quits the usual
+    // way instead, so typing waiting for a pause is written first.
+    for (int signal : {SIGTERM, SIGINT, SIGHUP}) {
+        KSignalHandler::self()->watchSignal(signal);
+    }
+    QObject::connect(KSignalHandler::self(), &KSignalHandler::signalReceived, &app, &QCoreApplication::quit);
 
     Gooseberry::NoteStore store(Gooseberry::NoteStore::defaultFolder());
     if (!store.open()) {

@@ -158,6 +158,18 @@ thought may not last.
 
 Rejected: starting Gooseberry afresh on each tap.
 
+## Typing is written at each pause
+
+The first letter makes the note on disk at once; later typing is written when
+the writing pauses for half a second, at least every three seconds while it
+goes on, and at once on any other change, Done, a logout or quitting
+(`FORMAT.md`). This is engineering's choice: writing the whole note on every
+letter cost the disk tens of kilobytes a letter for a note of a few hundred
+bytes, and a crash now loses at most the last moment of typing, never the note.
+
+Rejected: writing on every letter, for the disk and battery it costs; and
+writing only on Done, which a crash would cost the whole note.
+
 ## Removing a note uses the desktop's trash directly
 
 Gooseberry moves a removed note into the person's trash itself, as the

@@ -1,27 +1,33 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // A note survives a crash, a logout and a restart. A second copy of this test
-// types a note letter by letter into its own folder and says each letter once
-// the call that typed it has returned; the first copy then ends it the way a
-// crash or a logout would, and reads the folder as Gooseberry would on the
-// next start.
+// types a note letter by letter into its own folder, faster than the pause that
+// writes typing, and says each letter once the call that typed it has returned,
+// and "rested" once the writing has paused and been written. The first copy
+// then ends it the way a crash or a logout would, and reads the folder as
+// Gooseberry would on the next start.
 #include "Board.h"
 #include "Capture.h"
 #include "NoteStore.h"
 #include "TestHome.h"
 
+#include <KSignalHandler>
+
 #include <QCoreApplication>
 #include <QProcess>
 #include <QTest>
+#include <QTimer>
 
 #include <csignal>
 #include <cstdio>
-#include <unistd.h>
 
 using namespace Gooseberry;
 
 namespace {
 
 const QString Words = QStringLiteral("Flick threshold feels short. Measure it.");
+
+// Quick typing: well inside the pause, so nothing is written between letters.
+constexpr int TypingMs = 10;
 
 int typeAndWait(const QString &folder, int letters)
 {
@@ -33,15 +39,38 @@ int typeAndWait(const QString &folder, int letters)
     capture.startNew({QStringLiteral("SpreadGesture.qml"), QStringLiteral("org.kde.kate"), QStringLiteral("Desk")});
     capture.setColour(QStringLiteral("rhyolite"));
     capture.setBelongs(QStringLiteral("project"), QStringLiteral("Shuffle"));
-    for (int i = 1; i <= letters; ++i) {
-        capture.setText(Words.left(i));
-        std::printf("%d\n", i);
+
+    // As Gooseberry does: a logout's signal quits the usual way.
+    for (int signal : {SIGTERM, SIGINT, SIGHUP}) {
+        KSignalHandler::self()->watchSignal(signal);
+    }
+    QObject::connect(KSignalHandler::self(), &KSignalHandler::signalReceived, qApp, &QCoreApplication::quit);
+
+    int typed = 0;
+    QTimer keys;
+    keys.setInterval(TypingMs);
+    QTimer rest;
+    rest.setInterval(10);
+    QObject::connect(&keys, &QTimer::timeout, [&] {
+        ++typed;
+        capture.setText(Words.left(typed));
+        std::printf("%d\n", typed);
         std::fflush(stdout);
-    }
+        if (typed == letters) {
+            keys.stop();
+            rest.start();
+        }
+    });
+    QObject::connect(&rest, &QTimer::timeout, [&] {
+        if (!capture.waiting()) {
+            rest.stop();
+            std::printf("rested\n");
+            std::fflush(stdout);
+        }
+    });
+    keys.start();
     // Still running, the sheet still up, when the end comes.
-    for (;;) {
-        pause();
-    }
+    return QCoreApplication::exec();
 }
 
 } // namespace
@@ -59,7 +88,13 @@ public:
 private:
     TestHome *m_home;
 
-    QString typeInChild(const QString &name, int letters, bool crash)
+    enum class End {
+        CrashAtOnce, // Right after the last letter, with typing still waiting.
+        CrashAfterAPause, // Once the writing has paused and been written.
+        Logout, // Right after the last letter, as a logout asks a program to end.
+    };
+
+    QString typeInChild(const QString &name, int letters, End end)
     {
         const QString folder = m_home->path() + QLatin1Char('/') + name;
         QProcess child;
@@ -70,26 +105,34 @@ private:
             return {};
         }
         QByteArray said;
-        const QByteArray last = QByteArray::number(letters).append('\n');
+        const QByteArray last = end == End::CrashAfterAPause ? QByteArray("rested\n")
+                                                             : QByteArray::number(letters).append('\n');
         while (!said.contains(last)) {
             if (!child.waitForReadyRead(10000)) {
                 return {};
             }
             said += child.readAllStandardOutput();
         }
-        if (crash) {
-            child.kill(); // As a crash: no chance to finish anything.
+        if (end == End::Logout) {
+            child.terminate();
         } else {
-            child.terminate(); // As a logout or shutdown asks a program to end.
+            child.kill(); // As a crash: no chance to finish anything.
         }
         child.waitForFinished();
         return folder;
     }
 
+    // Nothing half-written is left behind beside the note.
+    static void onlyTheNote(const QString &folder, const Note &note)
+    {
+        const QStringList left = QDir(folder).entryList(QDir::Files | QDir::Hidden);
+        QCOMPARE(left, (QStringList{QStringLiteral(".gooseberry"), note.id + QStringLiteral(".md")}));
+    }
+
 private Q_SLOTS:
     void survivesACrashFromTheFirstLetter()
     {
-        const QString folder = typeInChild(QStringLiteral("crash-1"), 1, true);
+        const QString folder = typeInChild(QStringLiteral("crash-1"), 1, End::CrashAtOnce);
         QVERIFY(m_home->holds(folder));
         NoteStore next(folder);
         QVERIFY(next.open());
@@ -97,10 +140,24 @@ private Q_SLOTS:
         QCOMPARE(next.notes().first().text, QStringLiteral("F"));
     }
 
-    void survivesACrashMidSentence()
+    void aCrashMidSentenceLosesOnlyTheTypingSinceThePause()
     {
         const int letters = 23;
-        const QString folder = typeInChild(QStringLiteral("crash-23"), letters, true);
+        const QString folder = typeInChild(QStringLiteral("crash-23"), letters, End::CrashAtOnce);
+        NoteStore next(folder);
+        QVERIFY(next.open());
+        QCOMPARE(next.notes().size(), 1);
+        const Note note = next.notes().first();
+        QVERIFY2(!note.text.isEmpty() && Words.left(letters).startsWith(note.text), qPrintable(note.text));
+        QCOMPARE(note.colour, QStringLiteral("rhyolite"));
+        QCOMPARE(note.project, QStringLiteral("Shuffle"));
+        onlyTheNote(folder, note);
+    }
+
+    void survivesACrashAfterAPause()
+    {
+        const int letters = 23;
+        const QString folder = typeInChild(QStringLiteral("crash-rested"), letters, End::CrashAfterAPause);
         NoteStore next(folder);
         QVERIFY(next.open());
         QCOMPARE(next.notes().size(), 1);
@@ -110,14 +167,13 @@ private Q_SLOTS:
         QCOMPARE(note.belongs, Belongs::Project);
         QCOMPARE(note.project, QStringLiteral("Shuffle"));
         QCOMPARE(note.window, QStringLiteral("SpreadGesture.qml"));
-        // Nothing half-written is left behind beside it.
-        const QStringList left = QDir(folder).entryList(QDir::Files | QDir::Hidden);
-        QCOMPARE(left, (QStringList{QStringLiteral(".gooseberry"), note.id + QStringLiteral(".md")}));
+        onlyTheNote(folder, note);
     }
 
     void survivesALogout()
     {
-        const QString folder = typeInChild(QStringLiteral("logout"), int(Words.size()), false);
+        // Ended mid-run, with typing still waiting: the logout writes it.
+        const QString folder = typeInChild(QStringLiteral("logout"), int(Words.size()), End::Logout);
         NoteStore next(folder);
         QVERIFY(next.open());
         QCOMPARE(next.notes().size(), 1);
@@ -126,7 +182,7 @@ private Q_SLOTS:
 
     void comesBackOnTheBoardAfterARestart()
     {
-        const QString folder = typeInChild(QStringLiteral("restart"), int(Words.size()), true);
+        const QString folder = typeInChild(QStringLiteral("restart"), int(Words.size()), End::CrashAfterAPause);
         NoteStore next(folder);
         QVERIFY(next.open());
         Places places(&next);
