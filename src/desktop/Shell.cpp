@@ -4,6 +4,10 @@
 #include "Board.h"
 #include "Capture.h"
 #include "NoteStore.h"
+#include "Notifier.h"
+#include "Planner.h"
+#include "ReminderWords.h"
+#include "Reminders.h"
 #include "SpreadGuest.h"
 #include "WindowContext.h"
 #include "Log.h"
@@ -13,6 +17,7 @@
 #include <LayerShellQt/Window>
 
 #include <QCommandLineParser>
+#include <QDBusConnection>
 #include <QCursor>
 #include <QGuiApplication>
 #include <QQmlComponent>
@@ -40,7 +45,18 @@ Shell::Shell(NoteStore *store, QQmlEngine *engine, QObject *parent)
     , m_notes(new PlaceNotes(store, this))
     , m_context(new WindowContext(QGuiApplication::desktopFileName(), this))
     , m_guest(new SpreadGuest(this))
+    , m_planner(new Planner(store, this))
+    , m_reminders(new Reminders(store, this))
+    , m_notifier(new Notifier(store, m_reminders, this))
 {
+    // A reminder tapped opens its note on the card.
+    connect(m_notifier, &Notifier::openRequested, this, &Shell::openNote);
+    connect(m_context, &WindowContext::documentOpened, m_reminders, &Reminders::documentOpened);
+    // A timer stands still while the computer sleeps; on waking, every
+    // reminder that came due meanwhile is shown at once.
+    QDBusConnection::systemBus().connect(QStringLiteral("org.freedesktop.login1"), QStringLiteral("/org/freedesktop/login1"),
+                                         QStringLiteral("org.freedesktop.login1.Manager"), QStringLiteral("PrepareForSleep"),
+                                         this, SLOT(sleeping(bool)));
     // Another guest took Spread's centre: the card closes, the note kept.
     connect(m_guest, &SpreadGuest::dismissed, m_capture, &Capture::finish);
     // A card that closes on its own gives Spread's centre back. One that
@@ -116,6 +132,28 @@ QObject *Shell::storeObject() const
 QObject *Shell::guestObject() const
 {
     return m_guest;
+}
+
+QObject *Shell::plannerObject() const
+{
+    return m_planner;
+}
+
+void Shell::sleeping(bool goingToSleep)
+{
+    if (!goingToSleep) {
+        m_reminders->check();
+    }
+}
+
+QString Shell::reminderLabel(const QDateTime &remind, bool onOpen) const
+{
+    return ReminderWords::label(remind, onOpen);
+}
+
+QVariantList Shell::reminderChoices() const
+{
+    return ReminderWords::choices(!m_capture->window().isEmpty());
 }
 
 QString Shell::boardId() const

@@ -27,7 +27,8 @@ bool sameNote(const Note &a, const Note &b)
 {
     return a.text == b.text && a.colour == b.colour && a.belongs == b.belongs && a.window == b.window
         && a.app == b.app && a.project == b.project && a.workspace == b.workspace && a.tucked == b.tucked
-        && a.format == b.format && a.extra == b.extra && a.created == b.created && a.changed == b.changed;
+        && a.format == b.format && a.extra == b.extra && a.created == b.created && a.changed == b.changed
+        && a.remind == b.remind && a.remindOnOpen == b.remindOnOpen && a.reminded == b.reminded && a.done == b.done;
 }
 
 // Times are kept to the second, as the header writes them, so a note in
@@ -222,13 +223,15 @@ QString NoteStore::create(Note note)
     return note.id;
 }
 
-bool NoteStore::save(Note note)
+bool NoteStore::save(Note note, Touch touch)
 {
     if (!m_notes.contains(note.id)) {
         m_lastError = QStringLiteral("That note is no longer in the folder.");
         return false;
     }
-    note.changed = nowToTheSecond();
+    if (touch == Touch::Changed) {
+        note.changed = nowToTheSecond();
+    }
     if (!write(note)) {
         return false;
     }

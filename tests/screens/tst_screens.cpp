@@ -4,6 +4,8 @@
 #include "Board.h"
 #include "Capture.h"
 #include "NoteStore.h"
+#include "Planner.h"
+#include "ReminderWords.h"
 #include "TestHome.h"
 
 #include <KLocalizedQmlContext>
@@ -37,6 +39,7 @@ class FakeShell : public QObject
     Q_PROPERTY(QObject *places MEMBER m_places CONSTANT)
     Q_PROPERTY(QObject *notes MEMBER m_notes CONSTANT)
     Q_PROPERTY(QObject *store MEMBER m_store CONSTANT)
+    Q_PROPERTY(QObject *planner MEMBER m_planner CONSTANT)
 
 public:
     FakeShell(NoteStore *store, Capture *capture, Places *places, PlaceNotes *notes)
@@ -44,6 +47,7 @@ public:
         , m_places(places)
         , m_notes(notes)
         , m_store(store)
+        , m_planner(new Planner(store, this))
     {
     }
 
@@ -56,12 +60,25 @@ public Q_SLOTS:
     void showBoard() { }
     void showCapture() { }
     QString applicationName() const { return QStringLiteral("Gooseberry"); }
+    QString reminderLabel(const QDateTime &remind, bool onOpen) const { return ReminderWords::label(remind, onOpen); }
+    QVariantList reminderChoices() const { return ReminderWords::choices(true); }
 
 private:
     QObject *m_capture;
     QObject *m_places;
     QObject *m_notes;
     QObject *m_store;
+    QObject *m_planner;
+};
+
+// The words for reminders, as the shell gives them to the card.
+class Words : public QObject
+{
+    Q_OBJECT
+
+public Q_SLOTS:
+    QString reminderLabel(const QDateTime &remind, bool onOpen) const { return ReminderWords::label(remind, onOpen); }
+    QVariantList reminderChoices() const { return ReminderWords::choices(true); }
 };
 
 namespace {
@@ -143,6 +160,7 @@ private:
     std::unique_ptr<NoteStore> m_store;
     std::unique_ptr<Capture> m_capture;
     std::unique_ptr<QQuickView> m_view;
+    Words m_words;
 
     QQuickItem *note() const { return m_view->rootObject(); }
     QQuickItem *named(const QString &name) const { return itemNamed(note(), name); }
@@ -163,7 +181,8 @@ private Q_SLOTS:
         m_view = std::make_unique<QQuickView>();
         KLocalization::setupLocalizedContext(m_view->engine());
         m_view->setInitialProperties({{QStringLiteral("capture"), QVariant::fromValue<QObject *>(m_capture.get())},
-                                      {QStringLiteral("projects"), QStringList{QStringLiteral("Shuffle"), QStringLiteral("Home")}}});
+                                      {QStringLiteral("projects"), QStringList{QStringLiteral("Shuffle"), QStringLiteral("Home")}},
+                                      {QStringLiteral("words"), QVariant::fromValue<QObject *>(&m_words)}});
         m_view->loadFromModule(QStringLiteral("io.github.carlsonjm.gooseberry"), QStringLiteral("QuickNote"));
         QVERIFY2(m_view->status() == QQuickView::Ready, qPrintable(m_view->errors().value(0).toString()));
         // The card's size on a tablet: the search's, 64 % of the room.
@@ -304,6 +323,129 @@ private Q_SLOTS:
         QTRY_VERIFY(note()->property("editor").value<QQuickItem *>()->hasActiveFocus());
         type(m_view.get(), QStringLiteral("Book it"));
         QCOMPARE(m_store->note(m_capture->noteId())->project, QStringLiteral("Cabin"));
+    }
+
+    // Remind offers the quick times, "next time this opens" and Pick a
+    // time; a choice is kept with the note at once, and the pill then says
+    // when. The cross takes the reminder away.
+    void remindQuickTimes()
+    {
+        type(m_view.get(), QStringLiteral("Call about the cabin"));
+        tap(m_view.get(), named(QStringLiteral("remind")));
+        QTRY_VERIFY(named(QStringLiteral("reminderChoices"))->isVisible());
+        const QVariantList choices = ReminderWords::choices(true);
+        for (const QVariant &choice : choices) {
+            QQuickItem *pill = named(QStringLiteral("remind-") + choice.toMap().value(QStringLiteral("kind")).toString());
+            QVERIFY(pill && pill->isVisible());
+            QCOMPARE(pill->property("text").toString(), choice.toMap().value(QStringLiteral("label")).toString());
+        }
+        picture(m_view.get(), QStringLiteral("note-remind"));
+        tap(m_view.get(), named(QStringLiteral("remind-tomorrow")));
+        const QDateTime tomorrow(QDate::currentDate().addDays(1), QTime(9, 0));
+        QCOMPARE(m_capture->remindAt(), tomorrow);
+        QCOMPARE(m_store->note(m_capture->noteId())->remind, tomorrow);
+        QVERIFY(!named(QStringLiteral("reminderChoices"))->isVisible());
+        QCOMPARE(named(QStringLiteral("remind"))->property("text").toString(), ReminderWords::label(tomorrow, false));
+        QVERIFY(named(QStringLiteral("remind"))->property("text").toString().startsWith(QStringLiteral("Tomorrow ")));
+        picture(m_view.get(), QStringLiteral("note-reminder-set"));
+
+        tap(m_view.get(), named(QStringLiteral("remind")));
+        tap(m_view.get(), named(QStringLiteral("remind-opens")));
+        QVERIFY(m_store->note(m_capture->noteId())->remindOnOpen);
+        QCOMPARE(named(QStringLiteral("remind"))->property("text").toString(), QStringLiteral("Next time this opens"));
+
+        tap(m_view.get(), named(QStringLiteral("noReminder")));
+        QVERIFY(!m_store->note(m_capture->noteId())->hasReminder());
+        QCOMPARE(named(QStringLiteral("remind"))->property("text").toString(), QStringLiteral("Remind"));
+        QVERIFY(!named(QStringLiteral("noReminder"))->isVisible());
+    }
+
+    // Pick a time: a day on and an hour and a quarter later than the next
+    // whole hour, then Set.
+    void pickATime()
+    {
+        type(m_view.get(), QStringLiteral("Split Rock review"));
+        tap(m_view.get(), named(QStringLiteral("remind")));
+        tap(m_view.get(), named(QStringLiteral("remind-pick")));
+        QTRY_VERIFY(named(QStringLiteral("timePicker"))->isVisible());
+        QDateTime start = QDateTime::currentDateTime().addSecs(3600);
+        start.setTime(QTime(start.time().hour(), 0));
+        picture(m_view.get(), QStringLiteral("note-pick"));
+        tap(m_view.get(), named(QStringLiteral("dayOn")));
+        tap(m_view.get(), named(QStringLiteral("hourOn")));
+        tap(m_view.get(), named(QStringLiteral("minutesOn")));
+        QCOMPARE(named(QStringLiteral("pickedDay"))->property("text").toString(),
+                 start.date().addDays(1) == QDate::currentDate().addDays(1) ? QStringLiteral("Tomorrow")
+                                                                            : named(QStringLiteral("pickedDay"))->property("text").toString());
+        tap(m_view.get(), named(QStringLiteral("setTime")));
+        QCOMPARE(m_capture->remindAt(), start.addDays(1).addSecs(75 * 60));
+        QVERIFY(!named(QStringLiteral("timePicker"))->isVisible());
+        // Nothing before now can be picked.
+        tap(m_view.get(), named(QStringLiteral("remind")));
+        tap(m_view.get(), named(QStringLiteral("remind-pick")));
+        for (int i = 0; i < 3; ++i) {
+            tap(m_view.get(), named(QStringLiteral("dayBack")));
+            tap(m_view.get(), named(QStringLiteral("hourBack")));
+        }
+        tap(m_view.get(), named(QStringLiteral("setTime")));
+        QVERIFY(m_capture->remindAt() > QDateTime::currentDateTime());
+    }
+
+    // Checklist turns the lines into items under their heading, each ticked
+    // where it stands; Return starts the next item, backspace in an empty
+    // one takes it away, and Checklist again turns it back into text.
+    void checklistTicksInPlace()
+    {
+        // With the keys down the card has room for the whole list.
+        m_view->resize(806, 640);
+        type(m_view.get(), QStringLiteral("Groceries"));
+        QTest::keyClick(m_view.get(), Qt::Key_Return);
+        type(m_view.get(), QStringLiteral("coffee"));
+        QTest::keyClick(m_view.get(), Qt::Key_Return);
+        type(m_view.get(), QStringLiteral("oats"));
+        tap(m_view.get(), named(QStringLiteral("checklist")));
+        QVERIFY(m_capture->checklist());
+        QCOMPARE(m_store->note(m_capture->noteId())->text, QStringLiteral("Groceries\n- [ ] coffee\n- [ ] oats"));
+        QQuickItem *pad = named(QStringLiteral("checklistPad"));
+        QTRY_VERIFY(pad->isVisible());
+        QVERIFY(!itemNamed(itemNamed(pad, QStringLiteral("line-0")), QStringLiteral("tick"))->isVisible());
+        QQuickItem *oats = itemNamed(pad, QStringLiteral("line-2"));
+        QVERIFY(itemNamed(oats, QStringLiteral("tick"))->isVisible());
+        QCOMPARE(itemNamed(oats, QStringLiteral("tick"))->width(), 44.0);
+
+        tap(m_view.get(), itemNamed(oats, QStringLiteral("tick")));
+        QCOMPARE(m_store->note(m_capture->noteId())->text, QStringLiteral("Groceries\n- [ ] coffee\n- [x] oats"));
+        QTRY_VERIFY(itemNamed(oats, QStringLiteral("lineText"))->property("font").value<QFont>().strikeOut());
+
+        // The cursor is in the last item; Return starts another.
+        QTRY_VERIFY(itemNamed(oats, QStringLiteral("lineText"))->hasActiveFocus());
+        QTest::keyClick(m_view.get(), Qt::Key_Return);
+        QTRY_VERIFY(itemNamed(itemNamed(pad, QStringLiteral("line-3")), QStringLiteral("lineText"))->hasActiveFocus());
+        type(m_view.get(), QStringLiteral("lemons"));
+        m_capture->flush();
+        QCOMPARE(m_store->note(m_capture->noteId())->text, QStringLiteral("Groceries\n- [ ] coffee\n- [x] oats\n- [ ] lemons"));
+        QTest::keyClick(m_view.get(), Qt::Key_Return);
+        QTRY_COMPARE(m_capture->lines().size(), 5);
+        picture(m_view.get(), QStringLiteral("note-checklist"));
+        QTest::keyClick(m_view.get(), Qt::Key_Backspace);
+        QTRY_COMPARE(m_capture->lines().size(), 4);
+        QTRY_VERIFY(itemNamed(itemNamed(pad, QStringLiteral("line-3")), QStringLiteral("lineText"))->hasActiveFocus());
+
+        // On a short page the line being written scrolls into sight.
+        m_view->resize(806, 471);
+        QTest::keyClick(m_view.get(), Qt::Key_Return);
+        QQuickItem *last = itemNamed(pad, QStringLiteral("line-4"));
+        QTRY_VERIFY(last && itemNamed(last, QStringLiteral("lineText"))->hasActiveFocus());
+        const QPointF lastAt = last->mapToItem(pad, QPointF());
+        QTRY_VERIFY(last->mapToItem(pad, QPointF()).y() + last->height() <= pad->height() + 1);
+        Q_UNUSED(lastAt)
+        QTest::keyClick(m_view.get(), Qt::Key_Backspace);
+        QTRY_COMPARE(m_capture->lines().size(), 4);
+
+        tap(m_view.get(), named(QStringLiteral("checklist")));
+        QVERIFY(!m_capture->checklist());
+        QCOMPARE(m_store->note(m_capture->noteId())->text, QStringLiteral("Groceries\ncoffee\noats\nlemons"));
+        QVERIFY(!pad->isVisible());
     }
 
     void doneFinishes()
@@ -512,6 +654,143 @@ private Q_SLOTS:
                                                                          button->property("text").toString())
                                     .arg(button->width()).arg(button->height())));
         }
+    }
+
+    // Today on the board, as the mock-up draws it: the day strip, the
+    // planner with the next note marked and a done one struck through, the
+    // days ahead, and the ideas with no date beside it. A tick marks a note
+    // done; a row opens its note; another day shows its own notes.
+    void plannerOnTheBoard()
+    {
+        const QDateTime now = QDateTime::currentDateTime();
+        if (now.time() < QTime(0, 2) || now.time() > QTime(23, 30)) {
+            QSKIP("Too near midnight to plan notes on either side of now.");
+        }
+        const QDate today = now.date();
+        auto planned = [this](const QString &text, const QString &place, const QDateTime &at, const QString &colour = QStringLiteral("butter")) {
+            Capture capture(m_store.get());
+            capture.startNewIn(place);
+            capture.setColour(colour);
+            capture.setText(text);
+            capture.setRemindAt(at);
+            capture.finish();
+            return capture.noteId();
+        };
+        const QString done = planned(QStringLiteral("Record Z13 flick samples"), QStringLiteral("window:SpreadGesture.qml"),
+                                     QDateTime(today, QTime(0, 0, 30)));
+        QVERIFY(setNoteDone(m_store.get(), done, true));
+        QDateTime soon = now.addSecs(3600);
+        soon.setTime(QTime(soon.time().hour(), 0));
+        if (soon.date() != today) {
+            soon = QDateTime(today, QTime(23, 45));
+        }
+        const QString next = planned(QStringLiteral("Ask Sam about a mouse way to move Spread on from Search"),
+                                     QStringLiteral("project:Shuffle"), soon);
+        const QString evening = planned(QStringLiteral("Call about the cabin weekend"), QStringLiteral("project:Home"),
+                                        QDateTime(today, QTime(23, 59)));
+        const QString ahead = planned(QStringLiteral("Split Rock: Milestone 0 review"), QStringLiteral("project:Split Rock"),
+                                      QDateTime(today.addDays(2), QTime(9, 0)));
+        m_capture->setText(QStringLiteral("Flick threshold feels short on the Z13. Measure the real velocity before touching 1400."));
+        Capture list(m_store.get());
+        list.startNewIn(QStringLiteral("project:Shuffle"));
+        list.setColour(QStringLiteral("lichen"));
+        list.setText(QStringLiteral("Groceries\ncoffee\noats\nlemons\ntape"));
+        list.makeChecklist();
+        list.setLineChecked(2, true);
+        const QString groceries = list.noteId();
+        Capture idea(m_store.get());
+        idea.startNewIn(QStringLiteral("project:Shuffle"));
+        idea.setColour(QStringLiteral("lake"));
+        idea.setText(QStringLiteral("Notes stack on a card's corner in Spread: count, not content."));
+
+        Places places(m_store.get());
+        PlaceNotes notes(m_store.get());
+        FakeShell shell(m_store.get(), m_capture.get(), &places, &notes);
+        QQmlEngine engine;
+        KLocalization::setupLocalizedContext(&engine);
+        QQmlComponent component(&engine, QStringLiteral("io.github.carlsonjm.gooseberry"), QStringLiteral("BoardWindow"));
+        std::unique_ptr<QObject> object(component.createWithInitialProperties({{QStringLiteral("shell"), QVariant::fromValue<QObject *>(&shell)}}));
+        QVERIFY2(object, qPrintable(component.errorString()));
+        auto *board = qobject_cast<QQuickWindow *>(object.get());
+        QMetaObject::invokeMethod(board, "present", Q_ARG(QVariant, QVariant()));
+        QVERIFY(QTest::qWaitForWindowExposed(board));
+        board->resize(1260, 716);
+        auto find = [board](const QString &name) { return itemNamed(board->contentItem(), name); };
+        QTRY_VERIFY(find(QStringLiteral("plan-") + next));
+        picture(board, QStringLiteral("board-planner"));
+
+        QCOMPARE(find(QStringLiteral("heading"))->property("text").toString(), QLocale().toString(today, QStringLiteral("d MMMM")));
+        QQuickItem *strip = find(QStringLiteral("dayStrip"));
+        QVERIFY(strip->isVisible());
+        QQuickItem *todayButton = itemNamed(strip, QStringLiteral("day-") + today.toString(QStringLiteral("yyyy-MM-dd")));
+        QVERIFY(todayButton);
+        QCOMPARE(todayButton->width(), 64.0);
+        QCOMPARE(todayButton->height(), 64.0);
+        QVERIFY(itemNamed(itemNamed(strip, QStringLiteral("day-") + today.addDays(2).toString(QStringLiteral("yyyy-MM-dd"))),
+                          QStringLiteral("planned"))->isVisible());
+        QVERIFY(!itemNamed(todayButton, QStringLiteral("planned"))->isVisible());
+
+        // The planner column: today's notes in order, then the day ahead.
+        QList<QString> headings;
+        for (QQuickItem *item : itemsUnder(find(QStringLiteral("planner")))) {
+            if (item->objectName() == QLatin1String("plannerHeading")) {
+                headings.append(item->property("text").toString());
+            }
+        }
+        QCOMPARE(headings.value(0), QStringLiteral("PLANNER · TODAY"));
+        QCOMPARE(headings.size(), 2);
+        QQuickItem *doneRow = find(QStringLiteral("plan-") + done);
+        QQuickItem *nextRow = find(QStringLiteral("plan-") + next);
+        QQuickItem *eveningRow = find(QStringLiteral("plan-") + evening);
+        QVERIFY(find(QStringLiteral("plan-") + ahead));
+        QVERIFY(doneRow->y() < nextRow->y() && nextRow->y() < eveningRow->y());
+        QCOMPARE(itemNamed(doneRow, QStringLiteral("planTime"))->property("text").toString(), QStringLiteral("Done"));
+        QVERIFY(itemNamed(doneRow, QStringLiteral("planTitle"))->property("font").value<QFont>().strikeOut());
+        QCOMPARE(nextRow->property("border").value<QObject *>()->property("width").toReal(), 1.0);
+        QCOMPARE(eveningRow->property("border").value<QObject *>()->property("width").toReal(), 0.0);
+        QCOMPARE(itemNamed(nextRow, QStringLiteral("planTime"))->property("color").value<QColor>(), QColor(QStringLiteral("#F2A65A")));
+
+        // Ideas beside it: no note with a time among them; the checklist as
+        // its heading and items.
+        QVERIFY(find(QStringLiteral("ideasHeading"))->isVisible());
+        QCOMPARE(find(QStringLiteral("ideasHeading"))->property("text").toString(), QStringLiteral("IDEAS · NO DATE NEEDED"));
+        QVERIFY(find(QStringLiteral("note-") + groceries));
+        QVERIFY(!find(QStringLiteral("note-") + next));
+        QQuickItem *groceriesCard = find(QStringLiteral("note-") + groceries);
+        QCOMPARE(itemNamed(groceriesCard, QStringLiteral("checklistHeading"))->property("text").toString(), QStringLiteral("Groceries"));
+        QCOMPARE(itemNamed(groceriesCard, QStringLiteral("checklistItems"))->property("text").toString(),
+                 QStringLiteral("coffee · <s>oats</s> · lemons · tape"));
+
+        // The tick marks a note done, and again marks it not done.
+        tap(board, itemNamed(eveningRow, QStringLiteral("planDone")));
+        QVERIFY(m_store->note(evening)->done.isValid());
+        QTRY_COMPARE(itemNamed(find(QStringLiteral("plan-") + evening), QStringLiteral("planTime"))->property("text").toString(),
+                     QStringLiteral("Done"));
+        tap(board, itemNamed(find(QStringLiteral("plan-") + evening), QStringLiteral("planDone")));
+        QVERIFY(!m_store->note(evening)->done.isValid());
+
+        // A row opens its note.
+        QTRY_VERIFY(find(QStringLiteral("plan-") + next));
+        tap(board, itemNamed(find(QStringLiteral("plan-") + next), QStringLiteral("planTitle")));
+        QCOMPARE(shell.opened, next);
+
+        // Another day: its own notes, under its own name.
+        tap(board, itemNamed(strip, QStringLiteral("day-") + today.addDays(2).toString(QStringLiteral("yyyy-MM-dd"))));
+        QTRY_COMPARE(find(QStringLiteral("heading"))->property("text").toString(),
+                     QLocale().toString(today.addDays(2), QStringLiteral("d MMMM")));
+        QTRY_VERIFY(!find(QStringLiteral("plan-") + next));
+        QVERIFY(find(QStringLiteral("plan-") + ahead));
+        picture(board, QStringLiteral("board-planner-ahead"));
+
+        // Every target big enough to touch.
+        for (QQuickItem *button : buttonsIn(board->contentItem())) {
+            QVERIFY2(button->height() >= 44 && button->width() >= 44, qPrintable(button->objectName()));
+        }
+
+        // A narrow window puts the day strip on a line of its own.
+        board->resize(800, 716);
+        QTRY_VERIFY(find(QStringLiteral("dayStripBelow"))->isVisible());
+        QVERIFY(!find(QStringLiteral("dayStrip"))->isVisible());
     }
 };
 

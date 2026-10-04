@@ -83,6 +83,9 @@ public:
         TuckedRole,
         ChangedRole,
         ReadOnlyRole,
+        ChecklistRole,
+        ChecklistHeadingRole,
+        ChecklistItemsRole,
     };
 
     explicit PlaceNotes(NoteStore *store, QObject *parent = nullptr);

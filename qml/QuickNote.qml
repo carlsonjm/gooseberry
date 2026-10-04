@@ -23,12 +23,54 @@ Item {
     readonly property string shownProject: capture.belongs === "project" ? capture.project : (projects.length > 0 ? projects[0] : "")
     readonly property var otherProjects: projects.filter(name => name !== shownProject)
     property bool choosingProject: false
+    // Words for reminders, and what Remind offers: the shell, where there
+    // is one (Shell::reminderLabel, Shell::reminderChoices).
+    property QtObject words: null
+    property bool choosingReminder: false
+    property bool pickingTime: false
+    property var reminderChoices: []
 
     function focusText() {
         choosingProject = false;
-        area.forceActiveFocus();
-        area.cursorPosition = area.length;
+        if (capture.checklist) {
+            checklistPad.focusLast();
+        } else {
+            area.forceActiveFocus();
+            area.cursorPosition = area.length;
+        }
         Qt.inputMethod.show();
+    }
+
+    function chooseReminder() {
+        choosingReminder = !choosingReminder;
+        pickingTime = false;
+        if (choosingReminder && words) {
+            reminderChoices = words.reminderChoices();
+        }
+    }
+
+    function remind(choice) {
+        if (choice.kind === "pick") {
+            timePicker.reset();
+            pickingTime = true;
+            return;
+        }
+        if (choice.kind === "opens") {
+            capture.setRemindOnOpen();
+        } else {
+            capture.setRemindAt(choice.time);
+        }
+        choosingReminder = false;
+        focusText();
+    }
+
+    function toggleChecklist() {
+        if (capture.checklist) {
+            capture.makePlain();
+        } else {
+            capture.makeChecklist();
+        }
+        Qt.callLater(focusText);
     }
 
     function chooseProject(name) {
@@ -167,13 +209,23 @@ Item {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 Layout.minimumHeight: 96
-                implicitHeight: 168
+                // The page takes whatever room the rest leaves it.
+                implicitHeight: 96
                 radius: 14
                 color: quick.capture.hexFor(quick.capture.colour)
                 clip: true
 
+                ChecklistPad {
+                    id: checklistPad
+                    objectName: "checklistPad"
+                    anchors.fill: parent
+                    visible: quick.capture.checklist
+                    capture: quick.capture
+                }
+
                 QQC2.ScrollView {
                     anchors.fill: parent
+                    visible: !quick.capture.checklist
                     QQC2.TextArea {
                         id: area
                         text: quick.capture.text
@@ -202,6 +254,73 @@ Item {
                 }
             }
 
+
+            // Checklist and Remind, under the note.
+            ColumnLayout {
+                Layout.fillWidth: true
+                spacing: 8
+
+                Flow {
+                    Layout.fillWidth: true
+                    spacing: 8
+                    enabled: !quick.capture.readOnly
+
+                    Pill {
+                        objectName: "checklist"
+                        text: i18n("Checklist")
+                        iconName: "checkbox"
+                        checked: quick.capture.checklist
+                        onClicked: quick.toggleChecklist()
+                    }
+                    Pill {
+                        objectName: "remind"
+                        text: quick.capture.hasReminder && quick.words
+                              ? quick.words.reminderLabel(quick.capture.remindAt, quick.capture.remindOnOpen)
+                              : i18n("Remind")
+                        iconName: "notifications"
+                        checked: quick.capture.hasReminder || quick.choosingReminder
+                        onClicked: quick.chooseReminder()
+                    }
+                    Pill {
+                        objectName: "noReminder"
+                        visible: quick.capture.hasReminder
+                        text: "✕"
+                        Accessible.name: i18n("No reminder")
+                        onClicked: {
+                            quick.capture.clearReminder();
+                            quick.choosingReminder = false;
+                        }
+                    }
+                }
+
+                Flow {
+                    objectName: "reminderChoices"
+                    Layout.fillWidth: true
+                    visible: quick.choosingReminder && !quick.pickingTime
+                    spacing: 8
+                    Repeater {
+                        model: quick.reminderChoices
+                        delegate: Pill {
+                            required property var modelData
+                            objectName: "remind-" + modelData.kind
+                            text: modelData.label
+                            onClicked: quick.remind(modelData)
+                        }
+                    }
+                }
+
+                TimePicker {
+                    id: timePicker
+                    objectName: "timePicker"
+                    visible: quick.choosingReminder && quick.pickingTime
+                    onPicked: time => {
+                        quick.capture.setRemindAt(time);
+                        quick.choosingReminder = false;
+                        quick.pickingTime = false;
+                        quick.focusText();
+                    }
+                }
+            }
 
             ColumnLayout {
                 Layout.fillWidth: true

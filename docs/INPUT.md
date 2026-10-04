@@ -1,8 +1,9 @@
 # Input
 
 Every tap and key Gooseberry answers, and what you see happen. Milestone 0
-builds capture, the board, tucking away and removing; Pen and Remind arrive with
-their milestones and are marked so below. A card's notes join its Stack by
+builds capture, the board, tucking away and removing; Milestone 1 builds
+reminders, the planner and checklists; Pen arrives with its milestone and is
+marked so below. A card's notes join its Stack by
 Kadunce's own hold and let go; stepping back to the card puts them away.
 
 | Task | Touch | Keyboard |
@@ -12,6 +13,8 @@ Kadunce's own hold and let go; stepping back to the card puts them away.
 | Choose where it belongs | Tap a place under Belongs to | None yet |
 | Write with a pen | Tap Pen | None yet |
 | Set a reminder | Tap Remind | None yet |
+| Make a checklist | Tap Checklist | None yet |
+| Plan the day | Tap a day in the strip | None yet |
 | Open the board | Tap Gooseberry, or hold it and tap All notes | None yet |
 | Open a note | Tap the note on the board | None yet |
 | Tuck a note away | Tap Tuck away on the note | None yet |
@@ -67,11 +70,57 @@ Not yet built: Milestone 2.
 
 ## Set a reminder
 
-Not yet built: Milestone 1.
+Checklist and Remind sit under the note on the card.
 
 | Input | What happens |
 | --- | --- |
-| Tap Remind | Choose a time, or next time this opens. The note goes on the planner. |
+| Tap Remind | The times it offers come up under it: Later today, two hours on to the hour, while that is before the evening; This evening, 7 PM, until 6 PM; Tomorrow, 9 AM; Next time this opens, for a note written on a window; and Pick a time. |
+| Tap one of the times | The note reminds you then and goes on the planner on that day. Remind now says when, and a cross beside it takes the reminder away. |
+| Tap Next time this opens | The note reminds you the next time a window opens on that document. It has no day, so it stays among the ideas. |
+| Tap Pick a time, then the arrows, then Set | Any day, a day at a time, and any time, an hour or a quarter hour at a time, never before now. |
+| Tap Remind on a note that has one | The times come up again; a new choice replaces the old reminder. |
+
+A reminder is the desktop's own notification, shown once: the note's first
+words, when it was for, and where it belongs. It stays as long as the desktop
+keeps its notifications, then waits in the desktop's history; nothing has to
+be closed.
+
+| Input | What happens |
+| --- | --- |
+| Tap the reminder | The note opens on the card. |
+| Tap Done on it | The note is marked done on the planner. |
+| Tap In 10 minutes on it | The note reminds you once more, ten minutes on. |
+
+A reminder that comes due while the computer sleeps, or while Gooseberry is
+not running, is shown when it wakes or starts. Where nothing on the desktop
+shows notifications, reminders wait until something does.
+
+## Make a checklist
+
+| Input | What happens |
+| --- | --- |
+| Tap Checklist | Each line becomes an item with a box; with more than one line, the first stays above them as the list's heading. An empty note starts with one item. |
+| Tap an item's box | The item is ticked and struck through where it stands. Tap again to untick it. |
+| Press Enter in an item | A new item starts below it. |
+| Press Backspace in an empty item | The item goes, and the cursor goes back to the line above. |
+| Tap Checklist again | The list is plain text again; nothing is lost. |
+
+On the board a checklist reads as its heading, then its items in one line,
+ticked ones struck through.
+
+## Plan the day
+
+The board's Today is the planner beside the ideas: today's notes with a time,
+then the days ahead that have any, and the notes with no date beside them.
+
+| Input | What happens |
+| --- | --- |
+| Tap a day in the strip | The planner shows that day's notes, then the days after it that have any. A day with notes planned carries a dot. |
+| Tap a row | The note opens on the card. |
+| Tap the tick at the end of a row | The note is marked done: Done stands where its time was, and its words are struck through. Tap again to undo it. |
+
+The next note still to come today stands out. Opening the board starts it on
+today again.
 
 ## Open the board
 

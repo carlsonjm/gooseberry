@@ -214,6 +214,69 @@ the card fades. Without Kadunce, or with one that does not offer this, the card
 is as it always was (`DESKTOP.md` § The quick note in Spread). (The maintainer,
 4 October.)
 
+## The planner's controls
+
+What the mock-up shows as Checklist and Remind on the note, and what it leaves
+undrawn, was proposed and approved before it was built (the maintainer, 4
+October):
+
+- **Remind offers quick times.** Later today, This evening, Tomorrow morning,
+  Next time this opens, and Pick a time for any day and hour: one tap for the
+  common case. Once set, Remind says when, with a cross beside it to take the
+  reminder away.
+- **A checklist is ticked in place.** Each line becomes an item with a box;
+  Enter starts the next. A ticked item is struck through where it stands, as
+  on a paper list. Checklist again turns it back into text.
+- **A planned note is marked done by a tick on its planner row.** Done then
+  stands where its time was, and its words are struck through. The card's own
+  Done keeps meaning "put the card away".
+- **A reminder offers Done and In 10 minutes,** and tapping it opens the note.
+  In 10 minutes is a new reminder, shown once like any other.
+
+Checklist and Remind sit in a row under the note, above Belongs to; the note
+pad gives up the room for them.
+
+Rejected: a day and time picker every time, which costs two or three taps even
+for tomorrow morning; ticked items sinking to the bottom, which makes items
+jump under the finger; Mark done on the card, beside the Done that puts it
+away; and a reminder with nothing to tap but the note.
+
+## A reminder is recorded before it is shown
+
+When a reminder comes due, Gooseberry writes the time it was shown into the
+note, and only then shows it; a reminder that could not be recorded is not
+shown. Where nothing on the desktop shows notifications, a due reminder waits,
+unrecorded, until something does. A reminder due while the computer slept or
+Gooseberry was not running is shown when it wakes or starts. This is
+engineering's choice: the proof is every reminder on time and none shown
+twice, and the note is the one record a restart, a second program or a second
+device reading the folder all see.
+
+Rejected: showing first and recording after, where a crash between the two
+shows it again; and a list of shown reminders in Gooseberry's own settings,
+which another device reading the same folder cannot see.
+
+## Reminders use the desktop's standard notifications directly
+
+Gooseberry asks for each reminder through the freedesktop.org notification
+interface on the session bus, under its own entry, for the desktop's own time
+on screen. This is engineering's choice: whatever shows notifications on any
+desktop shows it, Plasma keeps it in its history and its notification
+settings, it adds no library, and a test can stand in for the desktop.
+
+Rejected: KDE's notification library, which adds a library and an events file
+for nothing the person sees here; and a reminder that stays until closed,
+which would be something on the work that has to be closed.
+
+## A checklist is Markdown task lines
+
+A checklist is kept in the note's text as `- [ ]` and `- [x]` lines, the way
+other Markdown programs write a task list, so any editor, the file index and
+Search read it as it is. This is engineering's choice.
+
+Rejected: a header key holding the items, which other programs would not show
+as a list.
+
 ## Gooseberry stays ready
 
 Gooseberry starts with the session, showing nothing, and keeps running between

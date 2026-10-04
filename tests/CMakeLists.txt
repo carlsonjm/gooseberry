@@ -17,8 +17,9 @@ endfunction()
 gooseberry_test(tst_note core/tst_note.cpp)
 gooseberry_test(tst_store core/tst_store.cpp)
 gooseberry_test(tst_keep core/tst_keep.cpp KF6::CoreAddons)
+gooseberry_test(tst_planner core/tst_planner.cpp)
 gooseberry_test(tst_screens screens/tst_screens.cpp
-    gooseberry-screensplugin Qt6::Gui Qt6::Quick KF6::I18n KF6::I18nQml)
+    gooseberry-desktop gooseberry-screensplugin Qt6::Gui Qt6::Quick KF6::I18n KF6::I18nQml)
 set_target_properties(tst_screens PROPERTIES QT_QML_MODULE_NO_IMPORT_SCAN ON)
 
 # The quick note's bus interface, driven by a client that loads none of
@@ -45,6 +46,19 @@ set_target_properties(tst_spread PROPERTIES QT_QML_MODULE_NO_IMPORT_SCAN ON)
 add_test(NAME tst_spread COMMAND ${DBUS_RUN_SESSION}
     --config-file=${CMAKE_CURRENT_SOURCE_DIR}/bus/private-bus.conf -- $<TARGET_FILE:tst_spread>)
 set_tests_properties(tst_spread PROPERTIES
+    ENVIRONMENT "GOOSEBERRY_PRIVATE_BUS=1"
+    SKIP_RETURN_CODE 77
+    TIMEOUT 120)
+
+# Reminders as the desktop shows them: the real Gooseberry on a bus of the
+# test's own, with the test standing in for the desktop's notifications.
+add_executable(tst_reminders_bus bus/tst_reminders_bus.cpp)
+target_link_libraries(tst_reminders_bus PRIVATE Qt6::DBus Qt6::Test)
+target_compile_definitions(tst_reminders_bus PRIVATE GOOSEBERRY_BINARY="$<TARGET_FILE:gooseberry>")
+add_dependencies(tst_reminders_bus gooseberry)
+add_test(NAME tst_reminders_bus COMMAND ${DBUS_RUN_SESSION}
+    --config-file=${CMAKE_CURRENT_SOURCE_DIR}/bus/private-bus.conf -- $<TARGET_FILE:tst_reminders_bus>)
+set_tests_properties(tst_reminders_bus PROPERTIES
     ENVIRONMENT "GOOSEBERRY_PRIVATE_BUS=1"
     SKIP_RETURN_CODE 77
     TIMEOUT 120)

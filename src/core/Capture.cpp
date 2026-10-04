@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "Capture.h"
 
+#include "Checklist.h"
 #include "NoteStore.h"
 
 #include <QCoreApplication>
@@ -82,6 +83,7 @@ void Capture::reset(const Note &note, bool editing)
     Q_EMIT colourChanged();
     Q_EMIT belongingChanged();
     Q_EMIT contextChanged();
+    Q_EMIT reminderChanged();
 }
 
 void Capture::startNew(const CaptureContext &context)
@@ -196,6 +198,94 @@ void Capture::setText(const QString &text)
     m_pause.start();
 }
 
+bool Capture::checklist() const
+{
+    return Checklist::contains(m_note.text);
+}
+
+QVariantList Capture::lines() const
+{
+    QVariantList list;
+    for (const ChecklistLine &line : Checklist::lines(m_note.text)) {
+        list.append(QVariantMap{{QStringLiteral("text"), line.text},
+                                {QStringLiteral("item"), line.item},
+                                {QStringLiteral("checked"), line.checked}});
+    }
+    return list;
+}
+
+void Capture::setTextNow(const QString &text)
+{
+    setText(text);
+    flush();
+}
+
+void Capture::makeChecklist()
+{
+    setTextNow(Checklist::from(m_note.text));
+}
+
+void Capture::makePlain()
+{
+    setTextNow(Checklist::toPlain(m_note.text));
+}
+
+void Capture::setLineText(int line, const QString &text)
+{
+    setText(Checklist::withLineText(m_note.text, line, text));
+}
+
+void Capture::setLineChecked(int line, bool checked)
+{
+    setTextNow(Checklist::withChecked(m_note.text, line, checked));
+}
+
+void Capture::addItemAfter(int line)
+{
+    setTextNow(Checklist::withItemAfter(m_note.text, line));
+}
+
+void Capture::removeLine(int line)
+{
+    setTextNow(Checklist::withoutLine(m_note.text, line));
+}
+
+void Capture::setReminder(const QDateTime &time, bool onOpen)
+{
+    if (readOnly() || (onOpen && m_note.window.isEmpty())) {
+        return;
+    }
+    QDateTime when = time;
+    if (when.isValid()) {
+        when.setTime(QTime(when.time().hour(), when.time().minute(), when.time().second()));
+    }
+    m_note.remind = when;
+    m_note.remindOnOpen = onOpen;
+    m_note.reminded = {};
+    m_note.done = {};
+    Q_EMIT reminderChanged();
+    keep();
+}
+
+void Capture::setRemindAt(const QDateTime &time)
+{
+    if (time.isValid()) {
+        setReminder(time, false);
+    }
+}
+
+void Capture::setRemindOnOpen()
+{
+    setReminder({}, true);
+}
+
+void Capture::clearReminder()
+{
+    if (m_note.hasReminder()) {
+        setReminder({}, false);
+    }
+}
+
 void Capture::setColour(const QString &colour)
 {
     if (colour == m_note.colour || readOnly()) {
@@ -290,7 +380,18 @@ void Capture::storeChanged(const QString &id)
     }
     if (m_waiting) {
         // Another program changed the note while typing here waited for a
-        // pause: what is being typed wins, and is written now.
+        // pause: what is being typed wins, and is written now. What
+        // Gooseberry recorded about it meanwhile, a reminder shown or the
+        // note marked done, is kept.
+        if (const auto onDisk = m_store->note(id)) {
+            m_note.reminded = onDisk->reminded;
+            m_note.done = onDisk->done;
+            if (onDisk->remind != m_note.remind || onDisk->remindOnOpen != m_note.remindOnOpen) {
+                m_note.remind = onDisk->remind;
+                m_note.remindOnOpen = onDisk->remindOnOpen;
+                Q_EMIT reminderChanged();
+            }
+        }
         keep();
         return;
     }
@@ -313,7 +414,11 @@ void Capture::storeChanged(const QString &id)
         m_note.project = onDisk->project;
         Q_EMIT belongingChanged();
     }
+    const bool reminder = onDisk->remind != m_note.remind || onDisk->remindOnOpen != m_note.remindOnOpen;
     m_note = *onDisk;
+    if (reminder) {
+        Q_EMIT reminderChanged();
+    }
 }
 
 } // namespace Gooseberry

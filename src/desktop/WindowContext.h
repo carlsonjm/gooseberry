@@ -5,6 +5,7 @@
 
 #include <QObject>
 #include <QPersistentModelIndex>
+#include <QSet>
 #include <memory>
 
 namespace TaskManager {
@@ -32,10 +33,15 @@ Q_SIGNALS:
     void workChanged();
     // The desktop said for the first time what is in front.
     void firstReported();
+    // A window showing this document appeared, or a window came to show it,
+    // where none did before. Windows already open when Gooseberry started
+    // are not news.
+    void documentOpened(const QString &window, const QString &app);
 
 private:
     void activeChanged();
     void forgetClosed();
+    void noticeDocuments();
 
     QString m_ownAppId;
     std::unique_ptr<TaskManager::WindowTasksModel> m_windows;
@@ -44,6 +50,9 @@ private:
     QString m_title;
     QString m_appId;
     QString m_appName;
+    // Every document shown in a window, as application and name.
+    QSet<QPair<QString, QString>> m_documents;
+    bool m_documentsKnown = false;
 };
 
 } // namespace Gooseberry

@@ -14,6 +14,8 @@ Item {
     readonly property QtObject notes: shell.notes
     readonly property QtObject places: shell.places
     readonly property bool searching: search.text.trim().length > 0
+    // Today shows the planner beside the notes with no date.
+    readonly property bool planning: !searching && notes.place === "today" && !!shell.planner
     property date now: new Date()
     // Drawn where a person can see it: in a shown window, and not faded out.
     readonly property bool shown: visible && Window.window !== null && Window.window.visible
@@ -25,6 +27,9 @@ Item {
         search.text = "";
         notes.place = "today";
         now = new Date();
+        if (shell.planner) {
+            shell.planner.showToday();
+        }
     }
 
     // A note leaves the place shown as soon as it is tucked away or brought
@@ -196,15 +201,19 @@ Item {
         }
 
         ColumnLayout {
+            id: main
             Layout.fillWidth: true
             Layout.fillHeight: true
             spacing: 18
+            // Under this width the day strip takes a line of its own.
+            readonly property bool roomy: width >= 820
 
             RowLayout {
                 Layout.fillWidth: true
                 Layout.leftMargin: 28
                 Layout.rightMargin: 28
                 Layout.topMargin: 22
+                spacing: 16
 
                 ColumnLayout {
                     Layout.fillWidth: true
@@ -216,6 +225,7 @@ Item {
                         text: {
                             if (board.searching) return i18n("Search");
                             const place = board.notes.place;
+                            if (board.planning) return Qt.locale().toString(board.shell.planner.day, "dddd");
                             if (place === "today") return Qt.locale().toString(board.now, "dddd");
                             if (place.startsWith("window:")) return i18n("Window");
                             if (place.startsWith("project:")) return i18n("Project");
@@ -225,6 +235,7 @@ Item {
                         visible: text.length > 0
                     }
                     QQC2.Label {
+                        objectName: "heading"
                         Layout.fillWidth: true
                         Accessible.role: Accessible.Heading
                         font.pixelSize: 30
@@ -233,10 +244,17 @@ Item {
                         text: {
                             if (board.searching) return i18np("%1 note", "%1 notes", board.notes.count);
                             const place = board.notes.place;
+                            if (board.planning) return Qt.locale().toString(board.shell.planner.day, "d MMMM");
                             if (place === "today") return Qt.locale().toString(board.now, "d MMMM");
                             return board.places.labelFor(place);
                         }
                     }
+                }
+
+                DayStrip {
+                    objectName: "dayStrip"
+                    visible: board.planning && main.roomy
+                    planner: board.shell.planner ? board.shell.planner : null
                 }
 
                 Pill {
@@ -250,22 +268,89 @@ Item {
                 }
             }
 
-            QQC2.ScrollView {
-                id: scroller
+            DayStrip {
+                objectName: "dayStripBelow"
+                Layout.leftMargin: 28
+                visible: board.planning && !main.roomy
+                planner: board.shell.planner ? board.shell.planner : null
+            }
+
+            RowLayout {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                contentWidth: availableWidth
+                Layout.leftMargin: 28
+                spacing: 24
 
-                Masonry {
-                    id: grid
-                    x: 28
-                    width: scroller.availableWidth - 56
-                    height: contentHeight + 28
-                    model: board.notes
-                    delegate: NoteCard {
-                        showPlace: board.searching || !board.notes.place.includes(":")
-                        onTapped: tucked ? board.bringBack(noteId, placeLabel) : board.shell.openNote(noteId)
-                        onTuckRequested: board.tuckAway(noteId)
+                PlannerColumn {
+                    objectName: "planner"
+                    visible: board.planning
+                    Layout.fillHeight: true
+                    Layout.preferredWidth: Math.min(360, main.width * 0.45)
+                    shell: board.shell
+                }
+
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    spacing: 14
+
+                    QQC2.Label {
+                        objectName: "ideasHeading"
+                        visible: board.planning
+                        text: i18n("Ideas · No date needed").toUpperCase()
+                        font.pixelSize: 13
+                        font.weight: Font.ExtraBold
+                        font.letterSpacing: 0.8
+                        color: Kirigami.Theme.disabledTextColor
+                        Accessible.role: Accessible.Heading
+                    }
+
+                    Item {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+
+                        QQC2.ScrollView {
+                            id: scroller
+                            anchors.fill: parent
+                            contentWidth: availableWidth
+
+                            Masonry {
+                                id: grid
+                                width: scroller.availableWidth - 28
+                                height: contentHeight + 28
+                                model: board.notes
+                                delegate: NoteCard {
+                                    showPlace: board.searching || !board.notes.place.includes(":")
+                                    onTapped: tucked ? board.bringBack(noteId, placeLabel) : board.shell.openNote(noteId)
+                                    onTuckRequested: board.tuckAway(noteId)
+                                }
+                            }
+                        }
+
+                        Kirigami.PlaceholderMessage {
+                            anchors.centerIn: parent
+                            anchors.horizontalCenterOffset: -14
+                            width: Math.min(parent.width - 2 * Kirigami.Units.gridUnit, 420)
+                            visible: board.notes.count === 0
+                            icon.name: board.iconFor(board.notes.place)
+                            text: {
+                                if (board.searching) return i18n("No note has those words");
+                                switch (board.notes.place) {
+                                case "today": return i18n("Nothing written today yet");
+                                case "loose": return i18n("Nothing loose");
+                                case "tucked": return i18n("Nothing tucked away");
+                                }
+                                return i18n("No notes here");
+                            }
+                            explanation: {
+                                if (board.searching) return "";
+                                switch (board.notes.place) {
+                                case "loose": return i18n("A note that belongs nowhere yet waits here.");
+                                case "tucked": return i18n("Tuck a note away to keep it here, out of sight. Tap it to bring it back.");
+                                }
+                                return i18n("Tap New note, or Gooseberry's button, to write one.");
+                            }
+                        }
                     }
                 }
             }
@@ -279,30 +364,5 @@ Item {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.horizontalCenterOffset: 125
         z: 1
-    }
-
-    Kirigami.PlaceholderMessage {
-        anchors.centerIn: parent
-        anchors.horizontalCenterOffset: 125
-        width: parent.width - 250 - 4 * Kirigami.Units.gridUnit
-        visible: board.notes.count === 0
-        icon.name: board.iconFor(board.notes.place)
-        text: {
-            if (board.searching) return i18n("No note has those words");
-            switch (board.notes.place) {
-            case "today": return i18n("Nothing written today yet");
-            case "loose": return i18n("Nothing loose");
-            case "tucked": return i18n("Nothing tucked away");
-            }
-            return i18n("No notes here");
-        }
-        explanation: {
-            if (board.searching) return "";
-            switch (board.notes.place) {
-            case "loose": return i18n("A note that belongs nowhere yet waits here.");
-            case "tucked": return i18n("Tuck a note away to keep it here, out of sight. Tap it to bring it back.");
-            }
-            return i18n("Tap New note, or Gooseberry's button, to write one.");
-        }
     }
 }

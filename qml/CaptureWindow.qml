@@ -57,6 +57,8 @@ Window {
         expanded = false;
         visible = true;
         shown = true;
+        note.choosingReminder = false;
+        note.pickingTime = false;
         requestActivate();
         Qt.callLater(note.focusText);
     }
@@ -206,6 +208,7 @@ Window {
             capture: root.shell.capture
             projects: root.shell.places.projects
             title: root.shell.applicationName()
+            words: root.shell.reminderLabel !== undefined ? root.shell : null
             surface: card.color
             opacity: root.expanded ? 0 : 1
             visible: opacity > 0

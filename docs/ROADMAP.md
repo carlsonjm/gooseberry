@@ -31,6 +31,11 @@ note, and with capture fast enough that nothing is written elsewhere instead.
 
 ## Milestone 1: the planner
 
+**Status:** built; waiting on its proof. The checks by hand are in
+`TESTING.md`. Remind, Checklist, the tick on the planner and the reminder's
+own buttons were drawn as proposals and approved by the maintainer
+(`DECISIONS.md`).
+
 - Reminders: a time, or next time a document opens.
 - The planner: today's timed notes, the days ahead, and what is done.
 - Checklists.

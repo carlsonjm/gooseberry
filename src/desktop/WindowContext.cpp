@@ -9,6 +9,8 @@
 
 #include <KWindowSystem>
 
+#include <QTimer>
+
 namespace Gooseberry {
 
 using TaskManager::AbstractTasksModel;
@@ -29,11 +31,53 @@ WindowContext::WindowContext(const QString &ownAppId, QObject *parent)
                 if (roles.isEmpty() || roles.contains(AbstractTasksModel::IsActive) || roles.contains(Qt::DisplayRole)) {
                     activeChanged();
                 }
+                if (roles.isEmpty() || roles.contains(Qt::DisplayRole) || roles.contains(AbstractTasksModel::AppId)) {
+                    noticeDocuments();
+                }
             });
     connect(m_windows.get(), &QAbstractItemModel::rowsInserted, this, &WindowContext::activeChanged);
     connect(m_windows.get(), &QAbstractItemModel::modelReset, this, &WindowContext::activeChanged);
     connect(m_windows.get(), &QAbstractItemModel::rowsRemoved, this, &WindowContext::forgetClosed);
+    for (auto signal : {&QAbstractItemModel::rowsInserted, &QAbstractItemModel::rowsRemoved}) {
+        connect(m_windows.get(), signal, this, &WindowContext::noticeDocuments);
+    }
+    connect(m_windows.get(), &QAbstractItemModel::modelReset, this, &WindowContext::noticeDocuments);
     activeChanged();
+    noticeDocuments();
+    // The desktop reports the windows already open one by one as Gooseberry
+    // starts; they were open before it was. Only what opens after they have
+    // been told is news.
+    QTimer::singleShot(3000, this, [this] {
+        m_documentsKnown = true;
+        noticeDocuments();
+    });
+}
+
+void WindowContext::noticeDocuments()
+{
+    QSet<QPair<QString, QString>> documents;
+    for (int row = 0; row < m_windows->rowCount(); ++row) {
+        const QModelIndex index = m_windows->index(row, 0);
+        QString appId = index.data(AbstractTasksModel::AppId).toString();
+        if (appId.endsWith(QLatin1String(".desktop"))) {
+            appId.chop(8);
+        }
+        const QString title = index.data(Qt::DisplayRole).toString();
+        if (appId == m_ownAppId || title.isEmpty()) {
+            continue;
+        }
+        documents.insert({appId, documentName(title, index.data(AbstractTasksModel::AppName).toString())});
+    }
+    const QSet<QPair<QString, QString>> before = std::exchange(m_documents, documents);
+    if (!m_documentsKnown) {
+        return;
+    }
+    for (const auto &[app, window] : std::as_const(documents)) {
+        if (!before.contains({app, window})) {
+            qCDebug(DESKTOP) << "opened:" << window << "in" << app;
+            Q_EMIT documentOpened(window, app);
+        }
+    }
 }
 
 WindowContext::~WindowContext() = default;

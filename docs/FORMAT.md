@@ -5,7 +5,8 @@ header at the top of each note. This is a contract. Another device reading the
 same folder, the file index, Search and any other program depend on it, so it
 is versioned, and a change that breaks it raises the version.
 
-**Folder format:** 1. **Note format:** 1. Both from Milestone 0.
+**Folder format:** 1. **Note format:** 1. Both from Milestone 0; the note
+format gained keys a reader can ignore in Milestone 1.
 
 ## Where the folder is
 
@@ -61,6 +62,7 @@ window: "SpreadGesture.qml"
 app: "org.kde.kate"
 workspace: "Desk"
 tucked: false
+remind: 2026-10-05T09:00:00-05:00
 ---
 Flick threshold feels short on the Z13. Measure the real velocity before
 touching 1400.
@@ -83,6 +85,9 @@ Times are ISO 8601 with their offset from UTC, to the second.
 | `project` | no | The project's name |
 | `workspace` | no | The workspace the note was written on |
 | `tucked` | yes | `true` when tucked away, otherwise `false` |
+| `remind` | no | The reminder: a time, which also puts the note on the planner on that day, or `opens` for the next time a window opens on the note's `window` in its `app` |
+| `reminded` | no | When the reminder was shown |
+| `done` | no | When the note was marked done on the planner |
 
 - **Belongs** says which place on the board the note sits in. `window`,
   `project` and `workspace` name theirs in the key of the same name; a note
@@ -93,6 +98,16 @@ Times are ISO 8601 with their offset from UTC, to the second.
   colour this version does not know is shown as butter and kept as written.
 - **The text** follows the closing `---` exactly as it was written: UTF-8, with
   line feeds. The first words are the title; there is no title key.
+- **A reminder is shown once.** It is due when `remind` has come and the note
+  has no `reminded` and no `done`. Gooseberry writes `reminded` into the note
+  before it shows the reminder, so a restart, or another program reading the
+  folder, never shows it again. Setting a new reminder removes `reminded` and
+  `done`. Writing `reminded` does not change `changed`, which stays the
+  person's own last change. A `remind` this version cannot read is kept as
+  written and does nothing.
+- **A checklist** is Markdown task lines in the text, `- [ ] oats` for an item
+  and `- [x] oats` for one ticked, as other Markdown programs write them. Any
+  other line is plain text; the first, above the items, is the list's heading.
 
 ## How notes are kept
 
@@ -126,3 +141,4 @@ Times are ISO 8601 with their offset from UTC, to the second.
 | Version | From | What changed |
 | --- | --- | --- |
 | 1 | Milestone 0 | The first format |
+| 1 | Milestone 1 | `remind`, `reminded` and `done` added, and checklists written down; a reader of the first format ignores them, so the version stays |

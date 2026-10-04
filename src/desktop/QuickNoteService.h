@@ -41,6 +41,12 @@ public Q_SLOTS:
     Q_SCRIPTABLE QVariantMap SetText(const QString &text);
     Q_SCRIPTABLE QVariantMap SetColour(const QString &colour);
     Q_SCRIPTABLE QVariantMap SetBelongs(const QString &kind, const QString &project);
+    // Added in version 1, from Milestone 1; a caller that does not know them
+    // ignores them. A reminder: an ISO 8601 time, "opens" for the next time
+    // the note's window opens, or empty for none.
+    Q_SCRIPTABLE QVariantMap SetReminder(const QString &when);
+    Q_SCRIPTABLE QVariantMap SetChecklist(bool on);
+    Q_SCRIPTABLE QVariantMap SetLineChecked(uint line, bool checked);
     Q_SCRIPTABLE QVariantMap Done();
     Q_SCRIPTABLE QVariantMap TuckAway();
     Q_SCRIPTABLE QVariantMap Remove();

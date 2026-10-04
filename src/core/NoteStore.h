@@ -45,8 +45,12 @@ public:
 
     // Keeps a new note and returns its id, or an empty string with lastError.
     QString create(Note note);
-    // Writes a changed note. Its changed time is set here.
-    bool save(Note note);
+    enum class Touch {
+        Changed, // The person changed the note: its changed time is set here.
+        Kept, // Gooseberry recorded something about it, as a reminder shown.
+    };
+    // Writes a changed note.
+    bool save(Note note, Touch touch = Touch::Changed);
     // Moves the note, and its ink when it has any, to the desktop's trash.
     // Returns the note's place in the trash, so it can be put back.
     std::optional<QString> trash(const QString &id);

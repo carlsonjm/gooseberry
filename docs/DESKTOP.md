@@ -9,7 +9,11 @@ required.
 
 Milestone 0 needs nothing from Kadunce, Tettegouche or Shuffle. On any Plasma
 desktop it reads two things from the desktop itself: the window in front, which
-a note belongs to by default, and the current workspace's name. Both come from
+a note belongs to by default, and the current workspace's name. From Milestone
+1 it also notices a window opening on a document, for "next time this opens",
+and shows reminders through the desktop's standard notifications
+(`org.freedesktop.Notifications` on the session bus), so whatever shows
+notifications on that desktop shows them. Both come from
 Plasma's own window list, which Plasma opens to Gooseberry because its desktop
 file asks for it. Where the desktop says nothing, a note starts Loose.
 
@@ -154,6 +158,11 @@ dictionary of strings to variants:
 | `choices` | `av` | The Belongs to choices in order, each a dictionary: `kind`, `label` (the words to show), `project` (for a project), `chosen` (`b`) |
 | `readOnly` | `b` | The note or folder is kept by a newer Gooseberry and is not changed |
 | `problem` | `s` | Why the last change could not be kept; empty when it was |
+| `remind` | `s` | The reminder: an ISO 8601 time with its offset, `opens` for the next time the note's window opens, or empty for none. From Milestone 1 |
+| `remindLabel` | `s` | The reminder in the words Remind shows on the card, such as "Tomorrow 9:00 AM"; empty for none. From Milestone 1 |
+| `remindChoices` | `av` | What Remind offers, in the card's order, each a dictionary: `kind` (`later`, `evening`, `tomorrow`, `opens` or `pick`), `label` (the words to show) and `time` (ISO 8601, for the first three; empty otherwise). `opens` only for a note written on a window; `pick` is for the search's own way to choose a day and time. From Milestone 1 |
+| `checklist` | `b` | The note is a checklist. From Milestone 1 |
+| `lines` | `av` | Every line of the text in order, each a dictionary: `text` (without the box), `item` (`b`, it has a box) and `checked` (`b`). From Milestone 1 |
 
 | Method | What it does |
 | --- | --- |
@@ -163,6 +172,9 @@ dictionary of strings to variants:
 | `SetText(s text) → a{sv}` | Sets the text. Search sends it at each pause, as Gooseberry's card writes; the first text keeps the note |
 | `SetColour(s name) → a{sv}` | One of the five colours; another name is refused |
 | `SetBelongs(s kind, s project) → a{sv}` | Belongs to; a project needs its name, and a new name makes the project |
+| `SetReminder(s when) → a{sv}` | Sets the reminder: an ISO 8601 time, `opens`, or empty to take it away. A new reminder replaces the old one and is shown once more. `opens` on a note written on no window, and anything else that is not a time, are refused. From Milestone 1 |
+| `SetChecklist(b on) → a{sv}` | Turns the text into a checklist, as Checklist on the card does, or back into plain text. From Milestone 1 |
+| `SetLineChecked(u line, b checked) → a{sv}` | Ticks or unticks the item on that line, counted from 0 as in `lines`; a line that is not an item is refused. From Milestone 1 |
 | `Done() → a{sv}` | Finishes the note, as Done on the card; a note left empty goes to the trash. The next `Start` begins a new one |
 | `TuckAway() → a{sv}` | Tucks the note away and finishes it |
 | `Remove() → a{sv}` | Moves the note to the desktop's trash and finishes it; nothing is deleted |
@@ -173,6 +185,18 @@ dictionary of strings to variants:
 | --- | --- |
 | `Changed(a{sv})` | The open note changed other than by a call here: on the board, on Gooseberry's card, or by another program writing its file |
 | `BoardShown(s requestToken)` | The board's window, asked for by `OpenBoard` with that token, has drawn its first frame |
+
+**Added in Milestone 1, within version 1.** The keys `remind`,
+`remindLabel`, `remindChoices`, `checklist` and `lines`, and the methods
+`SetReminder`, `SetChecklist` and `SetLineChecked`. A version-1 caller that
+does not know them ignores the keys and never calls the methods, and keeps
+working as before. A search that offers them shows Remind and Checklist as the
+card does: Remind offers `remindChoices` and sends the chosen `time`, or
+`opens`; Checklist calls `SetChecklist`, each box calls `SetLineChecked`, and
+words typed in an item go with `SetText` as any typing does, the text keeping
+its `- [ ] ` and `- [x] ` markers. The reminder itself is Gooseberry's to show,
+wherever the note was written. `Changed` also tells a reminder or a tick made
+elsewhere.
 
 For All notes, Search calls `OpenBoard` with a token of its own and waits for
 `BoardShown` with that token: from then the board's window, whose application

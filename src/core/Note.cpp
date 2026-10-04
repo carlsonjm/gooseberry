@@ -26,8 +26,10 @@ const QStringList KnownKeys = {
     QStringLiteral("gooseberry"), QStringLiteral("created"), QStringLiteral("changed"),
     QStringLiteral("colour"), QStringLiteral("belongs"), QStringLiteral("window"),
     QStringLiteral("app"), QStringLiteral("project"), QStringLiteral("workspace"),
-    QStringLiteral("tucked"),
+    QStringLiteral("tucked"), QStringLiteral("remind"), QStringLiteral("reminded"), QStringLiteral("done"),
 };
+
+const QString OnOpen = QStringLiteral("opens");
 
 QString quoted(const QString &value)
 {
@@ -169,6 +171,17 @@ QByteArray Note::serialize() const
         out += QStringLiteral("workspace: %1\n").arg(quoted(workspace));
     }
     out += QStringLiteral("tucked: %1\n").arg(tucked ? QStringLiteral("true") : QStringLiteral("false"));
+    if (remind.isValid()) {
+        out += QStringLiteral("remind: %1\n").arg(timeText(remind));
+    } else if (remindOnOpen) {
+        out += QStringLiteral("remind: %1\n").arg(OnOpen);
+    }
+    if (reminded.isValid()) {
+        out += QStringLiteral("reminded: %1\n").arg(timeText(reminded));
+    }
+    if (done.isValid()) {
+        out += QStringLiteral("done: %1\n").arg(timeText(done));
+    }
     for (const auto &[key, value] : extra) {
         out += key + QLatin1String(": ") + value + QLatin1Char('\n');
     }
@@ -248,6 +261,22 @@ Note Note::parse(const QByteArray &bytes, const QString &id, const QDateTime &fa
             note.workspace = value;
         } else if (key == QLatin1String("tucked")) {
             note.tucked = value == QLatin1String("true");
+        } else if (key == QLatin1String("remind")) {
+            if (value == OnOpen) {
+                note.remindOnOpen = true;
+            } else {
+                const auto time = QDateTime::fromString(value, Qt::ISODate);
+                if (time.isValid()) {
+                    note.remind = time;
+                } else {
+                    // A reminder this version cannot read is kept as written.
+                    note.extra.append({key, raw});
+                }
+            }
+        } else if (key == QLatin1String("reminded")) {
+            note.reminded = QDateTime::fromString(value, Qt::ISODate);
+        } else if (key == QLatin1String("done")) {
+            note.done = QDateTime::fromString(value, Qt::ISODate);
         }
     }
     return note;

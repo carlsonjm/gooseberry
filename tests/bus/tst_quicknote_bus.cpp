@@ -273,6 +273,65 @@ private Q_SLOTS:
         QCOMPARE(shown.first().value(0).toString(), QStringLiteral("token-1"));
     }
 
+    // Added in version 1 for the planner, ignorable by a caller that does
+    // not know them: a reminder, from the same choices as the card's Remind,
+    // and a checklist ticked line by line. Each is on disk when the call
+    // returns.
+    void remindersAndChecklists()
+    {
+        QVariantMap state = call(QStringLiteral("Start"));
+        QCOMPARE(state.value(QStringLiteral("remind")).toString(), QString());
+        QVERIFY(!state.value(QStringLiteral("checklist")).toBool());
+        QStringList kinds;
+        for (const QVariant &choice : asList(state.value(QStringLiteral("remindChoices")))) {
+            const QVariantMap map = asMap(choice);
+            kinds.append(map.value(QStringLiteral("kind")).toString());
+            QVERIFY(!map.value(QStringLiteral("label")).toString().isEmpty());
+            if (map.value(QStringLiteral("kind")) == QLatin1String("tomorrow")) {
+                QCOMPARE(QDateTime::fromString(map.value(QStringLiteral("time")).toString(), Qt::ISODate),
+                         QDateTime(QDate::currentDate().addDays(1), QTime(9, 0)));
+            }
+        }
+        QVERIFY(kinds.contains(QStringLiteral("tomorrow")));
+        QCOMPARE(kinds.last(), QStringLiteral("pick"));
+        // Written on no window, so no "next time this opens".
+        QVERIFY(!kinds.contains(QStringLiteral("opens")));
+
+        state = call(QStringLiteral("SetText"), {QStringLiteral("Groceries\ncoffee\noats")});
+        const QString id = state.value(QStringLiteral("id")).toString();
+        const QDateTime tomorrow(QDate::currentDate().addDays(1), QTime(9, 0));
+        const QString iso = tomorrow.toOffsetFromUtc(tomorrow.offsetFromUtc()).toString(Qt::ISODate);
+        state = call(QStringLiteral("SetReminder"), {iso});
+        QCOMPARE(state.value(QStringLiteral("remind")).toString(), iso);
+        QVERIFY(state.value(QStringLiteral("remindLabel")).toString().startsWith(QStringLiteral("Tomorrow ")));
+        QCOMPARE(readNote(pathOf(id)).header.value(QStringLiteral("remind")), iso);
+
+        for (const QString &wrong : {QStringLiteral("opens"), QStringLiteral("soon")}) {
+            const QDBusMessage refused = m_note->call(QStringLiteral("SetReminder"), wrong);
+            QCOMPARE(refused.type(), QDBusMessage::ErrorMessage);
+        }
+        QCOMPARE(readNote(pathOf(id)).header.value(QStringLiteral("remind")), iso);
+        state = call(QStringLiteral("SetReminder"), {QString()});
+        QCOMPARE(state.value(QStringLiteral("remind")).toString(), QString());
+        QVERIFY(!readNote(pathOf(id)).header.contains(QStringLiteral("remind")));
+
+        state = call(QStringLiteral("SetChecklist"), {true});
+        QVERIFY(state.value(QStringLiteral("checklist")).toBool());
+        QCOMPARE(readNote(pathOf(id)).text, QStringLiteral("Groceries\n- [ ] coffee\n- [ ] oats"));
+        const QVariantList lines = asList(state.value(QStringLiteral("lines")));
+        QCOMPARE(lines.size(), 3);
+        QVERIFY(!asMap(lines.at(0)).value(QStringLiteral("item")).toBool());
+        QCOMPARE(asMap(lines.at(2)).value(QStringLiteral("text")).toString(), QStringLiteral("oats"));
+        state = call(QStringLiteral("SetLineChecked"), {2u, true});
+        QVERIFY(asMap(asList(state.value(QStringLiteral("lines"))).at(2)).value(QStringLiteral("checked")).toBool());
+        QCOMPARE(readNote(pathOf(id)).text, QStringLiteral("Groceries\n- [ ] coffee\n- [x] oats"));
+        QCOMPARE(m_note->call(QStringLiteral("SetLineChecked"), 0u, true).type(), QDBusMessage::ErrorMessage);
+        QCOMPARE(m_note->call(QStringLiteral("SetLineChecked"), 9u, true).type(), QDBusMessage::ErrorMessage);
+        state = call(QStringLiteral("SetChecklist"), {false});
+        QCOMPARE(readNote(pathOf(id)).text, QStringLiteral("Groceries\ncoffee\noats"));
+        call(QStringLiteral("Done"));
+    }
+
     // Gooseberry still running and well after all of it.
     void stillRunning()
     {

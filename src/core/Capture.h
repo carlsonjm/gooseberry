@@ -39,6 +39,14 @@ class Capture : public QObject
     Q_PROPERTY(QString workspace READ workspace NOTIFY contextChanged)
     Q_PROPERTY(QString problem READ problem NOTIFY problemChanged)
     Q_PROPERTY(QVariantList colours READ colours CONSTANT)
+    // The reminder: a time, or the next time the note's window opens.
+    Q_PROPERTY(QDateTime remindAt READ remindAt NOTIFY reminderChanged)
+    Q_PROPERTY(bool remindOnOpen READ remindOnOpen NOTIFY reminderChanged)
+    Q_PROPERTY(bool hasReminder READ hasReminder NOTIFY reminderChanged)
+    // A checklist, and every line of the text: each a map of text, item and
+    // checked.
+    Q_PROPERTY(bool checklist READ checklist NOTIFY textChanged)
+    Q_PROPERTY(QVariantList lines READ lines NOTIFY textChanged)
 
 public:
     explicit Capture(NoteStore *store, QObject *parent = nullptr);
@@ -69,8 +77,29 @@ public:
     QVariantList colours() const;
     Q_INVOKABLE QString hexFor(const QString &colour) const { return colourHex(colour); }
 
+    QDateTime remindAt() const { return m_note.remind; }
+    bool remindOnOpen() const { return m_note.remindOnOpen; }
+    bool hasReminder() const { return m_note.hasReminder(); }
+    bool checklist() const;
+    QVariantList lines() const;
+
     void setText(const QString &text);
     void setColour(const QString &colour);
+
+    // A reminder replaces any the note had, and is shown once more.
+    Q_INVOKABLE void setRemindAt(const QDateTime &time);
+    Q_INVOKABLE void setRemindOnOpen();
+    Q_INVOKABLE void clearReminder();
+
+    // Checklist on the card: the text becomes a list and back. A tick, a new
+    // item and a removed one are kept at once; words typed in an item wait
+    // for the pause as any typing does.
+    Q_INVOKABLE void makeChecklist();
+    Q_INVOKABLE void makePlain();
+    Q_INVOKABLE void setLineText(int line, const QString &text);
+    Q_INVOKABLE void setLineChecked(int line, bool checked);
+    Q_INVOKABLE void addItemAfter(int line);
+    Q_INVOKABLE void removeLine(int line);
 
     // A new, empty note. It belongs to the window in front when there is
     // one, and is Loose otherwise. Nothing is kept until it has text.
@@ -101,12 +130,15 @@ Q_SIGNALS:
     void colourChanged();
     void belongingChanged();
     void contextChanged();
+    void reminderChanged();
     void problemChanged();
     void finished();
     void removed();
 
 private:
     void keep();
+    void setTextNow(const QString &text);
+    void setReminder(const QDateTime &time, bool onOpen);
     void stopWaiting();
     void leaveEmpty();
     void setProblem(const QString &problem);

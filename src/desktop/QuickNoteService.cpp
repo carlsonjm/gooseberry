@@ -4,6 +4,7 @@
 #include "Board.h"
 #include "Capture.h"
 #include "NoteStore.h"
+#include "ReminderWords.h"
 #include "Shell.h"
 
 #include <KLocalizedString>
@@ -46,7 +47,7 @@ QuickNoteService::QuickNoteService(Shell *shell, NoteStore *store, QObject *pare
         }
     });
     for (auto signal : {&Capture::textChanged, &Capture::colourChanged, &Capture::belongingChanged,
-                        &Capture::noteChanged}) {
+                        &Capture::noteChanged, &Capture::reminderChanged}) {
         connect(m_capture, signal, this, &QuickNoteService::changedElsewhere);
     }
     connect(m_shell, &Shell::boardShown, this, [this] {
@@ -126,6 +127,61 @@ QVariantMap QuickNoteService::SetBelongs(const QString &kind, const QString &pro
     return state(m_open);
 }
 
+QVariantMap QuickNoteService::SetReminder(const QString &when)
+{
+    Calling calling(m_calling);
+    if (!m_open) {
+        sendErrorReply(QDBusError::Failed, QStringLiteral("No quick note is open; call Start first."));
+        return {};
+    }
+    if (when.isEmpty()) {
+        m_capture->clearReminder();
+    } else if (when == QLatin1String("opens")) {
+        if (m_capture->window().isEmpty()) {
+            sendErrorReply(QDBusError::InvalidArgs, QStringLiteral("This note was not written on a window."));
+            return {};
+        }
+        m_capture->setRemindOnOpen();
+    } else {
+        const QDateTime time = QDateTime::fromString(when, Qt::ISODate);
+        if (!time.isValid()) {
+            sendErrorReply(QDBusError::InvalidArgs, QStringLiteral("Not a time: %1").arg(when));
+            return {};
+        }
+        m_capture->setRemindAt(time);
+    }
+    return state(m_open);
+}
+
+QVariantMap QuickNoteService::SetChecklist(bool on)
+{
+    Calling calling(m_calling);
+    if (!m_open) {
+        sendErrorReply(QDBusError::Failed, QStringLiteral("No quick note is open; call Start first."));
+        return {};
+    }
+    if (on != m_capture->checklist()) {
+        on ? m_capture->makeChecklist() : m_capture->makePlain();
+    }
+    return state(m_open);
+}
+
+QVariantMap QuickNoteService::SetLineChecked(uint line, bool checked)
+{
+    Calling calling(m_calling);
+    if (!m_open) {
+        sendErrorReply(QDBusError::Failed, QStringLiteral("No quick note is open; call Start first."));
+        return {};
+    }
+    const QVariantList lines = m_capture->lines();
+    if (line >= uint(lines.size()) || !lines.at(int(line)).toMap().value(QStringLiteral("item")).toBool()) {
+        sendErrorReply(QDBusError::InvalidArgs, QStringLiteral("Line %1 is not an item of the list.").arg(line));
+        return {};
+    }
+    m_capture->setLineChecked(int(line), checked);
+    return state(m_open);
+}
+
 QVariantMap QuickNoteService::Done()
 {
     Calling calling(m_calling);
@@ -176,6 +232,19 @@ bool QuickNoteService::OpenBoard(const QString &noteId, const QString &requestTo
 
 QVariantMap QuickNoteService::state(bool open) const
 {
+    const QString remind = m_capture->remindOnOpen() ? QStringLiteral("opens")
+        : m_capture->remindAt().isValid() ? m_capture->remindAt().toOffsetFromUtc(m_capture->remindAt().offsetFromUtc()).toString(Qt::ISODate)
+                                          : QString();
+    // The same choices, in the same order, as Remind on Gooseberry's card,
+    // with each time as ISO 8601 for SetReminder.
+    QVariantList remindChoices;
+    const QVariantList offered = ReminderWords::choices(!m_capture->window().isEmpty());
+    for (const QVariant &choice : offered) {
+        QVariantMap map = choice.toMap();
+        const QDateTime time = map.value(QStringLiteral("time")).toDateTime();
+        map.insert(QStringLiteral("time"), time.isValid() ? time.toOffsetFromUtc(time.offsetFromUtc()).toString(Qt::ISODate) : QString());
+        remindChoices.append(map);
+    }
     QStringList hexes;
     const QStringList names = colourNames();
     for (const QString &name : names) {
@@ -196,6 +265,11 @@ QVariantMap QuickNoteService::state(bool open) const
         {QStringLiteral("choices"), choices()},
         {QStringLiteral("readOnly"), m_capture->readOnly()},
         {QStringLiteral("problem"), m_capture->problem()},
+        {QStringLiteral("remind"), remind},
+        {QStringLiteral("remindLabel"), ReminderWords::label(m_capture->remindAt(), m_capture->remindOnOpen())},
+        {QStringLiteral("remindChoices"), remindChoices},
+        {QStringLiteral("checklist"), m_capture->checklist()},
+        {QStringLiteral("lines"), m_capture->lines()},
     };
 }
 

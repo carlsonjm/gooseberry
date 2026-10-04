@@ -30,6 +30,9 @@ add_library(gooseberry-core STATIC
     src/core/Note.cpp src/core/Note.h
     src/core/NoteStore.cpp src/core/NoteStore.h
     src/core/Capture.cpp src/core/Capture.h
+    src/core/Checklist.cpp src/core/Checklist.h
+    src/core/Planner.cpp src/core/Planner.h
+    src/core/Reminders.cpp src/core/Reminders.h
     src/core/Board.cpp src/core/Board.h
     src/core/Trash.cpp src/core/Trash.h
 )
@@ -46,11 +49,15 @@ qt_add_qml_module(gooseberry-screens
         qml/BoardView.qml
         qml/BoardWindow.qml
         qml/CaptureWindow.qml
+        qml/ChecklistPad.qml
+        qml/DayStrip.qml
         qml/Masonry.qml
         qml/NoteCard.qml
         qml/Notice.qml
         qml/Pill.qml
+        qml/PlannerColumn.qml
         qml/QuickNote.qml
+        qml/TimePicker.qml
     RESOURCES
         qml/icons/note.svg
         qml/icons/tuck.svg
@@ -60,7 +67,9 @@ qt_add_qml_module(gooseberry-screens
 # place on screen, one running copy.
 add_library(gooseberry-desktop STATIC
     src/desktop/Log.h
+    src/desktop/Notifier.cpp src/desktop/Notifier.h
     src/desktop/QuickNoteService.cpp src/desktop/QuickNoteService.h
+    src/desktop/ReminderWords.cpp src/desktop/ReminderWords.h
     src/desktop/Shell.cpp src/desktop/Shell.h
     src/desktop/SpreadGuest.cpp src/desktop/SpreadGuest.h
     src/desktop/WindowContext.cpp src/desktop/WindowContext.h

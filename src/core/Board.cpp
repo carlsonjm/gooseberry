@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "Board.h"
 
+#include "Checklist.h"
 #include "NoteStore.h"
 
 #include <QDateTime>
@@ -42,6 +43,11 @@ bool Places::contains(const QString &key, const Note &note, const QDate &today)
         return false;
     }
     if (key == Today) {
+        // A note with a time is on the day it is planned for; any other is
+        // today's when it was written or changed today.
+        if (note.remind.isValid()) {
+            return note.plannedDay() == today;
+        }
         return note.changed.toLocalTime().date() == today || note.created.toLocalTime().date() == today;
     }
     return note.placeKey() == key;
@@ -266,6 +272,10 @@ QStringList PlaceNotes::wanted() const
         if (needle.isEmpty() && !Places::contains(m_place, note, today)) {
             continue;
         }
+        // On Today, notes with a time are on the planner beside the others.
+        if (needle.isEmpty() && m_place == Today && note.remind.isValid()) {
+            continue;
+        }
         if (!needle.isEmpty() && !note.text.contains(needle, Qt::CaseInsensitive)
             && !note.placeLabel().contains(needle, Qt::CaseInsensitive)) {
             continue;
@@ -359,6 +369,19 @@ QVariant PlaceNotes::data(const QModelIndex &index, int role) const
         return note->changed;
     case ReadOnlyRole:
         return note->newerFormat() || m_store->readOnly();
+    case ChecklistRole:
+        return Checklist::contains(note->text);
+    case ChecklistHeadingRole:
+        return Checklist::heading(note->text);
+    case ChecklistItemsRole: {
+        QVariantList items;
+        for (const ChecklistLine &line : Checklist::lines(note->text)) {
+            if (line.item && !line.text.trimmed().isEmpty()) {
+                items.append(QVariantMap{{QStringLiteral("text"), line.text.trimmed()}, {QStringLiteral("checked"), line.checked}});
+            }
+        }
+        return items;
+    }
     }
     return {};
 }
@@ -377,6 +400,9 @@ QHash<int, QByteArray> PlaceNotes::roleNames() const
         {TuckedRole, "tucked"},
         {ChangedRole, "changed"},
         {ReadOnlyRole, "readOnly"},
+        {ChecklistRole, "checklist"},
+        {ChecklistHeadingRole, "checklistHeading"},
+        {ChecklistItemsRole, "checklistItems"},
     };
 }
 

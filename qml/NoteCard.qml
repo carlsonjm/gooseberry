@@ -14,6 +14,9 @@ Rectangle {
     required property string placeLabel
     required property string placeKey
     required property bool tucked
+    required property bool checklist
+    required property string checklistHeading
+    required property var checklistItems
     // The place shown under the note, when the board is not already there.
     property bool showPlace: true
 
@@ -45,8 +48,44 @@ Rectangle {
         }
         spacing: 8
 
+        // A checklist reads as its heading, then its items in one line, those
+        // ticked struck through.
+        QQC2.Label {
+            objectName: "checklistHeading"
+            Layout.fillWidth: true
+            Layout.bottomMargin: -4
+            visible: card.checklist && card.checklistHeading.length > 0
+            text: card.checklistHeading
+            textFormat: Text.PlainText
+            wrapMode: Text.Wrap
+            maximumLineCount: 2
+            elide: Text.ElideRight
+            color: card.ink
+            font.pixelSize: 15
+            font.weight: Font.Bold
+        }
+
+        QQC2.Label {
+            objectName: "checklistItems"
+            Layout.fillWidth: true
+            visible: card.checklist
+            text: card.checklistItems.map(item => {
+                const words = item.text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                return item.checked ? "<s>" + words + "</s>" : words;
+            }).join(" · ")
+            textFormat: Text.StyledText
+            wrapMode: Text.Wrap
+            maximumLineCount: 8
+            elide: Text.ElideRight
+            color: card.ink
+            font.pixelSize: 15
+            font.weight: Font.Medium
+            lineHeight: 1.15
+        }
+
         QQC2.Label {
             Layout.fillWidth: true
+            visible: !card.checklist
             text: card.text.trim()
             textFormat: Text.PlainText
             wrapMode: Text.Wrap

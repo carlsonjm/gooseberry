@@ -6,9 +6,10 @@ Write a thought down in one tap. Keep it beside the work it belongs to, put it
 on the planner when it has a time, or tuck it away without losing it. Nothing
 asks for a title, a folder or a save before an idea is kept.
 
-**Status:** Milestone 0, capture and keep, is built and waiting on its proof:
-the quick-note card, the board, tucking away and removing. Reminders, the planner
-and the pen come next. The concept is in [docs/CONCEPT.md](docs/CONCEPT.md) and
+**Status:** Milestone 0, capture and keep, and Milestone 1, the planner, are
+built and waiting on their proof: the quick-note card, the board, tucking away
+and removing; reminders at a time or the next time a document opens, the
+planner and checklists. The pen comes next. The concept is in [docs/CONCEPT.md](docs/CONCEPT.md) and
 the plan in [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## What it does
