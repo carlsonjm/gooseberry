@@ -436,7 +436,7 @@ Item {
                     font.pixelSize: 13
                     font.weight: Font.DemiBold
                     text: quick.capture.problem.length > 0 ? i18n("Not kept yet: %1", quick.capture.problem)
-                        : quick.capture.readOnly ? i18n("Kept by a newer Gooseberry: read only")
+                        : quick.capture.readOnly ? i18n("Kept by a newer %1: read only", Qt.application.displayName)
                         : i18n("Saved as you go")
                     color: quick.capture.problem.length > 0 || quick.capture.readOnly ? Kirigami.Theme.negativeTextColor
                                                                                       : Kirigami.Theme.positiveTextColor

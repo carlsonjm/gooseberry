@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "NoteStore.h"
 
+#include "Product.h"
 #include "Trash.h"
 
 #include <QDir>
@@ -173,7 +174,7 @@ NoteStore::Seen NoteStore::seen(const QString &path)
 bool NoteStore::write(const Note &note)
 {
     if (m_readOnly || note.newerFormat()) {
-        m_lastError = QStringLiteral("This note was kept by a newer Gooseberry, so it is not changed here.");
+        m_lastError = QStringLiteral("This note was kept by a newer %1, so it is not changed here.").arg(productName());
         return false;
     }
     if (!QFileInfo::exists(m_folder)) {
@@ -243,7 +244,8 @@ bool NoteStore::save(Note note, Touch touch)
 std::optional<QString> NoteStore::trash(const QString &id)
 {
     if (m_readOnly) {
-        m_lastError = QStringLiteral("This folder was laid out by a newer Gooseberry, so nothing in it is changed here.");
+        m_lastError = QStringLiteral("This folder was laid out by a newer %1, so nothing in it is changed here.")
+                          .arg(productName());
         return std::nullopt;
     }
     const QString path = pathFor(id);

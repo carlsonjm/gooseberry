@@ -10,7 +10,7 @@ Kirigami.ApplicationWindow {
     required property QtObject shell
 
     objectName: "boardWindow"
-    title: i18n("Gooseberry")
+    title: Qt.application.displayName
     width: 1100
     height: 720
     minimumWidth: 600
