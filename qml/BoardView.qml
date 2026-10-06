@@ -348,7 +348,7 @@ Item {
                                 case "loose": return i18n("A note that belongs nowhere yet waits here.");
                                 case "tucked": return i18n("Tuck a note away to keep it here, out of sight. Tap it to bring it back.");
                                 }
-                                return i18n("Tap New note, or Gooseberry's button, to write one.");
+                                return i18n("Tap New note, or %1's button, to write one.", Qt.application.displayName);
                             }
                         }
                     }

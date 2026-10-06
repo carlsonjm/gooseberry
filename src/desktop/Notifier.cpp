@@ -4,6 +4,7 @@
 #include "Checklist.h"
 #include "Log.h"
 #include "NoteStore.h"
+#include "Product.h"
 #include "ReminderWords.h"
 #include "Reminders.h"
 
@@ -90,7 +91,7 @@ void Notifier::show(const QString &noteId)
         {QStringLiteral("desktop-entry"), appId()},
         {QStringLiteral("urgency"), QVariant::fromValue(uchar(1))},
     };
-    notify.setArguments({QGuiApplication::applicationDisplayName().isEmpty() ? QStringLiteral("Gooseberry")
+    notify.setArguments({QGuiApplication::applicationDisplayName().isEmpty() ? productName()
                                                                               : QGuiApplication::applicationDisplayName(),
                          uint(0), appId(), summary, body.toHtmlEscaped(), actions, hints,
                          // The desktop's own time on screen, then its history:

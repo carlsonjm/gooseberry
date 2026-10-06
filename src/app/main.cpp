@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "NoteStore.h"
+#include "Product.h"
 #include "QuickNoteService.h"
 #include "Shell.h"
 #include "SpreadGuest.h"
@@ -26,7 +27,11 @@ int main(int argc, char *argv[])
     QApplication app(argc, argv);
     KLocalizedString::setApplicationDomain("gooseberry");
 
-    KAboutData about(QStringLiteral("gooseberry"), QStringLiteral("Gooseberry"), QStringLiteral(GOOSEBERRY_VERSION),
+    // Named once, before anything shows: Notes where Shuffle is installed,
+    // Gooseberry elsewhere. Every title and sentence that names the program
+    // reads it from here.
+    Gooseberry::setInsideShuffle(Gooseberry::shuffleInstalled());
+    KAboutData about(QStringLiteral("gooseberry"), Gooseberry::productName(), QStringLiteral(GOOSEBERRY_VERSION),
                      QStringLiteral("Notes, stickies and a planner"), KAboutLicense::GPL_V2);
     about.setOrganizationDomain("carlsonjm.github.io");
     about.setDesktopFileName(QStringLiteral(GOOSEBERRY_APP_ID));

@@ -32,6 +32,7 @@ add_library(gooseberry-core STATIC
     src/core/Capture.cpp src/core/Capture.h
     src/core/Checklist.cpp src/core/Checklist.h
     src/core/Planner.cpp src/core/Planner.h
+    src/core/Product.cpp src/core/Product.h
     src/core/Reminders.cpp src/core/Reminders.h
     src/core/Board.cpp src/core/Board.h
     src/core/Trash.cpp src/core/Trash.h

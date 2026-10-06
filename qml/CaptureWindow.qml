@@ -46,7 +46,7 @@ Window {
     readonly property alias board: board
 
     objectName: "quickNoteWindow"
-    title: i18n("Gooseberry")
+    title: Qt.application.displayName
     color: "transparent"
     visible: false
 

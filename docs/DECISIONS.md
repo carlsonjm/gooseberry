@@ -7,7 +7,11 @@ still open are in `ROADMAP.md` § Open decisions.
 
 Gooseberry is a separate program with its own repository and name, and works on
 any KDE Plasma desktop. A product that includes it may give it another name
-there. (The maintainer, 3 October.)
+there. (The maintainer, 3 October.) Where Shuffle is installed, the window
+titles, the application's displayed name and its sentences say Notes; elsewhere
+they say Gooseberry. One build decides at start, by whether Shuffle's bottom
+surface is installed. Ids, the desktop file, the bus names and the notes folder
+keep Gooseberry's name either way.
 
 Rejected: building notes inside a product's own repository. Notes would only
 exist inside that product, and anyone without it would be left with the
