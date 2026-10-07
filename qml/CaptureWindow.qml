@@ -206,7 +206,6 @@ Window {
             id: note
             anchors.fill: parent
             capture: root.shell.capture
-            projects: root.shell.places.projects
             title: root.shell.applicationName()
             words: root.shell.reminderLabel !== undefined ? root.shell : null
             surface: card.color

@@ -383,6 +383,16 @@ CaptureContext Shell::currentContext() const
     return m_context->current();
 }
 
+QVariantList Shell::openWindows() const
+{
+    return m_context->openWindows();
+}
+
+QString Shell::currentWorkspace() const
+{
+    return m_context->current().workspace;
+}
+
 QString Shell::applicationName() const
 {
     if (const auto service = KService::serviceByDesktopName(QGuiApplication::desktopFileName())) {

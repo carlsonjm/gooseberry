@@ -23,6 +23,9 @@ Capture::Capture(NoteStore *store, QObject *parent)
         Q_EMIT noteChanged();
     });
     connect(m_store, &NoteStore::readOnlyChanged, this, &Capture::noteChanged);
+    connect(m_store, &NoteStore::foldersChanged, this, &Capture::foldersChanged);
+    connect(this, &Capture::belongingChanged, this, &Capture::foldersChanged);
+    connect(this, &Capture::contextChanged, this, &Capture::foldersChanged);
 
     m_pause.setSingleShot(true);
     m_pause.setInterval(PauseMs);
@@ -50,6 +53,29 @@ QVariantList Capture::colours() const
     QVariantList list;
     for (const QString &name : colourNames()) {
         list.append(QVariantMap{{QStringLiteral("name"), name}, {QStringLiteral("hex"), colourHex(name)}});
+    }
+    return list;
+}
+
+QVariantList Capture::folderChoices() const
+{
+    QVariantList list;
+    const QString own = m_store->workspaceFolder(m_note.workspace);
+    auto add = [&list, &own, this](const QString &name) {
+        list.append(QVariantMap{{QStringLiteral("name"), name},
+                                {QStringLiteral("label"), name.isEmpty() ? inboxLabel() : name},
+                                {QStringLiteral("chosen"), name == m_note.folder},
+                                {QStringLiteral("workspace"), !own.isEmpty() && name == own}});
+    };
+    if (!own.isEmpty()) {
+        add(own);
+    }
+    add({});
+    const QStringList folders = m_store->folders();
+    for (const QString &folder : folders) {
+        if (folder != own) {
+            add(folder);
+        }
     }
     return list;
 }

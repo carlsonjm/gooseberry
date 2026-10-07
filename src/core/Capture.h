@@ -40,6 +40,10 @@ class Capture : public QObject
     Q_PROPERTY(bool stuck READ stuck NOTIFY belongingChanged)
     Q_PROPERTY(QString window READ window NOTIFY contextChanged)
     Q_PROPERTY(QString app READ app NOTIFY contextChanged)
+    // What Folder offers, in order: the workspace's folder, Inbox, then the
+    // rest; each a map of name (empty for Inbox), label, chosen and
+    // workspace (true for the workspace's own).
+    Q_PROPERTY(QVariantList folders READ folderChoices NOTIFY foldersChanged)
     Q_PROPERTY(QString workspace READ workspace NOTIFY contextChanged)
     Q_PROPERTY(QString problem READ problem NOTIFY problemChanged)
     Q_PROPERTY(QVariantList colours READ colours CONSTANT)
@@ -72,6 +76,7 @@ public:
     QString colour() const { return m_note.colour; }
     QString folder() const { return m_note.folder; }
     QString folderLabel() const { return m_note.placeLabel(); }
+    QVariantList folderChoices() const;
     bool stuck() const { return m_note.isStuck(); }
     // The window the note was written on or stuck to, and the workspace it
     // was written on.
@@ -142,6 +147,7 @@ Q_SIGNALS:
     void textChanged();
     void colourChanged();
     void belongingChanged();
+    void foldersChanged();
     void contextChanged();
     void reminderChanged();
     void problemChanged();

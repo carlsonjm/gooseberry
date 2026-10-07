@@ -40,6 +40,7 @@ public Q_SLOTS:
     Q_SCRIPTABLE QVariantMap State() const;
     Q_SCRIPTABLE QVariantMap SetText(const QString &text);
     Q_SCRIPTABLE QVariantMap SetColour(const QString &colour);
+    // Kept for callers of Milestone 1; SetFolder and SetStuck replace it.
     Q_SCRIPTABLE QVariantMap SetBelongs(const QString &kind, const QString &project);
     // Added in version 1, from Milestone 1; a caller that does not know them
     // ignores them. A reminder: an ISO 8601 time, "opens" for the next time
@@ -47,6 +48,11 @@ public Q_SLOTS:
     Q_SCRIPTABLE QVariantMap SetReminder(const QString &when);
     Q_SCRIPTABLE QVariantMap SetChecklist(bool on);
     Q_SCRIPTABLE QVariantMap SetLineChecked(uint line, bool checked);
+    // Added in version 1, from Milestone 2. The folder, by name, empty for
+    // Inbox; a new name makes the folder. The window to stick to, by its
+    // document's name and application; an empty window unsticks.
+    Q_SCRIPTABLE QVariantMap SetFolder(const QString &name);
+    Q_SCRIPTABLE QVariantMap SetStuck(const QString &window, const QString &app);
     Q_SCRIPTABLE QVariantMap Done();
     Q_SCRIPTABLE QVariantMap TuckAway();
     Q_SCRIPTABLE QVariantMap Remove();
@@ -64,6 +70,7 @@ Q_SIGNALS:
 private:
     QVariantMap state(bool open) const;
     QVariantList choices() const;
+    QVariantList windowChoices() const;
     void changedElsewhere();
 
     Shell *m_shell;

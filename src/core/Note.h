@@ -75,7 +75,7 @@ struct Note {
     QString whereLabel() const;
 
     QByteArray serialize() const;
-    // Reads a note file. A file with no header is a Loose note; its times
+    // Reads a note file. A file with no header is a note in its folder, unstuck; its times
     // come from fallbackTime.
     static Note parse(const QByteArray &bytes, const QString &id, const QDateTime &fallbackTime);
 };

@@ -96,16 +96,17 @@ private:
     FakeNotifications m_notifications;
 
     QString folder() const { return m_home + QStringLiteral("/Documents/Gooseberry"); }
-    QString pathOf(const QString &id) const { return folder() + QLatin1Char('/') + id + QStringLiteral(".md"); }
+    // Each note is kept in the Shuffle folder.
+    QString pathOf(const QString &id) const { return folder() + QStringLiteral("/Shuffle/") + id + QStringLiteral(".md"); }
 
     void writeNote(const QString &id, const QString &text, const QString &remind)
     {
-        QDir().mkpath(folder());
+        QDir().mkpath(folder() + QStringLiteral("/Shuffle"));
         QFile file(pathOf(id));
         QVERIFY(file.open(QIODevice::WriteOnly | QIODevice::Truncate));
         const QString now = isoTime(QDateTime::currentDateTime());
-        file.write(QStringLiteral("---\ngooseberry: 1\ncreated: %1\nchanged: %1\ncolour: lake\nbelongs: project\n"
-                                  "project: \"Shuffle\"\ntucked: false\nremind: %2\n---\n%3\n")
+        file.write(QStringLiteral("---\ngooseberry: 2\ncreated: %1\nchanged: %1\ncolour: lake\n"
+                                  "tucked: false\nremind: %2\n---\n%3\n")
                        .arg(now, remind, text)
                        .toUtf8());
     }

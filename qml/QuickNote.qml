@@ -5,33 +5,35 @@ import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 
 // The quick note, inside its card: the page with the cursor in it, the
-// note's colour, where it belongs, and Done. What is written is kept from its
+// note's colour, the folder it is kept in and the window it is stuck to, and
+// Done. What is written is kept from its
 // first letter. The page takes the room the card has; when the keys shorten
 // the card past what all of it needs, the rest scrolls.
 Item {
     id: quick
 
     required property QtObject capture
-    // Project names, the most recently used first.
-    property var projects: []
     // The application's name, as its desktop file gives it.
     property string title: Qt.application.displayName
 
     signal boardRequested()
 
     readonly property alias editor: area
-    readonly property string shownProject: capture.belongs === "project" ? capture.project : (projects.length > 0 ? projects[0] : "")
-    readonly property var otherProjects: projects.filter(name => name !== shownProject)
-    property bool choosingProject: false
-    // Words for reminders, and what Remind offers: the shell, where there
-    // is one (Shell::reminderLabel, Shell::reminderChoices).
+    property bool choosingFolder: false
+    property bool choosingWindow: false
+    // The open windows Stuck to offers, read as it opens.
+    property var windows: []
+    // Words for reminders, what Remind offers and the open windows: the
+    // shell, where there is one (Shell::reminderLabel,
+    // Shell::reminderChoices, Shell::openWindows).
     property QtObject words: null
     property bool choosingReminder: false
     property bool pickingTime: false
     property var reminderChoices: []
 
     function focusText() {
-        choosingProject = false;
+        choosingFolder = false;
+        choosingWindow = false;
         if (capture.checklist) {
             checklistPad.focusLast();
         } else {
@@ -73,9 +75,51 @@ Item {
         Qt.callLater(focusText);
     }
 
-    function chooseProject(name) {
-        capture.setBelongs("project", name);
-        projectName.text = "";
+    function chooseFolder() {
+        choosingFolder = !choosingFolder;
+        choosingWindow = false;
+    }
+
+    function chooseWindow() {
+        choosingWindow = !choosingWindow;
+        choosingFolder = false;
+        if (!choosingWindow) {
+            return;
+        }
+        // The open windows, the one in front first; the note's own window
+        // first of all when it is no longer open.
+        const open = words && words.openWindows ? words.openWindows() : [];
+        const list = [];
+        const own = capture.window;
+        if (own.length > 0 && !open.some(w => w.window === own && w.app === capture.app)) {
+            list.push({ window: own, app: capture.app, appName: "", front: false });
+        }
+        windows = list.concat(open);
+    }
+
+    function windowLabel(entry) {
+        return entry.appName && entry.appName !== entry.window ? i18nc("application · document", "%1 · %2", entry.appName, entry.window)
+                                                               : entry.window;
+    }
+
+    function keepIn(name) {
+        capture.setFolder(name);
+        focusText();
+    }
+
+    function newFolder(name) {
+        const problem = capture.makeFolder(name);
+        if (problem.length > 0) {
+            folderProblem.text = problem;
+            return;
+        }
+        folderName.text = "";
+        folderProblem.text = "";
+        focusText();
+    }
+
+    function stickTo(entry) {
+        capture.setStuck(entry ? entry.window : "", entry ? entry.app : "");
         focusText();
     }
 
@@ -322,17 +366,11 @@ Item {
                 }
             }
 
+            // Where the note is kept, and the window it is stuck to: two
+            // chips, both already filled in, each opening its choices.
             ColumnLayout {
                 Layout.fillWidth: true
                 spacing: 8
-
-                QQC2.Label {
-                    text: i18n("Belongs to").toUpperCase()
-                    font.pixelSize: 12
-                    font.weight: Font.Bold
-                    font.letterSpacing: 0.5
-                    color: Kirigami.Theme.disabledTextColor
-                }
 
                 Flow {
                     Layout.fillWidth: true
@@ -340,79 +378,98 @@ Item {
                     enabled: !quick.capture.readOnly
 
                     Pill {
-                        visible: quick.capture.window.length > 0
-                        text: i18n("This window · %1", quick.capture.window)
-                        checked: quick.capture.belongs === "window"
-                        objectName: "belongs-window"
-                        onClicked: quick.capture.setBelongs("window")
+                        objectName: "folderChip"
+                        text: i18n("Folder · %1 ▾", quick.capture.folderLabel)
+                        iconName: "folder"
+                        checked: quick.choosingFolder
+                        Accessible.name: i18n("Folder: %1", quick.capture.folderLabel)
+                        onClicked: quick.chooseFolder()
                     }
                     Pill {
-                        visible: quick.shownProject.length > 0
-                        text: i18n("Project · %1", quick.shownProject)
-                        checked: quick.capture.belongs === "project"
-                        objectName: "belongs-project"
-                        onClicked: quick.capture.setBelongs("project", quick.shownProject)
-                    }
-                    Pill {
-                        text: quick.capture.workspace.length > 0 ? i18n("Workspace · %1", quick.capture.workspace) : i18n("Workspace")
-                        checked: quick.capture.belongs === "workspace"
-                        objectName: "belongs-workspace"
-                        onClicked: quick.capture.setBelongs("workspace")
-                    }
-                    Pill {
-                        text: i18n("Loose")
-                        checked: quick.capture.belongs === "loose"
-                        objectName: "belongs-loose"
-                        onClicked: quick.capture.setBelongs("loose")
-                    }
-                    Pill {
-                        objectName: "chooseProject"
-                        text: quick.otherProjects.length > 0 ? i18n("Other project") : i18n("New project")
-                        iconName: quick.choosingProject ? "go-up" : "list-add"
-                        checked: quick.choosingProject
-                        onClicked: {
-                            quick.choosingProject = !quick.choosingProject;
-                            if (quick.choosingProject && quick.otherProjects.length === 0) {
-                                projectName.forceActiveFocus();
-                            }
-                        }
+                        objectName: "stuckChip"
+                        text: quick.capture.stuck ? i18n("Stuck to · %1 ▾", quick.capture.window) : i18n("Not stuck to a window ▾")
+                        iconName: "pin"
+                        checked: quick.choosingWindow
+                        Accessible.name: quick.capture.stuck ? i18n("Stuck to %1", quick.capture.window) : i18n("Not stuck to a window")
+                        onClicked: quick.chooseWindow()
                     }
                 }
 
                 Flow {
+                    objectName: "folderChoices"
                     Layout.fillWidth: true
-                    visible: quick.choosingProject
+                    visible: quick.choosingFolder
                     spacing: 8
 
                     Repeater {
-                        model: quick.otherProjects
+                        model: quick.capture.folders
                         delegate: Pill {
-                            required property string modelData
-                            text: modelData
-                            onClicked: quick.chooseProject(modelData)
+                            required property var modelData
+                            objectName: "folder-" + (modelData.name.length > 0 ? modelData.name : "inbox")
+                            text: modelData.workspace ? i18n("%1 · this workspace", modelData.label) : modelData.label
+                            iconName: modelData.name.length > 0 ? "folder" : "mail-folder-inbox"
+                            checked: modelData.chosen
+                            onClicked: quick.keepIn(modelData.name)
                         }
                     }
 
                     QQC2.TextField {
-                        id: projectName
-                        objectName: "projectName"
+                        id: folderName
+                        objectName: "folderName"
                         implicitHeight: 44
-                        width: 260
-                        placeholderText: i18n("Name a new project")
-                        Accessible.name: i18n("New project")
+                        width: 220
+                        placeholderText: i18n("New folder")
+                        Accessible.name: i18n("New folder")
                         onAccepted: {
                             if (text.trim().length > 0) {
-                                quick.chooseProject(text);
+                                quick.newFolder(text);
                             }
                         }
                         background: Rectangle {
                             radius: 22
                             color: Qt.alpha(Kirigami.Theme.textColor, 0.07)
                             border.width: 1
-                            border.color: projectName.activeFocus ? Kirigami.Theme.focusColor : Qt.alpha(Kirigami.Theme.textColor, 0.35)
+                            border.color: folderName.activeFocus ? Kirigami.Theme.focusColor : Qt.alpha(Kirigami.Theme.textColor, 0.35)
                         }
                         leftPadding: 16
                         rightPadding: 16
+                    }
+
+                    QQC2.Label {
+                        id: folderProblem
+                        objectName: "folderProblem"
+                        visible: text.length > 0
+                        height: 44
+                        verticalAlignment: Text.AlignVCenter
+                        color: Kirigami.Theme.negativeTextColor
+                        font.pixelSize: 13
+                        font.weight: Font.DemiBold
+                    }
+                }
+
+                Flow {
+                    objectName: "windowChoices"
+                    Layout.fillWidth: true
+                    visible: quick.choosingWindow
+                    spacing: 8
+
+                    Repeater {
+                        model: quick.windows
+                        delegate: Pill {
+                            required property var modelData
+                            required property int index
+                            objectName: "window-" + index
+                            text: modelData.front ? i18n("%1 · in front", quick.windowLabel(modelData)) : quick.windowLabel(modelData)
+                            iconName: "window"
+                            checked: quick.capture.stuck && quick.capture.window === modelData.window && quick.capture.app === modelData.app
+                            onClicked: quick.stickTo(modelData)
+                        }
+                    }
+                    Pill {
+                        objectName: "dontStick"
+                        text: i18n("Don't stick to a window")
+                        checked: !quick.capture.stuck
+                        onClicked: quick.stickTo(null)
                     }
                 }
             }
