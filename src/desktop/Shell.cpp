@@ -53,10 +53,13 @@ Shell::Shell(NoteStore *store, QQmlEngine *engine, QObject *parent)
         return create(QStringLiteral("StuckWindow"));
     }, this))
 {
-    // A note tapped over its window opens on the card.
+    // A note tapped over its window opens on the card; the notes step aside
+    // while it is open and come back when it closes.
     connect(m_stuck, &StuckNotes::openRequested, this, [this](const QString &id) {
-        m_stuck->Hide();
-        openNote(id);
+        if (m_capture->open(id)) {
+            m_stuck->setCardOpen(true);
+            raiseCard();
+        }
     });
     // A reminder tapped opens its note on the card.
     connect(m_notifier, &Notifier::openRequested, this, &Shell::openNote);
@@ -301,6 +304,13 @@ QQuickWindow *Shell::captureWindow()
     if (!m_captureWindow) {
         return nullptr;
     }
+    // Notes shown over a window come back once the card is gone, however it
+    // went.
+    connect(m_captureWindow, &QWindow::visibleChanged, this, [this](bool visible) {
+        if (!visible) {
+            m_stuck->setCardOpen(false);
+        }
+    });
     if (QGuiApplication::platformName().startsWith(QLatin1String("wayland"))) {
         // A surface of the desktop's own, across the whole display, with the
         // note's card centred on it; a tap on the work around the

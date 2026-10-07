@@ -247,14 +247,16 @@ tucked away, a dictionary of strings to variants:
 | `count` | `u` | How many notes are stuck to it |
 | `colour`, `colourHex` | `s`, `s` | The top note's colour, by name and as `#RRGGBB` |
 | `notes` | `av` | Its notes, the top one first (the one changed last), each a dictionary: `id`, `title` (the first words), `text`, `colour`, `colourHex` |
-| `shown` | `b` | Its notes are over the window now |
+| `shown` | `b` | Its notes are up: brought up and not yet put away. They stay up while the window is behind another or Spread is open, and are drawn again when it comes back |
 
 | Method | What it does |
 | --- | --- |
 | `ProtocolVersion() → u` | The version, `1` |
 | `Windows() → av` | Every entry as above, in no set order; empty when no open window has notes |
 | `Toggle(s windowId, s caption, s app) → b` | Shows that window's notes over it, each where it was last placed, or puts them away when they are shown. The window is found by `windowId` when it is given and open, otherwise by `caption` and `app`. Returns whether they are shown now; false when no window with notes matches |
-| `Hide()` | Puts away whatever notes are shown |
+| `Show(s windowId, s caption, s app) → b` | Brings that window's notes up, found as `Toggle` finds it; nothing changes when they are up already. Returns false when no window with notes matches |
+| `Hide()` | Puts away every window's notes |
+| `Pause(b paused)` | While paused, notes that are up step aside without being put away, and come back when the pause ends. Spread pauses while it is open, so its own stacks are the only notes on screen |
 | `StickTo(s noteId, s windowId, s caption, s app) → b` | Sticks the note to that window, found as `Toggle` finds it, keeping its folder. Returns false when the note or the window is not found, or the note cannot be changed |
 
 | Signal | When |
@@ -273,9 +275,13 @@ of Gooseberry's own, above the windows and laid exactly over the one with the
 notes, following it as it moves or is resized; the window itself is never
 moved or resized. Each note stands where it was last let go there, written as
 the note's `place` (`FORMAT.md`); one never placed starts at the top-right,
-the newest on top. A tap on a note opens it on the quick-note card; a tap on
-the work around the notes, the dot again, another window coming to the front,
-or Spread opening puts them away.
+the newest on top. Notes brought up stay up until Robin puts them away: with the
+"Put away" button above them, the dot again, or the window's stack in Spread.
+Nothing else puts them away. The surface takes presses only on the notes and
+that button, so a tap anywhere else on the window reaches the window. While the
+window is behind another, while Spread is open and while a note is open on the
+quick-note card, the notes step aside, and they come back with it. A tap on a
+note opens it on the card.
 
 ## Split Rock
 

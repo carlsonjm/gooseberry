@@ -11,6 +11,7 @@
 #include <QDBusError>
 #include <QGuiApplication>
 #include <QQuickWindow>
+#include <QRegion>
 #include <QScreen>
 
 namespace Gooseberry {
@@ -66,13 +67,13 @@ QVariantList StuckNotes::Windows() const
     return m_entries;
 }
 
-const OpenWindow *StuckNotes::shownWindow() const
+const OpenWindow *StuckNotes::drawnWindow() const
 {
-    if (m_shownKey.isEmpty()) {
+    if (m_drawnKey.isEmpty()) {
         return nullptr;
     }
     for (const OpenWindow &window : m_windows) {
-        if (window.key() == m_shownKey) {
+        if (window.key() == m_drawnKey) {
             return &window;
         }
     }
@@ -87,7 +88,7 @@ QVariantList StuckNotes::shownNotes() const
 QVariantList StuckNotes::currentShownNotes() const
 {
     QVariantList list;
-    const OpenWindow *window = shownWindow();
+    const OpenWindow *window = drawnWindow();
     if (!window) {
         return list;
     }
@@ -104,51 +105,84 @@ QVariantList StuckNotes::currentShownNotes() const
     return list;
 }
 
-QString StuckNotes::activeKey() const
-{
-    for (const OpenWindow &window : m_windows) {
-        if (window.active) {
-            return window.key();
-        }
-    }
-    return {};
-}
-
 void StuckNotes::refresh()
 {
     m_windows = m_context->windows();
-    if (!m_shownKey.isEmpty()) {
-        const OpenWindow *window = shownWindow();
-        // Another window came to the front after the notes were shown. The
-        // window in front when the dot was tapped is not news: the tap may
-        // be told before the window it was on is.
-        const QString active = activeKey();
-        const bool elsewhere = !active.isEmpty() && active != m_activeAtShow && active != m_shownKey;
-        if (active == m_shownKey) {
-            m_activeAtShow = active;
+    // A window that closed, or whose last note came off, has nothing up.
+    QSet<QString> open;
+    QString active;
+    for (const OpenWindow &window : std::as_const(m_windows)) {
+        if (!StuckWindows::notesOn(window, m_store->notes()).isEmpty()) {
+            open.insert(window.key());
         }
-        // The window closed, its last note came off, or Robin went to other
-        // work: its notes are put away.
-        if (!window || StuckWindows::notesOn(*window, m_store->notes()).isEmpty() || elsewhere) {
-            qCDebug(DESKTOP) << "stuck notes put away:" << (window ? "work elsewhere or no notes" : "window closed");
-            m_shownKey.clear();
+        if (window.active) {
+            active = window.key();
+        }
+    }
+    m_shownKeys.intersect(open);
+    // The notes are drawn over the window in front when it has them up; a
+    // desktop that says no window is in front leaves them where they were.
+    if (!active.isEmpty() || !m_shownKeys.contains(m_drawnKey)) {
+        m_drawnKey = m_shownKeys.contains(active) ? active : QString();
+    }
+    const bool drawn = !m_paused && !m_cardOpen && !m_drawnKey.isEmpty();
+    if (drawn) {
+        if (!m_surface) {
+            m_surface = m_makeSurface ? m_makeSurface() : nullptr;
             if (m_surface) {
-                m_surface->hide();
+                prepareSurface();
             }
-        } else {
-            follow();
         }
+        follow();
     }
     const QVariantList shown = currentShownNotes();
     if (shown != m_shownNotes) {
         m_shownNotes = shown;
         Q_EMIT shownChanged();
     }
-    const QVariantList entries = StuckWindows::entries(m_windows, m_store->notes(), m_shownKey);
+    if (m_surface && m_surface->isVisible() != drawn) {
+        qCDebug(DESKTOP) << (drawn ? "stuck notes drawn over" : "stuck notes step aside from") << m_drawnKey;
+        m_surface->setVisible(drawn);
+    }
+    const QVariantList entries = StuckWindows::entries(m_windows, m_store->notes(), m_shownKeys);
     if (entries != m_entries) {
         m_entries = entries;
         Q_EMIT WindowsChanged(m_entries);
     }
+}
+
+void StuckNotes::prepareSurface()
+{
+    if (onWayland()) {
+        // A surface of the desktop's own above the windows, laid exactly
+        // over the one whose notes it shows. It takes no keys: a note is
+        // written on the quick-note card. It takes presses only on the notes
+        // and their button (setPressable); the rest reaches the window.
+        auto *layer = LayerShellQt::Window::get(m_surface);
+        layer->setLayer(LayerShellQt::Window::LayerTop);
+        layer->setAnchors({LayerShellQt::Window::AnchorTop, LayerShellQt::Window::AnchorLeft});
+        layer->setExclusiveZone(-1);
+        layer->setKeyboardInteractivity(LayerShellQt::Window::KeyboardInteractivityNone);
+        layer->setScreenConfiguration(LayerShellQt::Window::ScreenFromQWindow);
+        layer->setScope(QStringLiteral("gooseberry-stuck"));
+    } else {
+        m_surface->setFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::Tool
+                            | Qt::WindowDoesNotAcceptFocus);
+    }
+}
+
+void StuckNotes::setShown(const OpenWindow &window, bool shown)
+{
+    if (shown) {
+        m_shownKeys.insert(window.key());
+        // Brought up from a title bar or Spread: drawn over that window now,
+        // even before the desktop says it is in front.
+        m_drawnKey = window.key();
+    } else {
+        m_shownKeys.remove(window.key());
+    }
+    qCDebug(DESKTOP) << "stuck notes" << (shown ? "up on" : "put away from") << window.caption;
+    refresh();
 }
 
 bool StuckNotes::Toggle(const QString &windowId, const QString &caption, const QString &app)
@@ -159,50 +193,26 @@ bool StuckNotes::Toggle(const QString &windowId, const QString &caption, const Q
         qCDebug(DESKTOP) << "no window with notes for" << windowId << caption << app;
         return false;
     }
-    if (m_windows.at(at).key() == m_shownKey) {
-        Hide();
-        return false;
-    }
-    show(m_windows.at(at));
-    return true;
+    const OpenWindow window = m_windows.at(at);
+    const bool up = !m_shownKeys.contains(window.key());
+    setShown(window, up);
+    return up;
 }
 
-void StuckNotes::show(const OpenWindow &window)
+bool StuckNotes::Show(const QString &windowId, const QString &caption, const QString &app)
 {
-    if (!m_surface) {
-        m_surface = m_makeSurface ? m_makeSurface() : nullptr;
-        if (!m_surface) {
-            return;
-        }
-        if (onWayland()) {
-            // A surface of the desktop's own above the windows, laid exactly
-            // over the one whose notes it shows. It takes no keys: a note is
-            // written on the quick-note card.
-            auto *layer = LayerShellQt::Window::get(m_surface);
-            layer->setLayer(LayerShellQt::Window::LayerTop);
-            layer->setAnchors({LayerShellQt::Window::AnchorTop, LayerShellQt::Window::AnchorLeft});
-            layer->setExclusiveZone(-1);
-            layer->setKeyboardInteractivity(LayerShellQt::Window::KeyboardInteractivityNone);
-            layer->setScreenConfiguration(LayerShellQt::Window::ScreenFromQWindow);
-            layer->setScope(QStringLiteral("gooseberry-stuck"));
-        } else {
-            m_surface->setFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::Tool
-                                | Qt::WindowDoesNotAcceptFocus);
-        }
+    m_windows = m_context->windows();
+    const qsizetype at = StuckWindows::find(m_windows, windowId, caption, app);
+    if (at < 0 || StuckWindows::notesOn(m_windows.at(at), m_store->notes()).isEmpty()) {
+        return false;
     }
-    m_shownKey = window.key();
-    m_activeAtShow = activeKey();
-    qCDebug(DESKTOP) << "stuck notes shown on" << window.caption << window.geometry;
-    follow();
-    m_shownNotes = currentShownNotes();
-    Q_EMIT shownChanged();
-    m_surface->show();
-    m_refresh.start();
+    setShown(OpenWindow(m_windows.at(at)), true);
+    return true;
 }
 
 void StuckNotes::follow()
 {
-    const OpenWindow *window = shownWindow();
+    const OpenWindow *window = drawnWindow();
     if (!window || !m_surface || !window->geometry.isValid()) {
         return;
     }
@@ -236,14 +246,48 @@ void StuckNotes::follow()
 
 void StuckNotes::Hide()
 {
-    if (m_shownKey.isEmpty()) {
+    if (m_shownKeys.isEmpty()) {
         return;
     }
-    m_shownKey.clear();
-    if (m_surface) {
-        m_surface->hide();
+    m_shownKeys.clear();
+    refresh();
+}
+
+void StuckNotes::Pause(bool paused)
+{
+    if (paused != m_paused) {
+        m_paused = paused;
+        refresh();
     }
-    m_refresh.start();
+}
+
+void StuckNotes::setCardOpen(bool open)
+{
+    if (open != m_cardOpen) {
+        m_cardOpen = open;
+        refresh();
+    }
+}
+
+void StuckNotes::putAway()
+{
+    if (const OpenWindow *window = drawnWindow()) {
+        setShown(OpenWindow(*window), false);
+    }
+}
+
+void StuckNotes::setPressable(const QVariantList &rects)
+{
+    if (!m_surface) {
+        return;
+    }
+    QRegion region;
+    for (const QVariant &rect : rects) {
+        region += rect.toRectF().toAlignedRect();
+    }
+    // An empty mask would take every press; one pixel off the notes takes none
+    // that matter.
+    m_surface->setMask(region.isEmpty() ? QRegion(0, 0, 1, 1) : region);
 }
 
 bool StuckNotes::StickTo(const QString &noteId, const QString &windowId, const QString &caption, const QString &app)

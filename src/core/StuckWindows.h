@@ -5,6 +5,7 @@
 
 #include <QList>
 #include <QRect>
+#include <QSet>
 #include <QStringList>
 #include <QVariantList>
 
@@ -33,9 +34,9 @@ namespace StuckWindows {
 // first.
 QList<Note> notesOn(const OpenWindow &window, const QList<Note> &notes);
 
-// One entry for each window with notes, as the bus gives it; shownKey is
-// the key of the window whose notes are shown, if any.
-QVariantList entries(const QList<OpenWindow> &windows, const QList<Note> &notes, const QString &shownKey);
+// One entry for each window with notes, as the bus gives it; shownKeys are
+// the keys of the windows whose notes are up.
+QVariantList entries(const QList<OpenWindow> &windows, const QList<Note> &notes, const QSet<QString> &shownKeys);
 
 // The window a caller means: by one of its ids when it is given and open,
 // otherwise by its caption and application. -1 when none matches. Only

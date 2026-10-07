@@ -62,7 +62,7 @@ QList<Note> notesOn(const OpenWindow &window, const QList<Note> &notes)
     return on;
 }
 
-QVariantList entries(const QList<OpenWindow> &windows, const QList<Note> &notes, const QString &shownKey)
+QVariantList entries(const QList<OpenWindow> &windows, const QList<Note> &notes, const QSet<QString> &shownKeys)
 {
     QVariantList list;
     for (const OpenWindow &window : windows) {
@@ -89,7 +89,7 @@ QVariantList entries(const QList<OpenWindow> &windows, const QList<Note> &notes,
             {QStringLiteral("colour"), on.constFirst().colour},
             {QStringLiteral("colourHex"), colourHex(on.constFirst().colour)},
             {QStringLiteral("notes"), noteList},
-            {QStringLiteral("shown"), !shownKey.isEmpty() && window.key() == shownKey},
+            {QStringLiteral("shown"), shownKeys.contains(window.key())},
         });
     }
     return list;

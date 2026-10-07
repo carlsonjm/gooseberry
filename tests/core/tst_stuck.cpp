@@ -89,7 +89,7 @@ private Q_SLOTS:
         const Note otherApp = stuckNote(QStringLiteral("other"), QStringLiteral("plan.md"), QStringLiteral("org.kde.ghostwriter"), 9);
 
         const QVariantList entries = StuckWindows::entries(windows, {older, newer, tucked, unstuck, otherApp},
-                                                           windows.constFirst().key());
+                                                           {windows.constFirst().key()});
         QCOMPARE(entries.size(), 1);
         const QVariantMap entry = entries.constFirst().toMap();
         QCOMPARE(entry.value(QStringLiteral("count")).toUInt(), 2u);

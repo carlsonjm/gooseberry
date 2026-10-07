@@ -7,7 +7,9 @@ import QtQuick.Window
 // stands where Robin last let it go, kept in proportion when the window is
 // resized, and one never placed starts at the top-right, the newest on top.
 // A note held and moved stays where it is let go; a tap opens it on the
-// quick-note card; a tap on the work around the notes puts them all away.
+// quick-note card. The notes stay up until Robin taps "Put away" above them,
+// or the dot or the stack in Spread again; a press anywhere else reaches the
+// window underneath, as if the notes were not there.
 Window {
     id: root
 
@@ -16,8 +18,8 @@ Window {
     readonly property var notes: stuck ? stuck.shownNotes : []
     // The same size on every window, smaller only on a narrow one.
     readonly property real noteWidth: Math.min(220, Math.max(140, width * 0.3))
-    // Clear of the title bar, where an unplaced note starts.
-    readonly property real topClear: 44
+    // Clear of the title bar and the button, where an unplaced note starts.
+    readonly property real topClear: 92
 
     objectName: "stuckNotesWindow"
     title: Qt.application.displayName
@@ -25,12 +27,71 @@ Window {
     flags: Qt.FramelessWindowHint
     visible: false
 
-    TapHandler {
-        onTapped: root.stuck.Hide()
+    // The surface takes presses only on the notes and the button; it is told
+    // where they are whenever one moves.
+    function tellPressable() {
+        if (!root.stuck) {
+            return;
+        }
+        const rects = [Qt.rect(putAway.x, putAway.y, putAway.width, putAway.height)];
+        for (let i = 0; i < notesRepeater.count; ++i) {
+            const item = notesRepeater.itemAt(i);
+            if (item) {
+                rects.push(Qt.rect(item.x, item.y, item.width, item.height + 3));
+            }
+        }
+        root.stuck.setPressable(rects);
+    }
+
+    Timer {
+        id: pressableLater
+        interval: 0
+        onTriggered: root.tellPressable()
+    }
+
+    onWidthChanged: pressableLater.restart()
+    onHeightChanged: pressableLater.restart()
+    onVisibleChanged: pressableLater.restart()
+
+    Rectangle {
+        id: putAway
+
+        objectName: "stuckPutAway"
+        visible: root.notes.length > 0
+        anchors {
+            top: parent.top
+            right: parent.right
+            topMargin: 44
+            rightMargin: 24
+        }
+        width: putAwayLabel.implicitWidth + 28
+        height: 36
+        radius: height / 2
+        color: "#E6202020"
+        z: root.notes.length + 1
+        Accessible.role: Accessible.Button
+        Accessible.name: putAwayLabel.text
+        onXChanged: pressableLater.restart()
+        onWidthChanged: pressableLater.restart()
+
+        Text {
+            id: putAwayLabel
+            anchors.centerIn: parent
+            text: qsTr("Put away")
+            color: "#FFFFFF"
+            font.pixelSize: 14
+            font.weight: Font.Medium
+        }
+
+        TapHandler {
+            onTapped: root.stuck.putAway()
+        }
     }
 
     Repeater {
+        id: notesRepeater
         model: root.notes
+        onCountChanged: pressableLater.restart()
 
         Rectangle {
             id: note
@@ -52,6 +113,9 @@ Window {
             y: placed ? Math.min(freeY, modelData.y * root.height) : Math.min(freeY, root.topClear + index * 30)
             Accessible.role: Accessible.Button
             Accessible.name: modelData.title
+            onXChanged: pressableLater.restart()
+            onYChanged: pressableLater.restart()
+            onHeightChanged: pressableLater.restart()
 
             Rectangle {
                 anchors.fill: parent

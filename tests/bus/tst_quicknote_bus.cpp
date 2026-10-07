@@ -177,6 +177,14 @@ private Q_SLOTS:
                                                     QStringLiteral("plan.md — Kate"), QStringLiteral("org.kde.kate"));
         QVERIFY(stuckTo.isValid());
         QVERIFY(!stuckTo.value());
+        const QDBusReply<bool> shown = stuck.call(QStringLiteral("Show"), QString(), QStringLiteral("plan.md — Kate"),
+                                                  QStringLiteral("org.kde.kate"));
+        QVERIFY(shown.isValid());
+        QVERIFY(!shown.value());
+        for (const bool paused : {true, false}) {
+            const QDBusMessage pause = stuck.call(QStringLiteral("Pause"), paused);
+            QCOMPARE(pause.type(), QDBusMessage::ReplyMessage);
+        }
         const QDBusMessage hidden = stuck.call(QStringLiteral("Hide"));
         QCOMPARE(hidden.type(), QDBusMessage::ReplyMessage);
     }
