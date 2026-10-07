@@ -47,7 +47,9 @@ that card. The corner never moves or resizes the window and never needs
 closing. (The maintainer, 7 October.) This replaces the 3 October ruling that a
 card's notes wait behind it in its Stack.
 
-Rejected: the top-right corner, where the tab covers the window's buttons;
+Rejected: the top-right corner, where the tab covers the window's buttons; a
+dot in the title bar, which applications that draw their own bar, such as web
+browsers, leave no room for (the maintainer, 7 October);
 notes always open on the window, which cover part of the work and
 need moving by hand; and notes only behind the card in its Stack, which hides
 that a window has notes at all.
