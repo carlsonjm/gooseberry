@@ -274,7 +274,11 @@ Item {
                             keys: ["gooseberry-note"]
                             onDropped: drop => {
                                 drop.accept();
-                                board.dropOn(placeButton.key, drop.source.noteId);
+                                // Once the drag has ended: the move can take the
+                                // note's card off the board.
+                                const key = placeButton.key;
+                                const id = drop.source.noteId;
+                                Qt.callLater(() => board.dropOn(key, id));
                             }
                         }
                         background: Rectangle {
@@ -644,7 +648,8 @@ Item {
             keys: ["gooseberry-note"]
             onDropped: drop => {
                 drop.accept();
-                board.dropOn("trash", drop.source.noteId);
+                const id = drop.source.noteId;
+                Qt.callLater(() => board.dropOn("trash", id));
             }
         }
     }

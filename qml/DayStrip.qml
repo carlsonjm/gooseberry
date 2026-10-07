@@ -38,7 +38,9 @@ Row {
                 keys: ["gooseberry-note"]
                 onDropped: drop => {
                     drop.accept();
-                    strip.noteDropped(drop.source.noteId, day.modelData.date);
+                    const id = drop.source.noteId;
+                    const date = day.modelData.date;
+                    Qt.callLater(() => strip.noteDropped(id, date));
                 }
             }
             background: Rectangle {
