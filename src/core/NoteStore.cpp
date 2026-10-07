@@ -3,6 +3,7 @@
 
 #include "Product.h"
 #include "Trash.h"
+#include <KLocalizedString>
 
 #include <QDir>
 #include <QFile>
@@ -89,7 +90,7 @@ QString NoteStore::defaultFolder()
 bool NoteStore::open()
 {
     if (!QDir().mkpath(m_folder)) {
-        m_lastError = QStringLiteral("The notes folder %1 could not be made.").arg(m_folder);
+        m_lastError = i18n("The notes folder %1 could not be made.", m_folder);
         return false;
     }
     const int format = readMarker();
@@ -113,7 +114,7 @@ bool NoteStore::writeMarker()
     QSaveFile out(m_folder + QLatin1Char('/') + MarkerName);
     if (!out.open(QIODevice::WriteOnly) || out.write(QStringLiteral("format: %1\n").arg(FolderFormat).toUtf8()) < 0
         || !out.commit()) {
-        m_lastError = QStringLiteral("The notes folder %1 could not be written to.").arg(m_folder);
+        m_lastError = i18n("The notes folder %1 could not be written to.", m_folder);
         return false;
     }
     return true;
@@ -154,7 +155,7 @@ int NoteStore::readMarker()
         return 0;
     }
     if (!marker.open(QIODevice::ReadOnly)) {
-        m_lastError = QStringLiteral("The notes folder's format file could not be read.");
+        m_lastError = i18n("The notes folder's format file could not be read.");
         return -1;
     }
     int format = FolderFormat;
@@ -178,8 +179,7 @@ int NoteStore::readMarker()
 bool NoteStore::refuseWhenReadOnly()
 {
     if (m_readOnly) {
-        m_lastError = QStringLiteral("This folder was laid out by a newer %1, so nothing in it is changed here.")
-                          .arg(productName());
+        m_lastError = i18n("This folder was laid out by a newer %1, so nothing in it is changed here.", productName());
     }
     return m_readOnly;
 }
@@ -199,19 +199,19 @@ QString NoteStore::folderNameProblem(const QString &name)
 {
     const QString simple = name.simplified();
     if (simple.isEmpty()) {
-        return QStringLiteral("A folder needs a name.");
+        return i18n("A folder needs a name.");
     }
     if (simple.contains(QLatin1Char('/')) || simple.contains(QChar(0))) {
-        return QStringLiteral("A folder's name cannot have a slash in it.");
+        return i18n("A folder's name cannot have a slash in it.");
     }
     if (simple.startsWith(QLatin1Char('.'))) {
-        return QStringLiteral("A folder's name cannot start with a dot.");
+        return i18n("A folder's name cannot start with a dot.");
     }
     if (simple.compare(inboxLabel(), Qt::CaseInsensitive) == 0) {
-        return QStringLiteral("Inbox is already there.");
+        return i18nc("%1 is the folder that holds loose notes", "%1 is already there.", inboxLabel());
     }
     if (simple.toUtf8().size() > 200) {
-        return QStringLiteral("That name is too long for a folder.");
+        return i18n("That name is too long for a folder.");
     }
     return {};
 }
@@ -228,11 +228,11 @@ bool NoteStore::makeFolder(const QString &name)
         return false;
     }
     if (hasFolder(simple)) {
-        m_lastError = QStringLiteral("There is already a folder called %1.").arg(simple);
+        m_lastError = i18n("There is already a folder called %1.", simple);
         return false;
     }
     if (!QDir().mkpath(dirFor(simple))) {
-        m_lastError = QStringLiteral("The folder %1 could not be made.").arg(simple);
+        m_lastError = i18n("The folder %1 could not be made.", simple);
         return false;
     }
     rescan();
@@ -246,7 +246,7 @@ bool NoteStore::renameFolder(const QString &from, const QString &to)
     }
     const QString simple = to.simplified();
     if (!hasFolder(from)) {
-        m_lastError = QStringLiteral("That folder is no longer there.");
+        m_lastError = i18n("That folder is no longer there.");
         return false;
     }
     if (simple == from) {
@@ -258,11 +258,11 @@ bool NoteStore::renameFolder(const QString &from, const QString &to)
         return false;
     }
     if (hasFolder(simple) || QFileInfo::exists(dirFor(simple))) {
-        m_lastError = QStringLiteral("There is already a folder called %1.").arg(simple);
+        m_lastError = i18n("There is already a folder called %1.", simple);
         return false;
     }
     if (!QDir().rename(dirFor(from), dirFor(simple))) {
-        m_lastError = QStringLiteral("The folder %1 could not be renamed.").arg(from);
+        m_lastError = i18n("The folder %1 could not be renamed.", from);
         return false;
     }
     // The notes are the same files in a folder of a new name: nothing in
@@ -298,7 +298,7 @@ std::optional<QStringList> NoteStore::removeFolder(const QString &name)
         return std::nullopt;
     }
     if (!hasFolder(name)) {
-        m_lastError = QStringLiteral("That folder is no longer there.");
+        m_lastError = i18n("That folder is no longer there.");
         return std::nullopt;
     }
     QStringList moved;
@@ -318,7 +318,7 @@ std::optional<QStringList> NoteStore::removeFolder(const QString &name)
     const bool empty = QDir(path).isEmpty(QDir::AllEntries | QDir::NoDotAndDotDot | QDir::Hidden | QDir::System);
     const bool gone = empty ? QDir().rmdir(path) : !Trash::move(path).isEmpty();
     if (!gone) {
-        m_lastError = QStringLiteral("The folder %1 could not be removed; its notes are in Inbox.").arg(name);
+        m_lastError = i18nc("%2 is the folder that holds loose notes", "The folder %1 could not be removed; its notes are in %2.", name, inboxLabel());
         rescan();
         return std::nullopt;
     }
@@ -359,25 +359,25 @@ bool NoteStore::moveNote(const QString &id, const QString &folder)
     }
     auto found = m_notes.find(id);
     if (found == m_notes.end()) {
-        m_lastError = QStringLiteral("That note is no longer in the folder.");
+        m_lastError = i18n("That note is no longer in the folder.");
         return false;
     }
     if (found->folder == folder) {
         return true;
     }
     if (!folder.isEmpty() && !hasFolder(folder)) {
-        m_lastError = QStringLiteral("The folder %1 is no longer there.").arg(folder);
+        m_lastError = i18n("The folder %1 is no longer there.", folder);
         return false;
     }
     if (found->newerFormat()) {
-        m_lastError = QStringLiteral("This note was kept by a newer %1, so it is not changed here.").arg(productName());
+        m_lastError = i18n("This note was kept by a newer %1, so it is not changed here.", productName());
         return false;
     }
     const QString before = found->folder;
     // One step on disk: the file is in one folder or the other, never both.
     m_watcher.removePath(pathFor(id));
     if (!moveFiles(id, before, folder)) {
-        m_lastError = QStringLiteral("The note could not be moved to %1.").arg(folder.isEmpty() ? inboxLabel() : folder);
+        m_lastError = i18n("The note could not be moved to %1.", folder.isEmpty() ? inboxLabel() : folder);
         return false;
     }
     Note note = *found;
@@ -400,7 +400,7 @@ bool NoteStore::setWorkspaceFolder(const QString &workspace, const QString &fold
         return false;
     }
     if (workspace.isEmpty() || (!folder.isEmpty() && !hasFolder(folder))) {
-        m_lastError = QStringLiteral("That folder is no longer there.");
+        m_lastError = i18n("That folder is no longer there.");
         return false;
     }
     if (folder.isEmpty()) {
@@ -455,7 +455,7 @@ bool NoteStore::writeWorkspaces()
     }
     QSaveFile file(m_folder + QLatin1Char('/') + WorkspacesName);
     if (!file.open(QIODevice::WriteOnly) || file.write(out.toUtf8()) < 0 || !file.commit()) {
-        m_lastError = QStringLiteral("The workspace's folder could not be kept.");
+        m_lastError = i18n("The workspace's folder could not be kept.");
         return false;
     }
     return true;
@@ -518,14 +518,14 @@ NoteStore::Seen NoteStore::seen(const QString &path)
 bool NoteStore::write(const Note &note)
 {
     if (m_readOnly || note.newerFormat()) {
-        m_lastError = QStringLiteral("This note was kept by a newer %1, so it is not changed here.").arg(productName());
+        m_lastError = i18n("This note was kept by a newer %1, so it is not changed here.", productName());
         return false;
     }
     if (!QFileInfo::exists(m_folder)) {
         // The folder went while Gooseberry was open: it is made again rather
         // than the note being lost.
         if (!QDir().mkpath(m_folder) || readMarker() < 0 || !writeMarker()) {
-            m_lastError = QStringLiteral("The notes folder %1 could not be made.").arg(m_folder);
+            m_lastError = i18n("The notes folder %1 could not be made.", m_folder);
             return false;
         }
         m_watcher.addPath(m_folder);
@@ -534,7 +534,7 @@ bool NoteStore::write(const Note &note)
     if (!note.folder.isEmpty() && !QFileInfo::exists(dir)) {
         // Its folder was removed by another program: it is made again.
         if (!QDir().mkpath(dir)) {
-            m_lastError = QStringLiteral("The folder %1 could not be made.").arg(note.folder);
+            m_lastError = i18n("The folder %1 could not be made.", note.folder);
             return false;
         }
         m_watcher.addPath(dir);
@@ -584,7 +584,7 @@ QString NoteStore::create(Note note)
 bool NoteStore::save(Note note, Touch touch)
 {
     if (!m_notes.contains(note.id)) {
-        m_lastError = QStringLiteral("That note is no longer in the folder.");
+        m_lastError = i18n("That note is no longer in the folder.");
         return false;
     }
     if (touch == Touch::Changed) {
@@ -617,7 +617,7 @@ std::optional<QString> NoteStore::trash(const QString &id)
     if (QFile::exists(path)) {
         pathInTrash = Trash::move(path);
         if (pathInTrash.isEmpty()) {
-            m_lastError = QStringLiteral("The note could not be moved to the trash.");
+            m_lastError = i18n("The note could not be moved to the trash.");
             return std::nullopt;
         }
     }
@@ -641,7 +641,7 @@ bool NoteStore::restore(const QString &id, const QString &pathInTrash)
     const QString from = m_trashedFrom.take(id);
     const QString folder = hasFolder(from) ? from : QString();
     if (!Trash::restore(pathInTrash, dirFor(folder) + QLatin1Char('/') + id + NoteSuffix)) {
-        m_lastError = QStringLiteral("The note could not be brought back from the trash.");
+        m_lastError = i18n("The note could not be brought back from the trash.");
         return false;
     }
     rescan();
