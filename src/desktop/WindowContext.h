@@ -6,6 +6,7 @@
 #include <QObject>
 #include <QPersistentModelIndex>
 #include <QSet>
+#include <QVariantList>
 #include <memory>
 
 namespace TaskManager {
@@ -17,7 +18,7 @@ namespace Gooseberry {
 
 // What Robin is working on, as the desktop reports it: the last window in
 // front that is not Gooseberry's own, and the current workspace. Where the
-// desktop reports nothing, both stay empty and notes start Loose.
+// desktop reports nothing, both stay empty and notes start unstuck.
 class WindowContext : public QObject
 {
     Q_OBJECT
@@ -27,6 +28,10 @@ public:
     ~WindowContext() override;
 
     CaptureContext current() const;
+    // The windows open now, the one in front first, each a map of window
+    // (the document's name), app, appName and front; one entry per
+    // document, and none of Gooseberry's own.
+    QVariantList openWindows() const;
 
 Q_SIGNALS:
     // Another window came to the front: Robin went back to the work.

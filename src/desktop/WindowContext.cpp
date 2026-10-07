@@ -21,7 +21,7 @@ WindowContext::WindowContext(const QString &ownAppId, QObject *parent)
 {
     // Plasma's window list answers only on a desktop session it knows.
     if (!KWindowSystem::isPlatformWayland() && !KWindowSystem::isPlatformX11()) {
-        qCDebug(DESKTOP) << "no desktop session: notes start Loose";
+        qCDebug(DESKTOP) << "no desktop session: notes start in their folder, unstuck";
         return;
     }
     m_windows = std::make_unique<TaskManager::WindowTasksModel>();
@@ -137,6 +137,44 @@ void WindowContext::forgetClosed()
     m_appId.clear();
     m_appName.clear();
     activeChanged();
+}
+
+QVariantList WindowContext::openWindows() const
+{
+    QVariantList list;
+    if (!m_windows) {
+        return list;
+    }
+    const CaptureContext front = current();
+    QSet<QPair<QString, QString>> seen;
+    for (int row = 0; row < m_windows->rowCount(); ++row) {
+        const QModelIndex index = m_windows->index(row, 0);
+        QString appId = index.data(AbstractTasksModel::AppId).toString();
+        if (appId.endsWith(QLatin1String(".desktop"))) {
+            appId.chop(8);
+        }
+        const QString title = index.data(Qt::DisplayRole).toString();
+        if (appId == m_ownAppId || title.isEmpty()) {
+            continue;
+        }
+        const QString appName = index.data(AbstractTasksModel::AppName).toString();
+        const QString window = documentName(title, appName);
+        if (seen.contains({appId, window})) {
+            continue;
+        }
+        seen.insert({appId, window});
+        const bool inFront = window == front.window && appId == front.app;
+        const QVariantMap entry{{QStringLiteral("window"), window},
+                                {QStringLiteral("app"), appId},
+                                {QStringLiteral("appName"), appName},
+                                {QStringLiteral("front"), inFront}};
+        if (inFront) {
+            list.prepend(entry);
+        } else {
+            list.append(entry);
+        }
+    }
+    return list;
 }
 
 CaptureContext WindowContext::current() const

@@ -33,9 +33,17 @@ class Capture : public QObject
     Q_PROPERTY(bool readOnly READ readOnly NOTIFY noteChanged)
     Q_PROPERTY(QString text READ text WRITE setText NOTIFY textChanged)
     Q_PROPERTY(QString colour READ colour WRITE setColour NOTIFY colourChanged)
-    Q_PROPERTY(QString belongs READ belongs NOTIFY belongingChanged)
-    Q_PROPERTY(QString project READ project NOTIFY belongingChanged)
+    // The folder the note is kept in, empty for Inbox, and its name to show.
+    Q_PROPERTY(QString folder READ folder NOTIFY belongingChanged)
+    Q_PROPERTY(QString folderLabel READ folderLabel NOTIFY belongingChanged)
+    // Stuck to the window named by window and app.
+    Q_PROPERTY(bool stuck READ stuck NOTIFY belongingChanged)
     Q_PROPERTY(QString window READ window NOTIFY contextChanged)
+    Q_PROPERTY(QString app READ app NOTIFY contextChanged)
+    // What Folder offers, in order: the workspace's folder, Inbox, then the
+    // rest; each a map of name (empty for Inbox), label, chosen and
+    // workspace (true for the workspace's own).
+    Q_PROPERTY(QVariantList folders READ folderChoices NOTIFY foldersChanged)
     Q_PROPERTY(QString workspace READ workspace NOTIFY contextChanged)
     Q_PROPERTY(QString problem READ problem NOTIFY problemChanged)
     Q_PROPERTY(QVariantList colours READ colours CONSTANT)
@@ -66,11 +74,14 @@ public:
     bool readOnly() const;
     QString text() const { return m_note.text; }
     QString colour() const { return m_note.colour; }
-    QString belongs() const { return belongsName(m_note.belongs); }
-    QString project() const { return m_note.project; }
-    // Where the note was written: the window and workspace offered under
-    // Belongs to.
+    QString folder() const { return m_note.folder; }
+    QString folderLabel() const { return m_note.placeLabel(); }
+    QVariantList folderChoices() const;
+    bool stuck() const { return m_note.isStuck(); }
+    // The window the note was written on or stuck to, and the workspace it
+    // was written on.
     QString window() const { return m_note.window; }
+    QString app() const { return m_note.app; }
     QString workspace() const { return m_note.workspace; }
     QString problem() const { return m_problem; }
     // The note colours in the order offered: each a map of name and hex.
@@ -101,17 +112,24 @@ public:
     Q_INVOKABLE void addItemAfter(int line);
     Q_INVOKABLE void removeLine(int line);
 
-    // A new, empty note. It belongs to the window in front when there is
-    // one, and is Loose otherwise. Nothing is kept until it has text.
+    // A new, empty note, stuck to the window in front when there is one and
+    // kept in the workspace's folder, or Inbox. Nothing is kept until it has
+    // text.
     void startNew(const CaptureContext &context);
-    // A new note that belongs to a place on the board, as "New note" there.
+    // A new note in a place on the board, as "New note" there: kept in its
+    // folder, or stuck to its window.
     Q_INVOKABLE void startNewIn(const QString &placeKey);
     // An existing note, to read and change.
     Q_INVOKABLE bool open(const QString &id);
 
-    // Belongs to: "window", "project", "workspace" or "loose". A project
-    // takes its name; the others use what was in front.
-    Q_INVOKABLE void setBelongs(const QString &kind, const QString &project = {});
+    // Keeps the note in a folder, by name; empty is Inbox.
+    Q_INVOKABLE void setFolder(const QString &folder);
+    // Makes a folder and keeps the note in it. Returns why it could not, in
+    // words for the person, or an empty string.
+    Q_INVOKABLE QString makeFolder(const QString &name);
+    // Sticks the note to a window, by its document's name and application;
+    // an empty window unsticks it. The folder stays as it is.
+    Q_INVOKABLE void setStuck(const QString &window, const QString &app = {});
 
     // The card goes away. A note left with no text goes to the trash.
     Q_INVOKABLE void finish();
@@ -129,6 +147,7 @@ Q_SIGNALS:
     void textChanged();
     void colourChanged();
     void belongingChanged();
+    void foldersChanged();
     void contextChanged();
     void reminderChanged();
     void problemChanged();

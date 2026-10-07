@@ -124,7 +124,7 @@ void Planner::rebuild()
                 {QStringLiteral("time"), note.remind.toLocalTime()},
                 {QStringLiteral("done"), note.done.isValid()},
                 {QStringLiteral("title"), rowTitle(note)},
-                {QStringLiteral("place"), note.placeLabel()},
+                {QStringLiteral("place"), note.whereLabel()},
                 {QStringLiteral("next"), note.id == next},
                 {QStringLiteral("colour"), colourHex(note.colour)},
                 {QStringLiteral("readOnly"), note.newerFormat() || m_store->readOnly()},

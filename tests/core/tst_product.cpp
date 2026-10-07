@@ -64,7 +64,7 @@ private Q_SLOTS:
         QVERIFY(QDir().mkpath(folder));
         QFile marker(folder + QStringLiteral("/.gooseberry"));
         QVERIFY(marker.open(QIODevice::WriteOnly));
-        marker.write("format: 2\n");
+        marker.write("format: 3\n");
         marker.close();
         NoteStore store(folder);
         QVERIFY(store.open());

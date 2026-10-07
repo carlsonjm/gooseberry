@@ -38,7 +38,7 @@ int typeAndWait(const QString &folder, int letters)
     Capture capture(&store);
     capture.startNew({QStringLiteral("SpreadGesture.qml"), QStringLiteral("org.kde.kate"), QStringLiteral("Desk")});
     capture.setColour(QStringLiteral("rhyolite"));
-    capture.setBelongs(QStringLiteral("project"), QStringLiteral("Shuffle"));
+    capture.makeFolder(QStringLiteral("Shuffle"));
 
     // As Gooseberry does: a logout's signal quits the usual way.
     for (int signal : {SIGTERM, SIGINT, SIGHUP}) {
@@ -125,8 +125,12 @@ private:
     // Nothing half-written is left behind beside the note.
     static void onlyTheNote(const QString &folder, const Note &note)
     {
+        // Nothing half written beside the note, in its folder or the notes
+        // folder.
         const QStringList left = QDir(folder).entryList(QDir::Files | QDir::Hidden);
-        QCOMPARE(left, (QStringList{QStringLiteral(".gooseberry"), note.id + QStringLiteral(".md")}));
+        QCOMPARE(left, QStringList{QStringLiteral(".gooseberry")});
+        const QStringList inFolder = QDir(folder + QLatin1Char('/') + note.folder).entryList(QDir::Files | QDir::Hidden);
+        QCOMPARE(inFolder, QStringList{note.id + QStringLiteral(".md")});
     }
 
 private Q_SLOTS:
@@ -150,7 +154,7 @@ private Q_SLOTS:
         const Note note = next.notes().first();
         QVERIFY2(!note.text.isEmpty() && Words.left(letters).startsWith(note.text), qPrintable(note.text));
         QCOMPARE(note.colour, QStringLiteral("rhyolite"));
-        QCOMPARE(note.project, QStringLiteral("Shuffle"));
+        QCOMPARE(note.folder, QStringLiteral("Shuffle"));
         onlyTheNote(folder, note);
     }
 
@@ -164,8 +168,8 @@ private Q_SLOTS:
         const Note note = next.notes().first();
         QCOMPARE(note.text, Words.left(letters));
         QCOMPARE(note.colour, QStringLiteral("rhyolite"));
-        QCOMPARE(note.belongs, Belongs::Project);
-        QCOMPARE(note.project, QStringLiteral("Shuffle"));
+        QCOMPARE(note.folder, QStringLiteral("Shuffle"));
+        QVERIFY(note.isStuck());
         QCOMPARE(note.window, QStringLiteral("SpreadGesture.qml"));
         onlyTheNote(folder, note);
     }
@@ -186,11 +190,11 @@ private Q_SLOTS:
         NoteStore next(folder);
         QVERIFY(next.open());
         Places places(&next);
-        QCOMPARE(places.countFor(QStringLiteral("project:Shuffle")), 1);
+        QCOMPARE(places.countFor(QStringLiteral("folder:Shuffle")), 1);
         QCOMPARE(places.countFor(QStringLiteral("today")), 1);
-        QCOMPARE(places.projects(), QStringList{QStringLiteral("Shuffle")});
+        QCOMPARE(places.folders(), QStringList{QStringLiteral("Shuffle")});
         PlaceNotes board(&next);
-        board.setPlace(QStringLiteral("project:Shuffle"));
+        board.setPlace(QStringLiteral("folder:Shuffle"));
         QCOMPARE(board.count(), 1);
         QCOMPARE(board.index(0).data(PlaceNotes::TitleRole).toString(), Words);
     }

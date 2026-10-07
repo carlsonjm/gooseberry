@@ -16,10 +16,9 @@ private Q_SLOTS:
         note.id = QStringLiteral("2026-10-04-144112-abcd");
         note.text = QStringLiteral("Flick threshold feels short.\n\nMeasure it: \"1400\" is a guess.\n");
         note.colour = QStringLiteral("lake");
-        note.belongs = Belongs::Window;
-        note.window = QStringLiteral("SpreadGesture.qml");
+        note.stuck = true;
+        note.window = QStringLiteral("SpreadGesture.qml: \"the suite\"");
         note.app = QStringLiteral("org.kde.kate");
-        note.project = QStringLiteral("Shuffle: \"the suite\"");
         note.workspace = QStringLiteral("Desk");
         note.created = QDateTime(QDate(2026, 10, 4), QTime(14, 41, 12), QTimeZone::fromSecondsAheadOfUtc(-5 * 3600));
         note.changed = note.created.addSecs(65);
@@ -28,10 +27,9 @@ private Q_SLOTS:
         const Note read = Note::parse(note.serialize(), note.id, {});
         QCOMPARE(read.text, note.text);
         QCOMPARE(read.colour, note.colour);
-        QCOMPARE(read.belongs, note.belongs);
+        QCOMPARE(read.stuck, true);
         QCOMPARE(read.window, note.window);
         QCOMPARE(read.app, note.app);
-        QCOMPARE(read.project, note.project);
         QCOMPARE(read.workspace, note.workspace);
         QCOMPARE(read.created, note.created);
         QCOMPARE(read.changed, note.changed);
@@ -48,11 +46,10 @@ private Q_SLOTS:
         const QString written = QString::fromUtf8(note.serialize());
         QCOMPARE(written,
                  QStringLiteral("---\n"
-                                "gooseberry: 1\n"
+                                "gooseberry: 2\n"
                                 "created: 2026-10-04T09:05:00Z\n"
                                 "changed: 2026-10-04T09:05:00Z\n"
                                 "colour: butter\n"
-                                "belongs: loose\n"
                                 "tucked: false\n"
                                 "---\n"
                                 "Groceries"));
@@ -60,7 +57,7 @@ private Q_SLOTS:
 
     void unknownKeysSurviveAnEdit()
     {
-        const QByteArray file = "---\ngooseberry: 1\nremind: 2026-10-05T09:00:00Z\ncolour: lichen\nink-words: \"coffee oats\"\n---\nGroceries\n";
+        const QByteArray file = "---\ngooseberry: 2\nremind: 2026-10-05T09:00:00Z\ncolour: lichen\nink-words: \"coffee oats\"\n---\nGroceries\n";
         Note note = Note::parse(file, QStringLiteral("a"), {});
         note.text += QStringLiteral("lemons\n");
         const QString written = QString::fromUtf8(note.serialize());
@@ -69,15 +66,16 @@ private Q_SLOTS:
         QVERIFY(written.endsWith(QStringLiteral("---\nGroceries\nlemons\n")));
     }
 
-    void fileWithoutHeaderIsALooseNote()
+    void fileWithoutHeaderIsAnInboxNote()
     {
         const QDateTime when(QDate(2026, 9, 1), QTime(8, 0));
         const Note note = Note::parse("# Wallpaper idea\nPalisade Head at dusk", QStringLiteral("idea"), when);
-        QCOMPARE(note.belongs, Belongs::Loose);
+        QVERIFY(!note.isStuck());
         QCOMPARE(note.text, QStringLiteral("# Wallpaper idea\nPalisade Head at dusk"));
         QCOMPARE(note.created, when);
         QCOMPARE(note.title(), QStringLiteral("Wallpaper idea"));
-        QCOMPARE(note.placeKey(), QStringLiteral("loose"));
+        QCOMPARE(note.placeKey(), QStringLiteral("inbox"));
+        QCOMPARE(note.placeLabel(), QStringLiteral("Inbox"));
     }
 
     void unclosedHeaderIsText()
@@ -90,14 +88,39 @@ private Q_SLOTS:
     {
         const Note note = Note::parse("\xEF\xBB\xBF---\r\ngooseberry: 1\r\nbelongs: project\r\nproject: Home\r\n---\r\nCall about the cabin\r\n",
                                       QStringLiteral("x"), {});
-        QCOMPARE(note.belongs, Belongs::Project);
-        QCOMPARE(note.project, QStringLiteral("Home"));
+        QCOMPARE(note.formerProject, QStringLiteral("Home"));
         QCOMPARE(note.text, QStringLiteral("Call about the cabin\n"));
+    }
+
+    // The first format's Belongs to is read as the second's two answers.
+    void firstFormatIsRead()
+    {
+        const Note onWindow = Note::parse("---\ngooseberry: 1\nbelongs: window\nwindow: \"Bug 412\"\napp: \"org.kde.kate\"\n"
+                                          "project: \"Shuffle\"\n---\nRepro first",
+                                          QStringLiteral("x"), {});
+        QVERIFY(onWindow.isStuck());
+        QCOMPARE(onWindow.stuckKey(), QStringLiteral("window:Bug 412"));
+        QCOMPARE(onWindow.formerProject, QString());
+        QVERIFY(onWindow.extra.isEmpty());
+
+        const Note inProject = Note::parse("---\ngooseberry: 1\nbelongs: project\nwindow: \"Bug 412\"\nproject: \"Shuffle\"\n---\nx",
+                                           QStringLiteral("y"), {});
+        QVERIFY(!inProject.isStuck());
+        QCOMPARE(inProject.formerProject, QStringLiteral("Shuffle"));
+
+        // Written again, it is in the second format, without the old keys.
+        Note upgraded = onWindow;
+        upgraded.format = NoteFormat;
+        const QString written = QString::fromUtf8(upgraded.serialize());
+        QVERIFY(written.contains(QStringLiteral("gooseberry: 2\n")));
+        QVERIFY(written.contains(QStringLiteral("stuck: true\n")));
+        QVERIFY(!written.contains(QStringLiteral("belongs")));
+        QVERIFY(!written.contains(QStringLiteral("project")));
     }
 
     void newerFormatIsReadOnly()
     {
-        const Note note = Note::parse("---\ngooseberry: 2\n---\nfrom the future", QStringLiteral("x"), {});
+        const Note note = Note::parse("---\ngooseberry: 3\n---\nfrom the future", QStringLiteral("x"), {});
         QVERIFY(note.newerFormat());
         QCOMPARE(note.text, QStringLiteral("from the future"));
     }
@@ -111,22 +134,25 @@ private Q_SLOTS:
         QCOMPARE(note.title(), QString());
     }
 
-    void placeFollowsBelonging()
+    void placeIsTheFolderAndStuckIsApart()
     {
         Note note;
         note.window = QStringLiteral("Bug 412");
-        note.project = QStringLiteral("Shuffle");
         note.workspace = QStringLiteral("Desk");
-        QCOMPARE(note.placeKey(), QStringLiteral("loose"));
-        note.belongs = Belongs::Window;
-        QCOMPARE(note.placeKey(), QStringLiteral("window:Bug 412"));
-        note.belongs = Belongs::Project;
-        QCOMPARE(note.placeKey(), QStringLiteral("project:Shuffle"));
-        note.belongs = Belongs::Workspace;
-        QCOMPARE(note.placeKey(), QStringLiteral("workspace:Desk"));
-        note.project.clear();
-        note.belongs = Belongs::Project;
-        QCOMPARE(note.placeKey(), QStringLiteral("loose"));
+        QCOMPARE(note.placeKey(), QStringLiteral("inbox"));
+        QCOMPARE(note.stuckKey(), QString());
+        QCOMPARE(note.whereLabel(), QStringLiteral("Inbox"));
+        note.folder = QStringLiteral("Shuffle");
+        QCOMPARE(note.placeKey(), QStringLiteral("folder:Shuffle"));
+        QCOMPARE(note.whereLabel(), QStringLiteral("Shuffle"));
+        note.stuck = true;
+        QCOMPARE(note.placeKey(), QStringLiteral("folder:Shuffle"));
+        QCOMPARE(note.stuckKey(), QStringLiteral("window:Bug 412"));
+        QCOMPARE(note.whereLabel(), QStringLiteral("Bug 412"));
+        // The folder is where the file is, never a header key.
+        QVERIFY(!QString::fromUtf8(note.serialize()).contains(QStringLiteral("Shuffle")));
+        note.window.clear();
+        QCOMPARE(note.stuckKey(), QString());
     }
 
     void documentNameFromTitle_data()

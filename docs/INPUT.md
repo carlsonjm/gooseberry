@@ -2,15 +2,18 @@
 
 Every tap and key Gooseberry answers, and what you see happen. Milestone 0
 builds capture, the board, tucking away and removing; Milestone 1 builds
-reminders, the planner and checklists; Pen arrives with its milestone and is
-marked so below. A card's notes join its Stack by
-Kadunce's own hold and let go; stepping back to the card puts them away.
+reminders, the planner and checklists; Milestone 2 builds folders, sticking a
+note to a window from the card, and carrying notes on the board; Pen arrives
+with its milestone and is marked so below.
 
 | Task | Touch | Keyboard |
 | --- | --- | --- |
 | Capture a note | Hold Gooseberry, then tap New note | None yet |
 | Finish a note | Tap the work around the card | `Esc` |
-| Choose where it belongs | Tap a place under Belongs to | None yet |
+| Keep a note in a folder | Tap Folder | None yet |
+| Stick a note to a window | Tap Stuck to | None yet |
+| Start a folder | Tap New folder on the board | None yet |
+| Move a note | Hold a note on the board | None yet |
 | Write with a pen | Tap Pen | None yet |
 | Set a reminder | Tap Remind | None yet |
 | Make a checklist | Tap Checklist | None yet |
@@ -28,7 +31,7 @@ Kadunce's own hold and let go; stepping back to the card puts them away.
 | --- | --- |
 | Hold Gooseberry, then tap New note | The quick-note card opens in the middle of the screen, the size of the desktop's search, with the cursor in it. What you write is kept from its first letter. |
 | The same in Kadunce's Spread | The card takes Spread's centre, between the cards on either side, as the desktop's search does. A tap on the cards around it is Spread's. |
-| Tap New note on the board | The same, for a note that belongs to the place the board is showing. |
+| Tap New note on the board | The same, for a note kept in the folder the board is showing, or stuck to the window it is showing. |
 
 Gooseberry is its entry in the launcher or a search, or its button pinned to
 the panel or the dock; holding it opens its menu, with New note and All notes.
@@ -51,17 +54,49 @@ down.
 A quick note closed with nothing written on it leaves nothing behind. A note emptied
 of its text and closed goes to the desktop's trash.
 
-## Choose where it belongs
+## Keep a note in a folder
+
+Two chips sit under the note, both already filled in: Folder, the folder the
+note is kept in, and Stuck to, the window it is stuck to. A new note is kept
+in the workspace's folder, or Inbox, and stuck to the window in front.
 
 | Input | What happens |
 | --- | --- |
-| Tap a place under Belongs to | The note belongs there instead: the window in front, a project, the workspace, or Loose. |
-| Tap Other project, then a project | The note belongs to that project. |
-| Tap New project, type a name, then press Enter | The project is made and the note belongs to it. Afterwards the project is one tap. |
+| Tap Folder | The folders come up under it: the workspace's own first, then Inbox, then the rest, and a field for a new one. |
+| Tap a folder | The note is kept there, at once, and the cursor goes back to the note. |
+| Type a name in New folder, then press Enter | The folder is made and the note is kept in it. A name that cannot be a folder's says why. |
+
+## Stick a note to a window
+
+| Input | What happens |
+| --- | --- |
+| Tap Stuck to | The open windows come up under it, the one in front first, and Don't stick to a window. |
+| Tap a window | The note is stuck to it, and comes back with it when it opens again. Its folder stays. |
+| Tap Don't stick to a window | The note is stuck to nothing; it stays in its folder. |
+
+## Start a folder
+
+| Input | What happens |
+| --- | --- |
+| Tap New folder on the board, type a name, then press Enter | The folder is made, empty, and the board shows it. It stays until it is removed. |
+| Tap Rename under a folder's name, type, then press Enter | The folder takes the new name; its notes stay in it. |
+| Tap New notes on (the workspace) go here | Notes written on this workspace go into the folder. Tap again for Inbox. |
+| Tap Remove folder | The folder goes and its notes go to Inbox. Undo, in the message that follows, puts them back. |
+
+## Move a note
+
+| Input | What happens |
+| --- | --- |
+| Hold a note on the board | It lifts and follows the finger or the pointer; Trash shows at the bottom. |
+| Let go over a folder or Inbox | The note is kept there. |
+| Let go over Tucked away | The note is tucked away. |
+| Let go over a day in the strip | The note goes on the planner that day, at the time it had or 9 AM; Undo takes it back off. |
+| Let go over Trash | The note goes to the desktop's trash; Undo brings it back. |
+| Let go anywhere else | Nothing changes. |
 
 ## Write with a pen
 
-Not yet built: Milestone 2.
+Not yet built: the last milestone.
 
 | Input | What happens |
 | --- | --- |
@@ -81,7 +116,7 @@ Checklist and Remind sit under the note on the card.
 | Tap Remind on a note that has one | The times come up again; a new choice replaces the old reminder. |
 
 A reminder is the desktop's own notification, shown once: the note's first
-words, when it was for, and where it belongs. It stays as long as the desktop
+words, when it was for, and the window it is stuck to, or its folder. It stays as long as the desktop
 keeps its notifications, then waits in the desktop's history; nothing has to
 be closed.
 
@@ -148,7 +183,7 @@ today again.
 
 | Input | What happens |
 | --- | --- |
-| Tap Tucked away on the board, then the note | The note goes back where it belonged. |
+| Tap Tucked away on the board, then the note | The note goes back to its folder. |
 
 ## Remove a note
 
@@ -161,4 +196,4 @@ today again.
 
 | Input | What happens |
 | --- | --- |
-| Type in Search notes on the board | The board shows every note with those words, tucked away ones too, whatever place was chosen. Clearing the search goes back to the place. |
+| Type in Search notes on the board | The board shows every note with those words, or in a folder or stuck to a window of that name, tucked away ones too, whatever place was chosen. Clearing the search goes back to the place. |

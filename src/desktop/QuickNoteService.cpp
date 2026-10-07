@@ -19,6 +19,7 @@ namespace {
 const QStringList Kinds = {QStringLiteral("window"), QStringLiteral("project"), QStringLiteral("workspace"),
                            QStringLiteral("loose")};
 
+
 // Marks a call from the bus, so the changes it makes are not told back as
 // changes from elsewhere.
 struct Calling {
@@ -47,7 +48,7 @@ QuickNoteService::QuickNoteService(Shell *shell, NoteStore *store, QObject *pare
         }
     });
     for (auto signal : {&Capture::textChanged, &Capture::colourChanged, &Capture::belongingChanged,
-                        &Capture::noteChanged, &Capture::reminderChanged}) {
+                        &Capture::foldersChanged, &Capture::noteChanged, &Capture::reminderChanged}) {
         connect(m_capture, signal, this, &QuickNoteService::changedElsewhere);
     }
     connect(m_shell, &Shell::boardShown, this, [this] {
@@ -123,7 +124,57 @@ QVariantMap QuickNoteService::SetBelongs(const QString &kind, const QString &pro
         sendErrorReply(QDBusError::InvalidArgs, QStringLiteral("Unknown place: %1").arg(kind));
         return {};
     }
-    m_capture->setBelongs(kind, project);
+    // The first Belongs to, read as the two answers: a window sticks the
+    // note to it; a project, the workspace and Loose each keep it in a folder
+    // and unstick it.
+    if (kind == QLatin1String("window")) {
+        if (!m_capture->window().isEmpty()) {
+            m_capture->setStuck(m_capture->window(), m_capture->app());
+        }
+        return state(m_open);
+    }
+    if (kind == QLatin1String("project")) {
+        const QString problem = m_capture->makeFolder(project);
+        if (!problem.isEmpty()) {
+            sendErrorReply(QDBusError::InvalidArgs, problem);
+            return {};
+        }
+    } else if (kind == QLatin1String("workspace")) {
+        m_capture->setFolder(m_store->workspaceFolder(m_capture->workspace()));
+    } else {
+        m_capture->setFolder({});
+    }
+    m_capture->setStuck({});
+    return state(m_open);
+}
+
+QVariantMap QuickNoteService::SetFolder(const QString &name)
+{
+    Calling calling(m_calling);
+    if (!m_open) {
+        sendErrorReply(QDBusError::Failed, QStringLiteral("No quick note is open; call Start first."));
+        return {};
+    }
+    if (name.isEmpty()) {
+        m_capture->setFolder({});
+    } else {
+        const QString problem = m_capture->makeFolder(name);
+        if (!problem.isEmpty()) {
+            sendErrorReply(QDBusError::InvalidArgs, problem);
+            return {};
+        }
+    }
+    return state(m_open);
+}
+
+QVariantMap QuickNoteService::SetStuck(const QString &window, const QString &app)
+{
+    Calling calling(m_calling);
+    if (!m_open) {
+        sendErrorReply(QDBusError::Failed, QStringLiteral("No quick note is open; call Start first."));
+        return {};
+    }
+    m_capture->setStuck(window.simplified(), app);
     return state(m_open);
 }
 
@@ -245,6 +296,10 @@ QVariantMap QuickNoteService::state(bool open) const
         map.insert(QStringLiteral("time"), time.isValid() ? time.toOffsetFromUtc(time.offsetFromUtc()).toString(Qt::ISODate) : QString());
         remindChoices.append(map);
     }
+    // Belongs to, as callers of Milestone 1 read it.
+    const QString belongs = m_capture->stuck() ? QStringLiteral("window")
+        : m_capture->folder().isEmpty()        ? QStringLiteral("loose")
+                                               : QStringLiteral("project");
     QStringList hexes;
     const QStringList names = colourNames();
     for (const QString &name : names) {
@@ -258,9 +313,15 @@ QVariantMap QuickNoteService::state(bool open) const
         {QStringLiteral("colour"), m_capture->colour()},
         {QStringLiteral("colours"), names},
         {QStringLiteral("colourHexes"), hexes},
-        {QStringLiteral("belongs"), m_capture->belongs()},
-        {QStringLiteral("project"), m_capture->project()},
+        {QStringLiteral("belongs"), belongs},
+        {QStringLiteral("project"), m_capture->folder()},
+        {QStringLiteral("folder"), m_capture->folder()},
+        {QStringLiteral("folderLabel"), m_capture->folderLabel()},
+        {QStringLiteral("folders"), m_capture->folderChoices()},
+        {QStringLiteral("stuck"), m_capture->stuck()},
+        {QStringLiteral("windows"), windowChoices()},
         {QStringLiteral("window"), m_capture->window()},
+        {QStringLiteral("app"), m_capture->app()},
         {QStringLiteral("workspace"), m_capture->workspace()},
         {QStringLiteral("choices"), choices()},
         {QStringLiteral("readOnly"), m_capture->readOnly()},
@@ -275,30 +336,60 @@ QVariantMap QuickNoteService::state(bool open) const
 
 QVariantList QuickNoteService::choices() const
 {
-    // The same choices, in the same order, as Belongs to on Gooseberry's card.
+    // Belongs to, for callers of Milestone 1: the window, each folder as a
+    // project, and Loose for Inbox. SetBelongs reads them back.
     QVariantList list;
-    auto add = [&list, this](const QString &kind, const QString &label, const QString &project = {}) {
-        const bool chosen = m_capture->belongs() == kind && (kind != QLatin1String("project") || m_capture->project() == project);
+    auto add = [&list](const QString &kind, const QString &label, bool chosen, const QString &project = {}) {
         list.append(QVariantMap{{QStringLiteral("kind"), kind},
                                 {QStringLiteral("label"), label},
                                 {QStringLiteral("project"), project},
                                 {QStringLiteral("chosen"), chosen}});
     };
+    const bool stuck = m_capture->stuck();
     if (!m_capture->window().isEmpty()) {
-        add(QStringLiteral("window"), i18n("This window · %1", m_capture->window()));
+        add(QStringLiteral("window"), i18n("This window · %1", m_capture->window()), stuck);
     }
-    const QStringList projects = m_shell->places()->projects();
-    const QString shown = m_capture->belongs() == QLatin1String("project") ? m_capture->project() : projects.value(0);
-    if (!shown.isEmpty()) {
-        add(QStringLiteral("project"), i18n("Project · %1", shown), shown);
-    }
-    add(QStringLiteral("workspace"),
-        m_capture->workspace().isEmpty() ? i18n("Workspace") : i18n("Workspace · %1", m_capture->workspace()));
-    add(QStringLiteral("loose"), i18n("Loose"));
-    for (const QString &project : projects) {
-        if (project != shown) {
-            add(QStringLiteral("project"), project, project);
+    const QVariantList folders = m_capture->folderChoices();
+    for (const QVariant &choice : folders) {
+        const QVariantMap folder = choice.toMap();
+        const QString name = folder.value(QStringLiteral("name")).toString();
+        if (name.isEmpty()) {
+            add(QStringLiteral("loose"), i18n("Inbox"), !stuck && m_capture->folder().isEmpty());
+        } else {
+            add(QStringLiteral("project"), name, !stuck && folder.value(QStringLiteral("chosen")).toBool(), name);
         }
+    }
+    return list;
+}
+
+QVariantList QuickNoteService::windowChoices() const
+{
+    // What Stuck to offers, as on the card: the open windows, the one in
+    // front first, and the note's own window first of all when it is no
+    // longer open. Each a map of window, app, label and chosen.
+    QVariantList list;
+    const bool stuck = m_capture->stuck();
+    auto add = [&list, stuck, this](const QString &window, const QString &app, const QString &appName) {
+        const bool chosen = stuck && window == m_capture->window() && app == m_capture->app();
+        list.append(QVariantMap{{QStringLiteral("window"), window},
+                                {QStringLiteral("app"), app},
+                                {QStringLiteral("label"), appName.isEmpty() || appName == window ? window : i18nc("application · document", "%1 · %2", appName, window)},
+                                {QStringLiteral("chosen"), chosen}});
+    };
+    const QVariantList open = m_shell->openWindows();
+    bool ownIsOpen = false;
+    for (const QVariant &entry : open) {
+        const QVariantMap map = entry.toMap();
+        ownIsOpen = ownIsOpen
+            || (map.value(QStringLiteral("window")).toString() == m_capture->window() && map.value(QStringLiteral("app")).toString() == m_capture->app());
+    }
+    if (!m_capture->window().isEmpty() && !ownIsOpen) {
+        add(m_capture->window(), m_capture->app(), {});
+    }
+    for (const QVariant &entry : open) {
+        const QVariantMap map = entry.toMap();
+        add(map.value(QStringLiteral("window")).toString(), map.value(QStringLiteral("app")).toString(),
+            map.value(QStringLiteral("appName")).toString());
     }
     return list;
 }

@@ -93,7 +93,22 @@ private:
     std::unique_ptr<QDBusInterface> m_note;
 
     QString folder() const { return m_home + QStringLiteral("/Documents/Gooseberry"); }
-    QString pathOf(const QString &id) const { return folder() + QLatin1Char('/') + id + QStringLiteral(".md"); }
+    // Where the note is: in the notes folder, which is Inbox, or one of its
+    // folders.
+    QString pathOf(const QString &id) const
+    {
+        const QString name = id + QStringLiteral(".md");
+        const QDir dir(folder());
+        if (dir.exists(name)) {
+            return dir.filePath(name);
+        }
+        for (const QString &sub : dir.entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
+            if (QFile::exists(dir.filePath(sub + QLatin1Char('/') + name))) {
+                return dir.filePath(sub + QLatin1Char('/') + name);
+            }
+        }
+        return dir.filePath(name);
+    }
 
     QVariantMap call(const QString &method, const QVariantList &arguments = {})
     {
@@ -159,7 +174,17 @@ private Q_SLOTS:
         for (const QVariant &choice : asList(state.value(QStringLiteral("choices")))) {
             kinds.append(asMap(choice).value(QStringLiteral("kind")).toString());
         }
-        QCOMPARE(kinds, (QStringList{QStringLiteral("workspace"), QStringLiteral("loose")}));
+        QCOMPARE(kinds, QStringList{QStringLiteral("loose")});
+        // From Milestone 2: the folder, Inbox; what Folder offers; not stuck,
+        // and no windows open on a bus with no desktop.
+        QCOMPARE(state.value(QStringLiteral("folder")).toString(), QString());
+        QCOMPARE(state.value(QStringLiteral("folderLabel")).toString(), QStringLiteral("Inbox"));
+        const QVariantList folders = asList(state.value(QStringLiteral("folders")));
+        QCOMPARE(folders.size(), 1);
+        QCOMPARE(asMap(folders.first()).value(QStringLiteral("label")).toString(), QStringLiteral("Inbox"));
+        QVERIFY(asMap(folders.first()).value(QStringLiteral("chosen")).toBool());
+        QVERIFY(!state.value(QStringLiteral("stuck")).toBool());
+        QVERIFY(asList(state.value(QStringLiteral("windows"))).isEmpty());
         QVERIFY(QDir(folder()).entryList({QStringLiteral("*.md")}, QDir::Files).isEmpty());
     }
 
@@ -180,11 +205,13 @@ private Q_SLOTS:
         QCOMPARE(state.value(QStringLiteral("colour")).toString(), QStringLiteral("lake"));
         QCOMPARE(readNote(pathOf(id)).header.value(QStringLiteral("colour")), QStringLiteral("lake"));
 
+        // Belongs to, as a caller of Milestone 1 sends it: a project is a
+        // folder, made when new.
         state = call(QStringLiteral("SetBelongs"), {QStringLiteral("project"), QStringLiteral("Shuffle")});
         QCOMPARE(state.value(QStringLiteral("belongs")).toString(), QStringLiteral("project"));
-        const NoteFile file = readNote(pathOf(id));
-        QCOMPARE(file.header.value(QStringLiteral("belongs")), QStringLiteral("project"));
-        QCOMPARE(file.header.value(QStringLiteral("project")), QStringLiteral("Shuffle"));
+        QCOMPARE(state.value(QStringLiteral("folder")).toString(), QStringLiteral("Shuffle"));
+        QCOMPARE(pathOf(id), folder() + QStringLiteral("/Shuffle/") + id + QStringLiteral(".md"));
+        QCOMPARE(readNote(pathOf(id)).header.value(QStringLiteral("gooseberry")), QStringLiteral("2"));
         bool chosen = false;
         for (const QVariant &choice : asList(state.value(QStringLiteral("choices")))) {
             const QVariantMap map = asMap(choice);
@@ -194,7 +221,36 @@ private Q_SLOTS:
         }
         QVERIFY(chosen);
 
+        // The folder and the window, as Milestone 2 sends them.
+        state = call(QStringLiteral("SetFolder"), {QStringLiteral("Groceries")});
+        QCOMPARE(state.value(QStringLiteral("folder")).toString(), QStringLiteral("Groceries"));
+        QCOMPARE(pathOf(id), folder() + QStringLiteral("/Groceries/") + id + QStringLiteral(".md"));
+        QStringList offered;
+        for (const QVariant &choice : asList(state.value(QStringLiteral("folders")))) {
+            offered.append(asMap(choice).value(QStringLiteral("label")).toString());
+        }
+        QCOMPARE(offered, (QStringList{QStringLiteral("Inbox"), QStringLiteral("Groceries"), QStringLiteral("Shuffle")}));
+        state = call(QStringLiteral("SetFolder"), {QString()});
+        QCOMPARE(pathOf(id), folder() + QLatin1Char('/') + id + QStringLiteral(".md"));
+        state = call(QStringLiteral("SetStuck"), {QStringLiteral("shuffleforplasma.com"), QStringLiteral("org.mozilla.firefox")});
+        QVERIFY(state.value(QStringLiteral("stuck")).toBool());
+        QCOMPARE(state.value(QStringLiteral("belongs")).toString(), QStringLiteral("window"));
+        QCOMPARE(state.value(QStringLiteral("window")).toString(), QStringLiteral("shuffleforplasma.com"));
+        NoteFile file = readNote(pathOf(id));
+        QCOMPARE(file.header.value(QStringLiteral("stuck")), QStringLiteral("true"));
+        QCOMPARE(file.header.value(QStringLiteral("app")), QStringLiteral("org.mozilla.firefox"));
+        // The note's own window is offered even with none open.
+        const QVariantList windows = asList(state.value(QStringLiteral("windows")));
+        QCOMPARE(windows.size(), 1);
+        QVERIFY(asMap(windows.first()).value(QStringLiteral("chosen")).toBool());
+        state = call(QStringLiteral("SetStuck"), {QString(), QString()});
+        QVERIFY(!state.value(QStringLiteral("stuck")).toBool());
+        QVERIFY(!readNote(pathOf(id)).header.contains(QStringLiteral("stuck")));
+        state = call(QStringLiteral("SetFolder"), {QStringLiteral("Shuffle")});
+        QCOMPARE(state.value(QStringLiteral("belongs")).toString(), QStringLiteral("project"));
+
         // Nonsense is refused, and changes nothing.
+        QVERIFY(m_note->call(QStringLiteral("SetFolder"), QStringLiteral("a/b")).type() == QDBusMessage::ErrorMessage);
         QVERIFY(m_note->call(QStringLiteral("SetColour"), QStringLiteral("plum")).type() == QDBusMessage::ErrorMessage);
         QVERIFY(m_note->call(QStringLiteral("SetBelongs"), QStringLiteral("drawer"), QString()).type()
                 == QDBusMessage::ErrorMessage);

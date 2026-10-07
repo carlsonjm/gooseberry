@@ -60,6 +60,10 @@ public:
     void showBoardOn(const QString &noteId);
     // What is in front now, for a note started from the search.
     CaptureContext currentContext() const;
+    // The windows open now, the one in front first (WindowContext).
+    Q_INVOKABLE QVariantList openWindows() const;
+    // The workspace in front now; empty where the desktop does not say.
+    Q_INVOKABLE QString currentWorkspace() const;
     // The application's name, as its desktop file gives it.
     Q_INVOKABLE QString applicationName() const;
     // All notes on the card. In Kadunce's Spread or over its Active card the

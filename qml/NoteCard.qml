@@ -4,7 +4,9 @@ import QtQuick.Controls as QQC2
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 
-// One note on the board, in its colour, with where it belongs underneath.
+// One note on the board, in its colour, with its folder and the window it is
+// stuck to underneath. Held, it lifts, to be carried to a folder, a day or the
+// trash.
 Rectangle {
     id: card
 
@@ -13,6 +15,7 @@ Rectangle {
     required property string colourHex
     required property string placeLabel
     required property string placeKey
+    required property string stuckTo
     required property bool tucked
     required property bool checklist
     required property string checklistHeading
@@ -22,6 +25,14 @@ Rectangle {
 
     signal tapped()
     signal tuckRequested()
+    // Held: the note lifts at that point, follows it, and is let go there,
+    // each in the window's own coordinates.
+    signal lifted(point scenePosition)
+    signal carried(point scenePosition)
+    signal letGo(point scenePosition)
+
+    // Lifted and following the finger or the pointer.
+    property bool lifting: false
 
     readonly property color ink: "#1A1A1A"
 
@@ -34,6 +45,28 @@ Rectangle {
 
     TapHandler {
         onTapped: card.tapped()
+        onLongPressed: {
+            card.lifting = true;
+            card.lifted(point.scenePosition);
+        }
+    }
+
+    // Follows the point without taking it from the board's scrolling until
+    // the note is lifted.
+    PointHandler {
+        id: tracker
+        readonly property point at: point.scenePosition
+        onAtChanged: {
+            if (card.lifting) {
+                card.carried(at);
+            }
+        }
+        onActiveChanged: {
+            if (!active && card.lifting) {
+                card.lifting = false;
+                card.letGo(at);
+            }
+        }
     }
 
     ColumnLayout {
@@ -99,8 +132,39 @@ Rectangle {
 
         RowLayout {
             Layout.fillWidth: true
-            visible: card.showPlace || !card.tucked
+            visible: card.showPlace || !card.tucked || card.stuckTo.length > 0
             spacing: 6
+
+            Rectangle {
+                objectName: "stuckTo"
+                visible: card.stuckTo.length > 0
+                implicitHeight: 24
+                implicitWidth: Math.min(stuckRow.implicitWidth + 18, content.width - 50)
+                radius: 12
+                color: Qt.rgba(0, 0, 0, 0.09)
+                Row {
+                    id: stuckRow
+                    anchors.verticalCenter: parent.verticalCenter
+                    x: 9
+                    spacing: 4
+                    Kirigami.Icon {
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 12
+                        height: 12
+                        source: "pin"
+                        color: card.ink
+                        isMask: true
+                    }
+                    QQC2.Label {
+                        width: Math.min(implicitWidth, content.width - 90)
+                        text: card.stuckTo
+                        elide: Text.ElideRight
+                        color: card.ink
+                        font.pixelSize: 11
+                        font.weight: Font.Bold
+                    }
+                }
+            }
 
             Rectangle {
                 visible: card.showPlace

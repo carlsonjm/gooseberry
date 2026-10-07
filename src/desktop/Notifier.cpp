@@ -78,8 +78,8 @@ void Notifier::show(const QString &noteId)
         summary = i18n("A note");
     }
     const QString when = note->remindOnOpen ? note->window : ReminderWords::label(note->remind, false);
-    const QString body = when.isEmpty() || note->placeLabel() == when ? note->placeLabel()
-                                                                      : i18nc("when · where", "%1 · %2", when, note->placeLabel());
+    const QString body = when.isEmpty() || note->whereLabel() == when ? note->whereLabel()
+                                                                      : i18nc("when · where", "%1 · %2", when, note->whereLabel());
 
     QDBusMessage notify = QDBusMessage::createMethodCall(Service, Path, Interface, QStringLiteral("Notify"));
     const QStringList actions = {

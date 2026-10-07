@@ -17,6 +17,7 @@
 #include <QQmlComponent>
 #include <QRegularExpression>
 #include <QQmlEngine>
+#include <QStyleHints>
 #include <QQuickItem>
 #include <QQuickView>
 #include <QQuickWindow>
@@ -62,6 +63,7 @@ public Q_SLOTS:
     QString applicationName() const { return QStringLiteral("Gooseberry"); }
     QString reminderLabel(const QDateTime &remind, bool onOpen) const { return ReminderWords::label(remind, onOpen); }
     QVariantList reminderChoices() const { return ReminderWords::choices(true); }
+    QString currentWorkspace() const { return QStringLiteral("Desk"); }
 
 private:
     QObject *m_capture;
@@ -71,7 +73,8 @@ private:
     QObject *m_planner;
 };
 
-// The words for reminders, as the shell gives them to the card.
+// The words for reminders and the open windows, as the shell gives them to
+// the card.
 class Words : public QObject
 {
     Q_OBJECT
@@ -79,6 +82,17 @@ class Words : public QObject
 public Q_SLOTS:
     QString reminderLabel(const QDateTime &remind, bool onOpen) const { return ReminderWords::label(remind, onOpen); }
     QVariantList reminderChoices() const { return ReminderWords::choices(true); }
+    QVariantList openWindows() const
+    {
+        return {QVariantMap{{QStringLiteral("window"), QStringLiteral("SpreadGesture.qml")},
+                            {QStringLiteral("app"), QStringLiteral("org.kde.kate")},
+                            {QStringLiteral("appName"), QStringLiteral("Kate")},
+                            {QStringLiteral("front"), true}},
+                QVariantMap{{QStringLiteral("window"), QStringLiteral("shuffleforplasma.com")},
+                            {QStringLiteral("app"), QStringLiteral("org.mozilla.firefox")},
+                            {QStringLiteral("appName"), QStringLiteral("Firefox")},
+                            {QStringLiteral("front"), false}}};
+    }
 };
 
 namespace {
@@ -134,6 +148,25 @@ void picture(QQuickWindow *window, const QString &name)
     }
 }
 
+// Holds an item until it lifts, carries it in steps to the middle of
+// another, and lets go there.
+void carry(QQuickWindow *window, QQuickItem *item, QQuickItem *to)
+{
+    QVERIFY(item);
+    QVERIFY(to);
+    QTest::qWait(30);
+    const QPoint from = item->mapToScene(QPointF(item->width() / 2, item->height() / 3)).toPoint();
+    QTest::mousePress(window, Qt::LeftButton, {}, from);
+    QTest::qWait(QGuiApplication::styleHints()->mousePressAndHoldInterval() + 300);
+    const QPoint target = to->mapToScene(QPointF(to->width() / 2, to->height() / 2)).toPoint();
+    for (int step = 1; step <= 10; ++step) {
+        QTest::mouseMove(window, from + (target - from) * step / 10);
+        QTest::qWait(16);
+    }
+    QTest::mouseRelease(window, Qt::LeftButton, {}, target);
+    QTest::qWait(30);
+}
+
 void tap(QQuickWindow *window, QQuickItem *item)
 {
     QVERIFY(item);
@@ -175,13 +208,14 @@ private Q_SLOTS:
         QVERIFY(m_home->holds(folder));
         m_store = std::make_unique<NoteStore>(folder);
         QVERIFY(m_store->open());
+        QVERIFY(m_store->makeFolder(QStringLiteral("Shuffle")));
+        QVERIFY(m_store->makeFolder(QStringLiteral("Home")));
         m_capture = std::make_unique<Capture>(m_store.get());
         m_capture->startNew({QStringLiteral("SpreadGesture.qml"), QStringLiteral("org.kde.kate"), QStringLiteral("Desk")});
 
         m_view = std::make_unique<QQuickView>();
         KLocalization::setupLocalizedContext(m_view->engine());
         m_view->setInitialProperties({{QStringLiteral("capture"), QVariant::fromValue<QObject *>(m_capture.get())},
-                                      {QStringLiteral("projects"), QStringList{QStringLiteral("Shuffle"), QStringLiteral("Home")}},
                                       {QStringLiteral("words"), QVariant::fromValue<QObject *>(&m_words)}});
         m_view->loadFromModule(QStringLiteral("io.github.carlsonjm.gooseberry"), QStringLiteral("QuickNote"));
         QVERIFY2(m_view->status() == QQuickView::Ready, qPrintable(m_view->errors().value(0).toString()));
@@ -279,50 +313,72 @@ private Q_SLOTS:
         picture(m_view.get(), QStringLiteral("note-written"));
     }
 
-    void belongsToIsOneTap()
+    // Two chips, both already filled in: the folder, and the window in
+    // front. Each opens its choices with a tap, and one more chooses.
+    void folderAndWindowAreChips()
     {
-        QVERIFY(named(QStringLiteral("belongs-window"))->isVisible());
-        QVERIFY(named(QStringLiteral("belongs-window"))->property("checked").toBool());
-        QCOMPARE(named(QStringLiteral("belongs-window"))->property("text").toString(), QStringLiteral("This window · SpreadGesture.qml"));
-        QCOMPARE(named(QStringLiteral("belongs-project"))->property("text").toString(), QStringLiteral("Project · Shuffle"));
-        QCOMPARE(named(QStringLiteral("belongs-workspace"))->property("text").toString(), QStringLiteral("Workspace · Desk"));
+        QCOMPARE(named(QStringLiteral("folderChip"))->property("text").toString(), QStringLiteral("Folder · Inbox ▾"));
+        QCOMPARE(named(QStringLiteral("stuckChip"))->property("text").toString(), QStringLiteral("Stuck to · SpreadGesture.qml ▾"));
+        QVERIFY(!named(QStringLiteral("folderChoices"))->isVisible());
 
-        tap(m_view.get(), named(QStringLiteral("belongs-project")));
-        QCOMPARE(m_capture->belongs(), QStringLiteral("project"));
-        QCOMPARE(m_capture->project(), QStringLiteral("Shuffle"));
-        tap(m_view.get(), named(QStringLiteral("belongs-loose")));
-        QCOMPARE(m_capture->belongs(), QStringLiteral("loose"));
-
-        // Another project: one tap to open the list, one to choose.
-        tap(m_view.get(), named(QStringLiteral("chooseProject")));
-        QQuickItem *home = nullptr;
-        for (QQuickItem *button : buttonsIn(note())) {
-            if (button->property("text").toString() == QLatin1String("Home")) {
-                home = button;
-            }
-        }
-        QVERIFY(home);
-        tap(m_view.get(), home);
-        QCOMPARE(m_capture->project(), QStringLiteral("Home"));
+        tap(m_view.get(), named(QStringLiteral("folderChip")));
+        QVERIFY(named(QStringLiteral("folderChoices"))->isVisible());
+        QVERIFY(named(QStringLiteral("folder-inbox"))->property("checked").toBool());
+        picture(m_view.get(), QStringLiteral("note-folders"));
+        tap(m_view.get(), named(QStringLiteral("folder-Shuffle")));
+        QCOMPARE(m_capture->folder(), QStringLiteral("Shuffle"));
+        QVERIFY(!named(QStringLiteral("folderChoices"))->isVisible());
+        QCOMPARE(named(QStringLiteral("folderChip"))->property("text").toString(), QStringLiteral("Folder · Shuffle ▾"));
         // The cursor goes back to the note.
         QTRY_VERIFY(note()->property("editor").value<QQuickItem *>()->hasActiveFocus());
+        type(m_view.get(), QStringLiteral("Price"));
+        QVERIFY(QFile::exists(m_store->folder() + QStringLiteral("/Shuffle/") + m_capture->noteId() + QStringLiteral(".md")));
+
+        // Stuck to lists the open windows, the one in front first.
+        tap(m_view.get(), named(QStringLiteral("stuckChip")));
+        QVERIFY(named(QStringLiteral("windowChoices"))->isVisible());
+        QCOMPARE(named(QStringLiteral("window-0"))->property("text").toString(), QStringLiteral("Kate · SpreadGesture.qml · in front"));
+        QVERIFY(named(QStringLiteral("window-0"))->property("checked").toBool());
+        QCOMPARE(named(QStringLiteral("window-1"))->property("text").toString(), QStringLiteral("Firefox · shuffleforplasma.com"));
+        picture(m_view.get(), QStringLiteral("note-windows"));
+        tap(m_view.get(), named(QStringLiteral("window-1")));
+        QCOMPARE(m_capture->window(), QStringLiteral("shuffleforplasma.com"));
+        QCOMPARE(m_capture->app(), QStringLiteral("org.mozilla.firefox"));
+        QVERIFY(m_store->note(m_capture->noteId())->isStuck());
+        QCOMPARE(named(QStringLiteral("stuckChip"))->property("text").toString(), QStringLiteral("Stuck to · shuffleforplasma.com ▾"));
+
+        // Not stuck, it keeps its folder.
+        tap(m_view.get(), named(QStringLiteral("stuckChip")));
+        tap(m_view.get(), named(QStringLiteral("dontStick")));
+        QVERIFY(!m_capture->stuck());
+        QVERIFY(!m_store->note(m_capture->noteId())->stuck);
+        QCOMPARE(m_store->note(m_capture->noteId())->folder, QStringLiteral("Shuffle"));
+        QCOMPARE(named(QStringLiteral("stuckChip"))->property("text").toString(), QStringLiteral("Not stuck to a window ▾"));
     }
 
-    void newProjectIsNamedOnce()
+    void newFolderIsNamedOnce()
     {
-        tap(m_view.get(), named(QStringLiteral("chooseProject")));
-        QQuickItem *field = named(QStringLiteral("projectName"));
+        tap(m_view.get(), named(QStringLiteral("folderChip")));
+        QQuickItem *field = named(QStringLiteral("folderName"));
         QVERIFY(field->isVisible());
-        picture(m_view.get(), QStringLiteral("note-projects"));
         tap(m_view.get(), field);
         QTRY_VERIFY(field->hasActiveFocus());
         type(m_view.get(), QStringLiteral("Cabin"));
         QTest::keyClick(m_view.get(), Qt::Key_Return);
-        QCOMPARE(m_capture->belongs(), QStringLiteral("project"));
-        QCOMPARE(m_capture->project(), QStringLiteral("Cabin"));
+        QCOMPARE(m_capture->folder(), QStringLiteral("Cabin"));
+        QVERIFY(m_store->hasFolder(QStringLiteral("Cabin")));
         QTRY_VERIFY(note()->property("editor").value<QQuickItem *>()->hasActiveFocus());
         type(m_view.get(), QStringLiteral("Book it"));
-        QCOMPARE(m_store->note(m_capture->noteId())->project, QStringLiteral("Cabin"));
+        QCOMPARE(m_store->note(m_capture->noteId())->folder, QStringLiteral("Cabin"));
+
+        // A name that cannot be a folder's says why, and changes nothing.
+        tap(m_view.get(), named(QStringLiteral("folderChip")));
+        tap(m_view.get(), field);
+        QTRY_VERIFY(field->hasActiveFocus());
+        type(m_view.get(), QStringLiteral("Inbox"));
+        QTest::keyClick(m_view.get(), Qt::Key_Return);
+        QVERIFY(named(QStringLiteral("folderProblem"))->isVisible());
+        QCOMPARE(m_capture->folder(), QStringLiteral("Cabin"));
     }
 
     // Remind offers the quick times, "next time this opens" and Pick a
@@ -596,7 +652,7 @@ private Q_SLOTS:
         };
         for (const auto &[text, colour] : more) {
             Capture extra(m_store.get());
-            extra.startNewIn(QStringLiteral("project:Shuffle"));
+            extra.startNewIn(QStringLiteral("folder:Shuffle"));
             extra.setColour(colour);
             extra.setText(text);
         }
@@ -642,10 +698,97 @@ private Q_SLOTS:
         tap(board, find(QStringLiteral("note-") + onWindow));
         QVERIFY(!m_store->note(onWindow)->tucked);
 
-        // New note in a place belongs there.
+        // New note in a place goes there.
         tap(board, find(QStringLiteral("place-window:SpreadGesture.qml")));
         tap(board, find(QStringLiteral("newNote")));
         QCOMPARE(shell.newIn, QStringLiteral("window:SpreadGesture.qml"));
+
+        // Folders down the side: Inbox first, New folder last.
+        QQuickItem *inbox = find(QStringLiteral("place-inbox"));
+        QQuickItem *home = find(QStringLiteral("place-folder:Home"));
+        QQuickItem *shuffle = find(QStringLiteral("place-folder:Shuffle"));
+        QQuickItem *newFolder = find(QStringLiteral("place-newfolder"));
+        QVERIFY(inbox->y() < home->y() && home->y() < shuffle->y() && shuffle->y() < newFolder->y());
+        QVERIFY(newFolder->y() < find(QStringLiteral("place-window:SpreadGesture.qml"))->y());
+
+        // A held note lifts and drops on a folder.
+        tap(board, inbox);
+        QTRY_VERIFY(find(QStringLiteral("note-") + loose));
+        shell.opened.clear();
+        carry(board, find(QStringLiteral("note-") + loose), home);
+        QTRY_COMPARE(m_store->note(loose)->folder, QStringLiteral("Home"));
+        QVERIFY(!find(QStringLiteral("lifted"))->isVisible());
+        QTRY_VERIFY(!find(QStringLiteral("note-") + loose));
+        // Held, it was carried rather than opened.
+        QVERIFY(shell.opened.isEmpty());
+
+        // On the trash: removed, and undone from the message.
+        tap(board, home);
+        QTRY_VERIFY(find(QStringLiteral("note-") + loose));
+        {
+            QQuickItem *card = find(QStringLiteral("note-") + loose);
+            const QPoint from = card->mapToScene(QPointF(card->width() / 2, card->height() / 3)).toPoint();
+            QTest::mousePress(board, Qt::LeftButton, {}, from);
+            QTest::qWait(QGuiApplication::styleHints()->mousePressAndHoldInterval() + 300);
+            QQuickItem *trash = find(QStringLiteral("trashTarget"));
+            QTRY_VERIFY(trash->isVisible());
+            QVERIFY(find(QStringLiteral("lifted"))->isVisible());
+            picture(board, QStringLiteral("board-carrying"));
+            const QPoint target = trash->mapToScene(QPointF(trash->width() / 2, trash->height() / 2)).toPoint();
+            for (int step = 1; step <= 10; ++step) {
+                QTest::mouseMove(board, from + (target - from) * step / 10);
+                QTest::qWait(16);
+            }
+            QTest::mouseRelease(board, Qt::LeftButton, {}, target);
+        }
+        QTRY_VERIFY(!m_store->note(loose));
+        QTRY_VERIFY(find(QStringLiteral("noticeAction"))->isVisible());
+        tap(board, find(QStringLiteral("noticeAction")));
+        QTRY_COMPARE(m_store->note(loose)->folder, QStringLiteral("Home"));
+
+        // New folder: named once, then shown.
+        tap(board, find(QStringLiteral("place-newfolder")));
+        QQuickItem *name = find(QStringLiteral("newFolderName"));
+        QVERIFY(name->isVisible());
+        QTRY_VERIFY(name->hasActiveFocus());
+        type(board, QStringLiteral("Tablet"));
+        QTest::keyClick(board, Qt::Key_Return);
+        QVERIFY(m_store->hasFolder(QStringLiteral("Tablet")));
+        QCOMPARE(notes.place(), QStringLiteral("folder:Tablet"));
+        QVERIFY(!name->isVisible());
+        QTRY_VERIFY(find(QStringLiteral("place-folder:Tablet")));
+        QVERIFY(find(QStringLiteral("folderActions"))->isVisible());
+        picture(board, QStringLiteral("board-folder"));
+
+        // The workspace's folder: notes written on Desk go here.
+        QQuickItem *workspace = find(QStringLiteral("workspaceFolder"));
+        QCOMPARE(workspace->property("text").toString(), QStringLiteral("New notes on Desk go here"));
+        QVERIFY(!workspace->property("checked").toBool());
+        tap(board, workspace);
+        QCOMPARE(m_store->workspaceFolder(QStringLiteral("Desk")), QStringLiteral("Tablet"));
+        QTRY_VERIFY(workspace->property("checked").toBool());
+
+        // Renamed in place.
+        tap(board, find(QStringLiteral("renameFolder")));
+        QQuickItem *rename = find(QStringLiteral("renameField"));
+        QTRY_VERIFY(rename->hasActiveFocus());
+        QTest::keyClick(board, Qt::Key_A, Qt::ControlModifier);
+        type(board, QStringLiteral("Z13"));
+        QTest::keyClick(board, Qt::Key_Return);
+        QCOMPARE(m_store->folders(), (QStringList{QStringLiteral("Home"), QStringLiteral("Shuffle"), QStringLiteral("Z13")}));
+        QCOMPARE(notes.place(), QStringLiteral("folder:Z13"));
+        QCOMPARE(m_store->workspaceFolder(QStringLiteral("Desk")), QStringLiteral("Z13"));
+
+        // Removed, its notes to Inbox; undo brings it back.
+        QVERIFY(m_store->moveNote(loose, QStringLiteral("Z13")));
+        tap(board, find(QStringLiteral("removeFolder")));
+        QVERIFY(!m_store->hasFolder(QStringLiteral("Z13")));
+        QCOMPARE(m_store->note(loose)->folder, QString());
+        QCOMPARE(notes.place(), QStringLiteral("inbox"));
+        QTRY_VERIFY(find(QStringLiteral("noticeAction"))->isVisible());
+        tap(board, find(QStringLiteral("noticeAction")));
+        QVERIFY(m_store->hasFolder(QStringLiteral("Z13")));
+        QCOMPARE(m_store->note(loose)->folder, QStringLiteral("Z13"));
 
         // Every target on the board is big enough to touch.
         for (QQuickItem *button : buttonsIn(board->contentItem())) {
@@ -676,6 +819,7 @@ private Q_SLOTS:
             capture.finish();
             return capture.noteId();
         };
+        QVERIFY(m_store->makeFolder(QStringLiteral("Split Rock")));
         const QString done = planned(QStringLiteral("Record Z13 flick samples"), QStringLiteral("window:SpreadGesture.qml"),
                                      QDateTime(today, QTime(0, 0, 30)));
         QVERIFY(setNoteDone(m_store.get(), done, true));
@@ -685,21 +829,21 @@ private Q_SLOTS:
             soon = QDateTime(today, QTime(23, 45));
         }
         const QString next = planned(QStringLiteral("Ask Sam about a mouse way to move Spread on from Search"),
-                                     QStringLiteral("project:Shuffle"), soon);
-        const QString evening = planned(QStringLiteral("Call about the cabin weekend"), QStringLiteral("project:Home"),
+                                     QStringLiteral("folder:Shuffle"), soon);
+        const QString evening = planned(QStringLiteral("Call about the cabin weekend"), QStringLiteral("folder:Home"),
                                         QDateTime(today, QTime(23, 59)));
-        const QString ahead = planned(QStringLiteral("Split Rock: Milestone 0 review"), QStringLiteral("project:Split Rock"),
+        const QString ahead = planned(QStringLiteral("Split Rock: Milestone 0 review"), QStringLiteral("folder:Split Rock"),
                                       QDateTime(today.addDays(2), QTime(9, 0)));
         m_capture->setText(QStringLiteral("Flick threshold feels short on the Z13. Measure the real velocity before touching 1400."));
         Capture list(m_store.get());
-        list.startNewIn(QStringLiteral("project:Shuffle"));
+        list.startNewIn(QStringLiteral("folder:Shuffle"));
         list.setColour(QStringLiteral("lichen"));
         list.setText(QStringLiteral("Groceries\ncoffee\noats\nlemons\ntape"));
         list.makeChecklist();
         list.setLineChecked(2, true);
         const QString groceries = list.noteId();
         Capture idea(m_store.get());
-        idea.startNewIn(QStringLiteral("project:Shuffle"));
+        idea.startNewIn(QStringLiteral("folder:Shuffle"));
         idea.setColour(QStringLiteral("lake"));
         idea.setText(QStringLiteral("Notes stack on a card's corner in Spread: count, not content."));
 
@@ -786,6 +930,14 @@ private Q_SLOTS:
         for (QQuickItem *button : buttonsIn(board->contentItem())) {
             QVERIFY2(button->height() >= 44 && button->width() >= 44, qPrintable(button->objectName()));
         }
+
+        // An idea let go on a day is planned for it, at nine.
+        const QDate tomorrow = today.addDays(1);
+        tap(board, itemNamed(strip, QStringLiteral("day-") + today.toString(QStringLiteral("yyyy-MM-dd"))));
+        QTRY_VERIFY(find(QStringLiteral("note-") + groceries));
+        carry(board, find(QStringLiteral("note-") + groceries),
+              itemNamed(strip, QStringLiteral("day-") + tomorrow.toString(QStringLiteral("yyyy-MM-dd"))));
+        QTRY_COMPARE(m_store->note(groceries)->remind, QDateTime(tomorrow, QTime(9, 0)));
 
         // A narrow window puts the day strip on a line of its own.
         board->resize(800, 716);

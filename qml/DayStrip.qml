@@ -5,11 +5,14 @@ import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 
 // The planner's days, two back to three ahead. The chosen day turns over to
-// the board's own colours; a day with notes planned carries a dot.
+// the board's own colours; a day with notes planned carries a dot. A carried
+// note let go on a day is planned for it.
 Row {
     id: strip
 
     required property QtObject planner
+
+    signal noteDropped(string id, date day)
     // The mock-up's mark for what is planned.
     readonly property color mark: "#F2A65A"
 
@@ -29,10 +32,23 @@ Row {
             Accessible.role: Accessible.RadioButton
             Accessible.checked: chosen
             onClicked: strip.planner.day = modelData.date
+            DropArea {
+                id: dropHere
+                anchors.fill: parent
+                keys: ["gooseberry-note"]
+                onDropped: drop => {
+                    drop.accept();
+                    const id = drop.source.noteId;
+                    const date = day.modelData.date;
+                    Qt.callLater(() => strip.noteDropped(id, date));
+                }
+            }
             background: Rectangle {
                 radius: 14
                 color: day.chosen ? Kirigami.Theme.textColor
                                   : Qt.alpha(Kirigami.Theme.textColor, day.down ? 0.14 : 0.06)
+                border.width: dropHere.containsDrag ? 2 : 0
+                border.color: Kirigami.Theme.highlightColor
             }
             contentItem: Item {
                 Column {

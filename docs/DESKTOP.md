@@ -153,9 +153,13 @@ dictionary of strings to variants:
 | `text` | `s` | The note's text |
 | `colour` | `s` | Its colour's name |
 | `colours`, `colourHexes` | `as`, `as` | The five colours in order, and their colours as `#RRGGBB` |
-| `belongs` | `s` | `window`, `project`, `workspace` or `loose` |
-| `project`, `window`, `workspace` | `s` | Its project, and the window and workspace it was written on |
-| `choices` | `av` | The Belongs to choices in order, each a dictionary: `kind`, `label` (the words to show), `project` (for a project), `chosen` (`b`) |
+| `folder` | `s` | The folder it is kept in, by name; empty for Inbox. From Milestone 2 |
+| `folderLabel` | `s` | That folder in the words Folder shows on the card. From Milestone 2 |
+| `folders` | `av` | What Folder offers, in the card's order: the workspace's folder, Inbox, then the rest; each a dictionary: `name` (empty for Inbox), `label`, `chosen` (`b`) and `workspace` (`b`, the workspace's own). From Milestone 2 |
+| `stuck` | `b` | The note is stuck to `window`. From Milestone 2 |
+| `windows` | `av` | What Stuck to offers, in the card's order: the note's own window when it is no longer open, then the open windows, the one in front first; each a dictionary: `window`, `app`, `label` (the words to show) and `chosen` (`b`). From Milestone 2 |
+| `window`, `app`, `workspace` | `s` | The window the note was written on or stuck to, its application, and the workspace it was written on. `app` from Milestone 2 |
+| `belongs`, `project`, `choices` | `s`, `s`, `av` | Belongs to, for a caller of Milestone 1: `belongs` is `window` when stuck, else `project` in a folder and `loose` in Inbox; `project` is the folder; `choices` offers the window, then Inbox as `loose` and each folder as a `project`, each a dictionary: `kind`, `label`, `project`, `chosen` (`b`) |
 | `readOnly` | `b` | The note or folder is kept by a newer Gooseberry and is not changed |
 | `problem` | `s` | Why the last change could not be kept; empty when it was |
 | `remind` | `s` | The reminder: an ISO 8601 time with its offset, `opens` for the next time the note's window opens, or empty for none. From Milestone 1 |
@@ -167,11 +171,13 @@ dictionary of strings to variants:
 | Method | What it does |
 | --- | --- |
 | `ProtocolVersion() → u` | The version, `1` |
-| `Start() → a{sv}` | Starts a note, belonging to the window in front, or resumes the one the last `Start` began and nothing has finished |
+| `Start() → a{sv}` | Starts a note, stuck to the window in front and kept in the workspace's folder, or resumes the one the last `Start` began and nothing has finished |
 | `State() → a{sv}` | The note as it is |
 | `SetText(s text) → a{sv}` | Sets the text. Search sends it at each pause, as Gooseberry's card writes; the first text keeps the note |
 | `SetColour(s name) → a{sv}` | One of the five colours; another name is refused |
-| `SetBelongs(s kind, s project) → a{sv}` | Belongs to; a project needs its name, and a new name makes the project |
+| `SetBelongs(s kind, s project) → a{sv}` | Belongs to, for a caller of Milestone 1: `window` sticks the note to its window; `project` keeps it in that folder, made when new, `workspace` in the workspace's folder and `loose` in Inbox, each unsticking it |
+| `SetFolder(s name) → a{sv}` | Keeps the note in that folder, made when new; empty is Inbox. A name that cannot be a folder's is refused. From Milestone 2 |
+| `SetStuck(s window, s app) → a{sv}` | Sticks the note to that window, by its document's name and application, as `windows` gives them; an empty window unsticks it. The folder stays. From Milestone 2 |
 | `SetReminder(s when) → a{sv}` | Sets the reminder: an ISO 8601 time, `opens`, or empty to take it away. A new reminder replaces the old one and is shown once more. `opens` on a note written on no window, and anything else that is not a time, are refused. From Milestone 1 |
 | `SetChecklist(b on) → a{sv}` | Turns the text into a checklist, as Checklist on the card does, or back into plain text. From Milestone 1 |
 | `SetLineChecked(u line, b checked) → a{sv}` | Ticks or unticks the item on that line, counted from 0 as in `lines`; a line that is not an item is refused. From Milestone 1 |
@@ -197,6 +203,15 @@ words typed in an item go with `SetText` as any typing does, the text keeping
 its `- [ ] ` and `- [x] ` markers. The reminder itself is Gooseberry's to show,
 wherever the note was written. `Changed` also tells a reminder or a tick made
 elsewhere.
+
+**Added in Milestone 2, within version 1.** The keys `folder`,
+`folderLabel`, `folders`, `stuck`, `windows` and `app`, and the methods
+`SetFolder` and `SetStuck`. A caller of Milestone 1 keeps working: its Belongs
+to row now offers the window, Inbox and the folders, and each choice does what
+the row says. A search that offers them shows the card's two chips in place of
+Belongs to: Folder offers `folders` and a field for a new one, sending
+`SetFolder`; Stuck to offers `windows` and "Don't stick to a window", sending
+`SetStuck`.
 
 For All notes, Search calls `OpenBoard` with a token of its own and waits for
 `BoardShown` with that token: from then the board's window, whose application

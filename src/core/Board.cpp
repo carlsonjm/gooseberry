@@ -5,6 +5,7 @@
 #include "NoteStore.h"
 
 #include <QDateTime>
+#include <QVariantMap>
 
 #include <algorithm>
 
@@ -12,9 +13,12 @@ namespace Gooseberry {
 
 namespace {
 
-const QString Loose = QStringLiteral("loose");
+const QString Inbox = QStringLiteral("inbox");
 const QString Today = QStringLiteral("today");
 const QString Tucked = QStringLiteral("tucked");
+const QString NewFolder = QStringLiteral("newfolder");
+const QString FolderPrefix = QStringLiteral("folder:");
+const QString WindowPrefix = QStringLiteral("window:");
 
 int msecsToMidnight()
 {
@@ -50,6 +54,9 @@ bool Places::contains(const QString &key, const Note &note, const QDate &today)
         }
         return note.changed.toLocalTime().date() == today || note.created.toLocalTime().date() == today;
     }
+    if (key.startsWith(WindowPrefix)) {
+        return note.stuckKey() == key;
+    }
     return note.placeKey() == key;
 }
 
@@ -64,6 +71,8 @@ Places::Places(NoteStore *store, QObject *parent)
     for (auto signal : {&NoteStore::noteAdded, &NoteStore::noteChanged, &NoteStore::noteRemoved}) {
         connect(m_store, signal, &m_rebuild, qOverload<>(&QTimer::start));
     }
+    connect(m_store, &NoteStore::foldersChanged, &m_rebuild, qOverload<>(&QTimer::start));
+    connect(m_store, &NoteStore::foldersChanged, this, &Places::foldersChanged);
     m_midnight.setSingleShot(true);
     connect(&m_midnight, &QTimer::timeout, this, [this] {
         rebuild();
@@ -84,65 +93,53 @@ void Places::rebuild()
     QList<Note> notes = m_store->notes();
     std::sort(notes.begin(), notes.end(), newerFirst);
 
-    QList<Place> places = {
-        {Loose, QStringLiteral("Loose"), QString(), 0},
-        {Today, QStringLiteral("Today"), QString(), 0},
-        {Tucked, QStringLiteral("Tucked away"), QString(), 0},
-    };
+    QList<Place> places = {{Today, QStringLiteral("Today"), QString(), 0}, {Inbox, inboxLabel(), QStringLiteral("folders"), 0}};
+    // Every folder has a row, empty ones too: a folder lasts until it is
+    // removed.
+    const QStringList folders = m_store->folders();
+    for (const QString &folder : folders) {
+        places.append({FolderPrefix + folder, folder, QStringLiteral("folders"), 0});
+    }
+    places.append({NewFolder, QStringLiteral("New folder"), QStringLiteral("folders"), 0});
     QList<Place> windows;
-    QList<Place> projects;
-    QList<Place> workspaces;
-    QStringList projectNames;
+    Place tucked{Tucked, QStringLiteral("Tucked away"), QStringLiteral("end"), 0};
 
-    auto bump = [](QList<Place> &list, const QString &key, const QString &label, const QString &section) {
-        for (auto &place : list) {
+    auto find = [&places](const QString &key) -> Place * {
+        for (auto &place : places) {
             if (place.key == key) {
-                ++place.count;
-                return;
+                return &place;
             }
         }
-        list.append({key, label, section, 1});
+        return nullptr;
     };
 
     for (const Note &note : std::as_const(notes)) {
-        if (!note.project.isEmpty() && !projectNames.contains(note.project)) {
-            projectNames.append(note.project);
-        }
-        for (int i = 0; i < 3; ++i) {
-            if (contains(places[i].key, note, today)) {
-                ++places[i].count;
-            }
+        if (contains(Today, note, today)) {
+            ++places[0].count;
         }
         if (note.tucked) {
+            ++tucked.count;
             continue;
         }
-        switch (note.belongs) {
-        case Belongs::Window:
-            if (!note.window.isEmpty()) {
-                bump(windows, note.placeKey(), note.window, QStringLiteral("windows"));
+        if (Place *place = find(note.placeKey())) {
+            ++place->count;
+        }
+        // Only windows with notes stuck to them, the most recent first, so
+        // the list stays short.
+        const QString stuck = note.stuckKey();
+        if (!stuck.isEmpty()) {
+            auto found = std::find_if(windows.begin(), windows.end(), [&stuck](const Place &p) {
+                return p.key == stuck;
+            });
+            if (found == windows.end()) {
+                windows.append({stuck, note.window, QStringLiteral("windows"), 1});
+            } else {
+                ++found->count;
             }
-            break;
-        case Belongs::Project:
-            if (!note.project.isEmpty()) {
-                bump(projects, note.placeKey(), note.project, QStringLiteral("projects"));
-            }
-            break;
-        case Belongs::Workspace:
-            bump(workspaces, note.placeKey(), note.placeLabel(), QStringLiteral("workspaces"));
-            break;
-        case Belongs::Loose:
-            break;
         }
     }
-
-    auto byName = [](const Place &a, const Place &b) {
-        return QString::localeAwareCompare(a.label, b.label) < 0;
-    };
-    std::sort(projects.begin(), projects.end(), byName);
-    std::sort(workspaces.begin(), workspaces.end(), byName);
     places += windows;
-    places += projects;
-    places += workspaces;
+    places.append(tucked);
 
     bool sameRows = places.size() == m_places.size();
     for (qsizetype i = 0; sameRows && i < places.size(); ++i) {
@@ -161,10 +158,11 @@ void Places::rebuild()
         m_places = places;
         endResetModel();
     }
-    if (projectNames != m_projects) {
-        m_projects = projectNames;
-        Q_EMIT projectsChanged();
-    }
+}
+
+QStringList Places::folders() const
+{
+    return m_store->folders();
 }
 
 int Places::rowCount(const QModelIndex &parent) const
@@ -211,6 +209,87 @@ QString Places::labelFor(const QString &key) const
     }
     const qsizetype colon = key.indexOf(QLatin1Char(':'));
     return colon < 0 ? key : key.mid(colon + 1);
+}
+
+QString Places::makeFolder(const QString &name)
+{
+    return m_store->makeFolder(name) ? QString() : m_store->lastError();
+}
+
+QString Places::renameFolder(const QString &from, const QString &to)
+{
+    return m_store->renameFolder(from, to) ? QString() : m_store->lastError();
+}
+
+QVariantMap Places::removeFolder(const QString &name)
+{
+    QStringList workspaces;
+    // The workspaces given this folder, so undo gives it back to them.
+    for (const QString &workspace : m_store->workspacesOf(name)) {
+        workspaces.append(workspace);
+    }
+    const auto moved = m_store->removeFolder(name);
+    if (!moved) {
+        m_problem = m_store->lastError();
+        return {};
+    }
+    m_problem.clear();
+    return {{QStringLiteral("name"), name}, {QStringLiteral("ids"), *moved}, {QStringLiteral("workspaces"), workspaces}};
+}
+
+bool Places::undoRemoveFolder(const QVariantMap &removed)
+{
+    const QString name = removed.value(QStringLiteral("name")).toString();
+    if (name.isEmpty() || (!m_store->hasFolder(name) && !m_store->makeFolder(name))) {
+        return false;
+    }
+    bool all = true;
+    const QStringList ids = removed.value(QStringLiteral("ids")).toStringList();
+    for (const QString &id : ids) {
+        // A note moved again since, or removed, stays where it is now.
+        const auto note = m_store->note(id);
+        if (note && note->folder.isEmpty()) {
+            all = m_store->moveNote(id, name) && all;
+        }
+    }
+    const QStringList workspaces = removed.value(QStringLiteral("workspaces")).toStringList();
+    for (const QString &workspace : workspaces) {
+        if (m_store->workspaceFolder(workspace).isEmpty()) {
+            m_store->setWorkspaceFolder(workspace, name);
+        }
+    }
+    return all;
+}
+
+bool Places::moveNote(const QString &id, const QString &placeKey)
+{
+    QString folder;
+    if (placeKey.startsWith(FolderPrefix)) {
+        folder = placeKey.mid(FolderPrefix.size());
+    } else if (placeKey != Inbox) {
+        return false;
+    }
+    if (!m_store->moveNote(id, folder)) {
+        m_problem = m_store->lastError();
+        return false;
+    }
+    m_problem.clear();
+    return true;
+}
+
+QString Places::workspaceFolder(const QString &workspace) const
+{
+    return m_store->workspaceFolder(workspace);
+}
+
+bool Places::setWorkspaceFolder(const QString &workspace, const QString &folder)
+{
+    if (!m_store->setWorkspaceFolder(workspace, folder)) {
+        m_problem = m_store->lastError();
+        return false;
+    }
+    m_problem.clear();
+    return true;
 }
 
 int Places::countFor(const QString &key) const
@@ -277,7 +356,8 @@ QStringList PlaceNotes::wanted() const
             continue;
         }
         if (!needle.isEmpty() && !note.text.contains(needle, Qt::CaseInsensitive)
-            && !note.placeLabel().contains(needle, Qt::CaseInsensitive)) {
+            && !note.placeLabel().contains(needle, Qt::CaseInsensitive)
+            && !(note.isStuck() && note.window.contains(needle, Qt::CaseInsensitive))) {
             continue;
         }
         notes.append(note);
@@ -361,8 +441,8 @@ QVariant PlaceNotes::data(const QModelIndex &index, int role) const
         return note->placeKey();
     case PlaceLabelRole:
         return note->placeLabel();
-    case BelongsRole:
-        return belongsName(note->belongs);
+    case StuckToRole:
+        return note->isStuck() ? note->window : QString();
     case TuckedRole:
         return note->tucked;
     case ChangedRole:
@@ -396,7 +476,7 @@ QHash<int, QByteArray> PlaceNotes::roleNames() const
         {ColourHexRole, "colourHex"},
         {PlaceKeyRole, "placeKey"},
         {PlaceLabelRole, "placeLabel"},
-        {BelongsRole, "belongs"},
+        {StuckToRole, "stuckTo"},
         {TuckedRole, "tucked"},
         {ChangedRole, "changed"},
         {ReadOnlyRole, "readOnly"},
@@ -413,6 +493,62 @@ bool PlaceNotes::tuckAway(const QString &id)
         return false;
     }
     note->tucked = true;
+    return m_store->save(*note);
+}
+
+QString PlaceNotes::remove(const QString &id)
+{
+    return m_store->trash(id).value_or(QString());
+}
+
+bool PlaceNotes::restore(const QString &id, const QString &pathInTrash)
+{
+    return !pathInTrash.isEmpty() && m_store->restore(id, pathInTrash);
+}
+
+bool PlaceNotes::planOn(const QString &id, const QDate &day)
+{
+    auto note = m_store->note(id);
+    if (!note || !day.isValid()) {
+        return false;
+    }
+    QTime time = note->remind.isValid() ? note->remind.toLocalTime().time() : QTime(9, 0);
+    QDateTime when(day, time);
+    const QDateTime now = QDateTime::currentDateTime();
+    if (when <= now) {
+        // A time already gone today would be due at once: the next hour.
+        when = QDateTime(now.date(), QTime(now.time().hour(), 0)).addSecs(3600);
+        if (when.date() != day) {
+            return false;
+        }
+    }
+    return setRemind(id, when);
+}
+
+QDateTime PlaceNotes::remindOf(const QString &id) const
+{
+    const auto note = m_store->note(id);
+    return note ? note->remind : QDateTime();
+}
+
+bool PlaceNotes::setRemind(const QString &id, const QDateTime &remind)
+{
+    auto note = m_store->note(id);
+    if (!note) {
+        return false;
+    }
+    QDateTime when = remind;
+    if (when.isValid()) {
+        when.setTime(QTime(when.time().hour(), when.time().minute(), when.time().second()));
+    }
+    if (when == note->remind && !note->remindOnOpen) {
+        return true;
+    }
+    // A new reminder is shown once more, as when it is set on the card.
+    note->remind = when;
+    note->remindOnOpen = false;
+    note->reminded = {};
+    note->done = {};
     return m_store->save(*note);
 }
 
