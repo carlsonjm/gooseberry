@@ -26,7 +26,7 @@ constexpr Colour Colours[] = {
 const QStringList KnownKeys = {
     QStringLiteral("gooseberry"), QStringLiteral("created"), QStringLiteral("changed"),
     QStringLiteral("colour"), QStringLiteral("stuck"), QStringLiteral("window"),
-    QStringLiteral("app"), QStringLiteral("workspace"),
+    QStringLiteral("app"), QStringLiteral("workspace"), QStringLiteral("place"),
     QStringLiteral("tucked"), QStringLiteral("remind"), QStringLiteral("reminded"), QStringLiteral("done"),
 };
 
@@ -143,6 +143,9 @@ QByteArray Note::serialize() const
     if (!workspace.isEmpty()) {
         out += QStringLiteral("workspace: %1\n").arg(quotedText(workspace));
     }
+    if (hasPlace()) {
+        out += QStringLiteral("place: %1 %2\n").arg(place.x(), 0, 'f', 3).arg(place.y(), 0, 'f', 3);
+    }
     out += QStringLiteral("tucked: %1\n").arg(tucked ? QStringLiteral("true") : QStringLiteral("false"));
     if (remind.isValid()) {
         out += QStringLiteral("remind: %1\n").arg(timeText(remind));
@@ -235,6 +238,19 @@ Note Note::parse(const QByteArray &bytes, const QString &id, const QDateTime &fa
             note.app = value;
         } else if (key == QLatin1String("workspace")) {
             note.workspace = value;
+        } else if (key == QLatin1String("place")) {
+            // Two fractions from 0 to 1; anything else is kept as written
+            // and the note is placed as one never placed.
+            const QStringList parts = value.split(QLatin1Char(' '), Qt::SkipEmptyParts);
+            bool okX = false;
+            bool okY = false;
+            const double x = parts.size() == 2 ? parts.at(0).toDouble(&okX) : -1;
+            const double y = parts.size() == 2 ? parts.at(1).toDouble(&okY) : -1;
+            if (okX && okY && x >= 0 && x <= 1 && y >= 0 && y <= 1) {
+                note.place = QPointF(x, y);
+            } else {
+                note.extra.append({key, raw});
+            }
         } else if (key == QLatin1String("tucked")) {
             note.tucked = value == QLatin1String("true");
         } else if (key == QLatin1String("remind")) {

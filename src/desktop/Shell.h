@@ -19,6 +19,7 @@ class Places;
 class Planner;
 class Reminders;
 class SpreadGuest;
+class StuckNotes;
 class WindowContext;
 
 // The desktop around the core: the quick-note card centred over the work,
@@ -33,6 +34,7 @@ class Shell : public QObject
     Q_PROPERTY(QObject *store READ storeObject CONSTANT)
     Q_PROPERTY(QObject *guest READ guestObject CONSTANT)
     Q_PROPERTY(QObject *planner READ plannerObject CONSTANT)
+    Q_PROPERTY(QObject *stuck READ stuckObject CONSTANT)
     // The card waits for the board's window to take its place.
     Q_PROPERTY(bool handingOff READ handingOff NOTIFY handingOffChanged)
 
@@ -46,6 +48,7 @@ public:
     NoteStore *store() const { return m_store; }
     SpreadGuest *guest() const { return m_guest; }
     Planner *planner() const { return m_planner; }
+    StuckNotes *stuck() const { return m_stuck; }
     Reminders *reminders() const { return m_reminders; }
     bool handingOff() const { return m_handingOff; }
 
@@ -98,6 +101,7 @@ private:
     QObject *storeObject() const;
     QObject *guestObject() const;
     QObject *plannerObject() const;
+    QObject *stuckObject() const;
     QString boardId() const;
     void setHandingOff(bool handingOff);
     void finishHandOff();
@@ -119,6 +123,7 @@ private:
     Planner *m_planner;
     Reminders *m_reminders;
     Notifier *m_notifier;
+    StuckNotes *m_stuck;
     bool m_handingOff = false;
     QString m_handOffToken;
     QTimer m_handOffTimeout;

@@ -9,6 +9,7 @@
 #include "ReminderWords.h"
 #include "Reminders.h"
 #include "SpreadGuest.h"
+#include "StuckNotes.h"
 #include "WindowContext.h"
 #include "Log.h"
 
@@ -48,7 +49,24 @@ Shell::Shell(NoteStore *store, QQmlEngine *engine, QObject *parent)
     , m_planner(new Planner(store, this))
     , m_reminders(new Reminders(store, this))
     , m_notifier(new Notifier(store, m_reminders, this))
+    , m_stuck(new StuckNotes(store, m_context, [this] {
+        return create(QStringLiteral("StuckWindow"));
+    }, this))
 {
+    // A note tapped over its window opens on the card; the notes step aside
+    // while it is open and come back when it closes.
+    connect(m_stuck, &StuckNotes::openRequested, this, [this](const QString &id) {
+        if (m_capture->open(id)) {
+            m_stuck->setCardOpen(true);
+            raiseCard();
+        }
+    });
+    // The title bar's + starts a note stuck to its window, on the card.
+    connect(m_stuck, &StuckNotes::newRequested, this, [this](const QString &window, const QString &app) {
+        m_capture->startNew({window, app, m_context->current().workspace});
+        m_stuck->setCardOpen(true);
+        raiseCard();
+    });
     // A reminder tapped opens its note on the card.
     connect(m_notifier, &Notifier::openRequested, this, &Shell::openNote);
     connect(m_context, &WindowContext::documentOpened, m_reminders, &Reminders::documentOpened);
@@ -137,6 +155,11 @@ QObject *Shell::guestObject() const
 QObject *Shell::plannerObject() const
 {
     return m_planner;
+}
+
+QObject *Shell::stuckObject() const
+{
+    return m_stuck;
 }
 
 void Shell::sleeping(bool goingToSleep)
@@ -287,6 +310,13 @@ QQuickWindow *Shell::captureWindow()
     if (!m_captureWindow) {
         return nullptr;
     }
+    // Notes shown over a window come back once the card is gone, however it
+    // went.
+    connect(m_captureWindow, &QWindow::visibleChanged, this, [this](bool visible) {
+        if (!visible) {
+            m_stuck->setCardOpen(false);
+        }
+    });
     if (QGuiApplication::platformName().startsWith(QLatin1String("wayland"))) {
         // A surface of the desktop's own, across the whole display, with the
         // note's card centred on it; a tap on the work around the

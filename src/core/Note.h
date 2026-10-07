@@ -5,6 +5,7 @@
 #include <QDateTime>
 #include <QList>
 #include <QPair>
+#include <QPointF>
 #include <QString>
 
 namespace Gooseberry {
@@ -30,6 +31,11 @@ struct Note {
     QString window; // The document or window the note was written on or stuck to.
     QString app; // That window's application id.
     QString workspace;
+    // Where the note sits on its window when the window's notes are shown:
+    // its top-left corner as fractions of the window's width and height, so
+    // it keeps its place in proportion when the window is resized. Negative
+    // when it has never been placed.
+    QPointF place{-1, -1};
     QDateTime created;
     QDateTime changed;
     bool tucked = false;
@@ -70,6 +76,7 @@ struct Note {
     // when it is stuck to none.
     QString stuckKey() const;
     bool isStuck() const { return stuck && !window.isEmpty(); }
+    bool hasPlace() const { return place.x() >= 0 && place.y() >= 0; }
     // Where the note is, in a few words: the window it is stuck to, or its
     // folder.
     QString whereLabel() const;

@@ -156,6 +156,43 @@ private Q_SLOTS:
         QCOMPARE(version.value(), 1u);
     }
 
+    // From Milestone 3: which windows have stuck notes. With no desktop to
+    // report windows, none is told, and nothing is shown or stuck.
+    void stuckNotesWithoutWindows()
+    {
+        QDBusInterface stuck(Service, QStringLiteral("/StuckNotes"), QStringLiteral("io.github.carlsonjm.Gooseberry.StuckNotes"));
+        QVERIFY2(stuck.isValid(), qPrintable(stuck.lastError().message()));
+        const QDBusReply<uint> version = stuck.call(QStringLiteral("ProtocolVersion"));
+        QVERIFY(version.isValid());
+        QCOMPARE(version.value(), 1u);
+        const QDBusMessage windows = stuck.call(QStringLiteral("Windows"));
+        QCOMPARE(windows.type(), QDBusMessage::ReplyMessage);
+        QCOMPARE(windows.signature(), QStringLiteral("av"));
+        QVERIFY(asList(windows.arguments().value(0)).isEmpty());
+        const QDBusReply<bool> toggled = stuck.call(QStringLiteral("Toggle"), QString(), QStringLiteral("plan.md — Kate"),
+                                                    QStringLiteral("org.kde.kate"));
+        QVERIFY(toggled.isValid());
+        QVERIFY(!toggled.value());
+        const QDBusReply<bool> stuckTo = stuck.call(QStringLiteral("StickTo"), QStringLiteral("no-such-note"), QString(),
+                                                    QStringLiteral("plan.md — Kate"), QStringLiteral("org.kde.kate"));
+        QVERIFY(stuckTo.isValid());
+        QVERIFY(!stuckTo.value());
+        const QDBusReply<bool> shown = stuck.call(QStringLiteral("Show"), QString(), QStringLiteral("plan.md — Kate"),
+                                                  QStringLiteral("org.kde.kate"));
+        QVERIFY(shown.isValid());
+        QVERIFY(!shown.value());
+        const QDBusReply<bool> started = stuck.call(QStringLiteral("NewOn"), QString(), QStringLiteral("plan.md — Kate"),
+                                                    QStringLiteral("org.kde.kate"));
+        QVERIFY(started.isValid());
+        QVERIFY(!started.value());
+        for (const bool paused : {true, false}) {
+            const QDBusMessage pause = stuck.call(QStringLiteral("Pause"), paused);
+            QCOMPARE(pause.type(), QDBusMessage::ReplyMessage);
+        }
+        const QDBusMessage hidden = stuck.call(QStringLiteral("Hide"));
+        QCOMPARE(hidden.type(), QDBusMessage::ReplyMessage);
+    }
+
     // Start gives an empty note with everything a pad needs to draw it, and
     // nothing is kept until it has text.
     void startOffersAnEmptyNote()

@@ -34,7 +34,12 @@ WindowContext::WindowContext(const QString &ownAppId, QObject *parent)
                 if (roles.isEmpty() || roles.contains(Qt::DisplayRole) || roles.contains(AbstractTasksModel::AppId)) {
                     noticeDocuments();
                 }
+                Q_EMIT windowsChanged();
             });
+    for (auto signal : {&QAbstractItemModel::rowsInserted, &QAbstractItemModel::rowsRemoved}) {
+        connect(m_windows.get(), signal, this, &WindowContext::windowsChanged);
+    }
+    connect(m_windows.get(), &QAbstractItemModel::modelReset, this, &WindowContext::windowsChanged);
     connect(m_windows.get(), &QAbstractItemModel::rowsInserted, this, &WindowContext::activeChanged);
     connect(m_windows.get(), &QAbstractItemModel::modelReset, this, &WindowContext::activeChanged);
     connect(m_windows.get(), &QAbstractItemModel::rowsRemoved, this, &WindowContext::forgetClosed);
@@ -173,6 +178,38 @@ QVariantList WindowContext::openWindows() const
         } else {
             list.append(entry);
         }
+    }
+    return list;
+}
+
+QList<OpenWindow> WindowContext::windows() const
+{
+    QList<OpenWindow> list;
+    if (!m_windows) {
+        return list;
+    }
+    for (int row = 0; row < m_windows->rowCount(); ++row) {
+        const QModelIndex index = m_windows->index(row, 0);
+        OpenWindow window;
+        window.app = index.data(AbstractTasksModel::AppId).toString();
+        if (window.app.endsWith(QLatin1String(".desktop"))) {
+            window.app.chop(8);
+        }
+        window.caption = index.data(Qt::DisplayRole).toString();
+        if (window.app == m_ownAppId || window.caption.isEmpty()) {
+            continue;
+        }
+        window.window = documentName(window.caption, index.data(AbstractTasksModel::AppName).toString());
+        // On Wayland the compositor's id for the window; on X11 its number.
+        for (const QVariant &id : index.data(AbstractTasksModel::WinIdList).toList()) {
+            const QString text = id.toString();
+            if (!text.isEmpty()) {
+                window.ids.append(text);
+            }
+        }
+        window.geometry = index.data(AbstractTasksModel::Geometry).toRect();
+        window.active = index.data(AbstractTasksModel::IsActive).toBool();
+        list.append(window);
     }
     return list;
 }

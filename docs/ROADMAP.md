@@ -65,6 +65,11 @@ notes sorted without opening a menu.
 
 Needs Kadunce (`DESKTOP.md` § Needs).
 
+**Status:** being built, 7 October: Gooseberry tells the desktop which windows
+have notes (`DESKTOP.md` § Stuck notes on the bus) and shows them over the
+window; Shuffle's title bar draws the dot and Kadunce's Spread the stacks.
+The checks by hand are in `TESTING.md`.
+
 - A dot in the window's title bar; a tap shows its notes where they were
   placed.
 - In Spread, each card's notes as a stack on its corner; a tap fans them.
