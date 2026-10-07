@@ -1,12 +1,13 @@
 # Note format
 
-How Gooseberry keeps notes on disk: where the folder is, what is in it, and the
-header at the top of each note. This is a contract. Another device reading the
+How Gooseberry keeps notes on disk: where the folder is, what is in it, its
+folders, and the header at the top of each note. This is a contract. Another device reading the
 same folder, the file index, Search and any other program depend on it, so it
 is versioned, and a change that breaks it raises the version.
 
-**Folder format:** 1. **Note format:** 1. Both from Milestone 0; the note
-format gained keys a reader can ignore in Milestone 1.
+**Folder format:** 2. **Note format:** 2. Both from Milestone 2, when notes
+went into folders; the first of each is read and brought up to date
+(§ Versions).
 
 ## Where the folder is
 
@@ -35,29 +36,57 @@ folder. It is for tests and trials.
 
 | Name | What it is |
 | --- | --- |
-| `.gooseberry` | The folder format, as the line `format: 1` |
-| `<id>.md` | One note: the header, then the note's text |
-| `<id>.svg` | The note's ink, when it has any, as a drawing; from Milestone 2 |
+| `.gooseberry` | The folder format, as the line `format: 2` |
+| `.workspaces` | Which folder each workspace's new notes go into, when one has been given a folder |
+| `<id>.md` | One note in Inbox: the header, then the note's text |
+| `<id>.svg` | The note's ink, when it has any, as a drawing, beside its note; from the pen milestone |
+| `<folder>/` | One folder, by its name, holding its notes and their ink as above |
 
 - **The id** is the moment the note was started, in local time, and four
   letters to tell apart notes started in the same second:
   `2026-10-04-144112-k3fm`. The letters are from
   `abcdefghjkmnpqrstuvwxyz23456789`. A note's file is never renamed; its title
   is its first words, read from the text.
-- **Anything else is left alone:** other files, subfolders and the files a sync
-  tool keeps.
-- **A Markdown file with no header** put in the folder by another program is a
-  Loose note. Gooseberry adds a header the first time it changes the note.
+- **Anything else is left alone:** other files, hidden folders such as a sync
+  tool's, and anything deeper than one folder down.
+- **A Markdown file with no header** put in the folder, or in one of its
+  folders, by another program is a note kept there, stuck to nothing.
+  Gooseberry adds a header the first time it changes the note.
+
+## Folders
+
+Every note is kept in exactly one folder. **Inbox** is the notes folder itself;
+every other folder is a visible folder inside it, one level deep, named as the
+person named it. A file manager or a sync tool sees the same folders the board
+does, and a folder made, renamed or removed there is seen within moments.
+
+- **The folder is where the file is.** No header key says it, so moving a note
+  is moving its file, in one step, with its ink beside it. The note's `changed`
+  time is then set, since its place changed.
+- **A folder lasts until it is removed,** empty or not. Removing it moves its
+  notes and their ink to Inbox first; whatever else is left in it, such as a
+  sync tool's own files, goes to the desktop's trash with the folder. Nothing
+  is deleted outright.
+- **A name** is any text without a slash, not starting with a dot, and not
+  Inbox, in any case. Spaces at its ends and runs of spaces inside are taken
+  away.
+- **The same note in two folders,** as a copy made by hand, is read once: from
+  Inbox first, then the folders in alphabetical order.
+- **`.workspaces`** has a line for each workspace given a folder, the
+  workspace's name and the folder's in double quotes as a header writes text:
+  `"Desk": "Shuffle launch"`. A workspace with no line, or whose folder is
+  gone, puts new notes in Inbox. Renaming a folder renames it here;
+  removing it takes its lines away.
 
 ## A note
 
 ```markdown
 ---
-gooseberry: 1
+gooseberry: 2
 created: 2026-10-04T14:41:12-05:00
 changed: 2026-10-04T14:43:05-05:00
 colour: butter
-belongs: window
+stuck: true
 window: "SpreadGesture.qml"
 app: "org.kde.kate"
 workspace: "Desk"
@@ -75,25 +104,24 @@ Times are ISO 8601 with their offset from UTC, to the second.
 
 | Key | Required | Value |
 | --- | --- | --- |
-| `gooseberry` | yes | The note format: `1` |
+| `gooseberry` | yes | The note format: `2` |
 | `created` | yes | When the note was started |
-| `changed` | yes | When its text, colour, place or tucked state last changed |
+| `changed` | yes | When its text, colour, folder, window or tucked state last changed |
 | `colour` | yes | `butter`, `rhyolite`, `lake`, `lichen` or `stone` |
-| `belongs` | yes | `window`, `project`, `workspace` or `loose` |
-| `window` | no | The document or window the note was written on |
+| `stuck` | no | `true` when the note is stuck to its `window`; left out otherwise |
+| `window` | no | The document or window the note was written on, or was stuck to last |
 | `app` | no | That window's application, by its desktop file name |
-| `project` | no | The project's name |
 | `workspace` | no | The workspace the note was written on |
 | `tucked` | yes | `true` when tucked away, otherwise `false` |
 | `remind` | no | The reminder: a time, which also puts the note on the planner on that day, or `opens` for the next time a window opens on the note's `window` in its `app` |
 | `reminded` | no | When the reminder was shown |
 | `done` | no | When the note was marked done on the planner |
 
-- **Belongs** says which place on the board the note sits in. `window`,
-  `project` and `workspace` name theirs in the key of the same name; a note
-  that belongs to a window or project with no name there is Loose. `window`,
-  `app` and `workspace` record where the note was written and are kept when it
-  moves to another place, so a note can later find its way back.
+- **Stuck** is apart from the folder: a stuck note is still kept in its
+  folder, moving it to another folder leaves it stuck, and unsticking it leaves
+  it where it is. `window` and `app` stay when it is unstuck, so "next time
+  this opens" still has a window to wait for. A note stuck to a window with no
+  name is not stuck.
 - **Colour** is the person's own sorting and means nothing to Gooseberry. A
   colour this version does not know is shown as butter and kept as written.
 - **The text** follows the closing `---` exactly as it was written: UTF-8, with
@@ -142,3 +170,15 @@ Times are ISO 8601 with their offset from UTC, to the second.
 | --- | --- | --- |
 | 1 | Milestone 0 | The first format |
 | 1 | Milestone 1 | `remind`, `reminded` and `done` added, and checklists written down; a reader of the first format ignores them, so the version stays |
+| 2 | Milestone 2 | Folders, one level down, with Inbox the notes folder itself, and `.workspaces`. In a note, `stuck` replaces the required `belongs`, and `project` goes, since the folder is the project |
+
+**Bringing the first version up to date.** A folder whose `.gooseberry` says
+`format: 1` is brought up to date when Gooseberry opens it. Each note that
+belonged to a project moves, with its ink, into a folder of the project's name
+(a slash in it becomes a hyphen; a name that cannot be a folder's leaves the
+note in Inbox), keeping its `changed` time. A note that belonged to a window is
+read as stuck to it; one that belonged to the workspace or was Loose is in
+Inbox. Then `.gooseberry` says `format: 2`. Each note's header is written in
+the second format the next time the note changes; until then a note of the
+first format is read as above wherever it is found. A first-version Gooseberry
+then finds a newer folder and changes nothing in it, as § Versions says.
