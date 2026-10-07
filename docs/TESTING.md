@@ -4,7 +4,9 @@ What the automated checks prove, and what only a person on the tablet can.
 
 ## Automated
 
-`./verify.sh` runs them all: the public text check, the build, then every test.
+`./verify.sh` runs them all: the public text check, the check that every word
+shown asks the `gooseberry` catalog (`tools/messages.py`), the build, then
+every test.
 Each test makes a home of its own in a temporary folder, with its own notes
 folder, settings and trash, and no connection to the desktop session
 (`tests/TestHome.h`). No test reads or changes a person's notes, settings or

@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
     // reads it from here.
     Gooseberry::setInsideShuffle(Gooseberry::shuffleInstalled());
     KAboutData about(QStringLiteral("gooseberry"), Gooseberry::productName(), QStringLiteral(GOOSEBERRY_VERSION),
-                     QStringLiteral("Notes, stickies and a planner"), KAboutLicense::GPL_V2);
+                     i18n("Notes, stickies and a planner"), KAboutLicense::GPL_V2);
     about.setOrganizationDomain("carlsonjm.github.io");
     about.setDesktopFileName(QStringLiteral(GOOSEBERRY_APP_ID));
     KAboutData::setApplicationData(about);

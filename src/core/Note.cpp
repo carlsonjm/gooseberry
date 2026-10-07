@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "Note.h"
 
+#include <KLocalizedString>
 #include <QRegularExpression>
 #include <QStringList>
 
@@ -74,7 +75,7 @@ QString timeText(const QDateTime &time)
 
 QString inboxLabel()
 {
-    return QStringLiteral("Inbox");
+    return i18nc("@title the folder that holds loose notes", "Inbox");
 }
 
 QString headerQuoted(const QString &value)
