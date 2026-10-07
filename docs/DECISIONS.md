@@ -39,8 +39,9 @@ question is where the thought is lost.
 A note stuck to a window shows as a folded paper tab peeking out from behind
 the window's bottom-right edge, in the gap around the card, with a count when
 there are several. It stays clear of the window's buttons, title and scroll
-bar. A tap slides the notes up over that corner; a tap on the work folds them
-back. In Spread, each card's notes sit as a small stack at its bottom-right
+bar. A tap brings the notes up over the window, each where Robin last placed
+it on that window, kept in proportion when the window is resized; a tap on the
+work folds them back. In Spread, each card's notes sit as a small stack at its bottom-right
 corner, the same size on every card, and a tap fans them out over
 that card. The corner never moves or resizes the window and never needs
 closing. (The maintainer, 7 October.) This replaces the 3 October ruling that a
