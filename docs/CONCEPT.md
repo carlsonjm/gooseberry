@@ -30,8 +30,8 @@ Four places, one set of notes.
    writes. By default the note is stuck to whatever Robin is working on, and
    kept in the workspace's folder; one tap changes either. All notes grows the
    card into the board. Going back to the work puts the card away.
-2. **Notes on the work.** A note stuck to a window waits on its corner as a
-   folded sticky, with a count when there are several. A tap opens them; a tap
+2. **Notes on the work.** A note stuck to a window peeks out from behind its
+   bottom-right edge as a folded sticky, with a count when there are several. A tap opens them; a tap
    on the work folds them back.
 3. **The board.** Every note in one place: Today, Inbox and each folder, the
    windows that have notes, and Tucked away. A held note drops on a folder.

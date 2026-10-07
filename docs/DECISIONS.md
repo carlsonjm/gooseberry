@@ -36,15 +36,18 @@ question is where the thought is lost.
 
 ## A note can be stuck to a window, as a folded corner
 
-A note stuck to a window shows on it as a folded paper corner, with a count
-when there are several. A tap unfolds the notes over that corner; a tap on the
-work folds them back. In Spread, each card's notes sit as a small stack on its
-top-right corner, the same size on every card, and a tap fans them out over
+A note stuck to a window shows as a folded paper tab peeking out from behind
+the window's bottom-right edge, in the gap around the card, with a count when
+there are several. It stays clear of the window's buttons, title and scroll
+bar. A tap slides the notes up over that corner; a tap on the work folds them
+back. In Spread, each card's notes sit as a small stack at its bottom-right
+corner, the same size on every card, and a tap fans them out over
 that card. The corner never moves or resizes the window and never needs
 closing. (The maintainer, 7 October.) This replaces the 3 October ruling that a
 card's notes wait behind it in its Stack.
 
-Rejected: notes always open on the window, which cover part of the work and
+Rejected: the top-right corner, where the tab covers the window's buttons;
+notes always open on the window, which cover part of the work and
 need moving by hand; and notes only behind the card in its Stack, which hides
 that a window has notes at all.
 
