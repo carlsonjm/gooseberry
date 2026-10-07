@@ -269,13 +269,6 @@ void StuckNotes::setCardOpen(bool open)
     }
 }
 
-void StuckNotes::putAway()
-{
-    if (const OpenWindow *window = drawnWindow()) {
-        setShown(OpenWindow(*window), false);
-    }
-}
-
 void StuckNotes::setPressable(const QVariantList &rects)
 {
     if (!m_surface) {
@@ -285,9 +278,22 @@ void StuckNotes::setPressable(const QVariantList &rects)
     for (const QVariant &rect : rects) {
         region += rect.toRectF().toAlignedRect();
     }
-    // An empty mask would take every press; one pixel off the notes takes none
-    // that matter.
+    // An empty mask would take every press; one pixel in the corner takes
+    // none that matter.
     m_surface->setMask(region.isEmpty() ? QRegion(0, 0, 1, 1) : region);
+}
+
+bool StuckNotes::NewOn(const QString &windowId, const QString &caption, const QString &app)
+{
+    m_windows = m_context->windows();
+    const qsizetype at = StuckWindows::find(m_windows, windowId, caption, app);
+    if (at < 0 || m_windows.at(at).window.isEmpty() || m_store->readOnly()) {
+        qCDebug(DESKTOP) << "no window to start a note on for" << windowId << caption << app;
+        return false;
+    }
+    const OpenWindow &window = m_windows.at(at);
+    Q_EMIT newRequested(window.window, window.app);
+    return true;
 }
 
 bool StuckNotes::StickTo(const QString &noteId, const QString &windowId, const QString &caption, const QString &app)

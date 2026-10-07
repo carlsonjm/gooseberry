@@ -257,6 +257,7 @@ tucked away, a dictionary of strings to variants:
 | `Show(s windowId, s caption, s app) → b` | Brings that window's notes up, found as `Toggle` finds it; nothing changes when they are up already. Returns false when no window with notes matches |
 | `Hide()` | Puts away every window's notes |
 | `Pause(b paused)` | While paused, notes that are up step aside without being put away, and come back when the pause ends. Spread pauses while it is open, so its own stacks are the only notes on screen |
+| `NewOn(s windowId, s caption, s app) → b` | Opens the quick-note card on a new note stuck to that window, found as `Toggle` finds it; it is kept from its first letter, as any quick note. Returns false when no open window matches or notes cannot be written. A title bar calls it from its + button |
 | `StickTo(s noteId, s windowId, s caption, s app) → b` | Sticks the note to that window, found as `Toggle` finds it, keeping its folder. Returns false when the note or the window is not found, or the note cannot be changed |
 
 | Signal | When |
@@ -276,9 +277,10 @@ notes, following it as it moves or is resized; the window itself is never
 moved or resized. Each note stands where it was last let go there, written as
 the note's `place` (`FORMAT.md`); one never placed starts at the top-right,
 the newest on top. Notes brought up stay up until Robin puts them away: with the
-"Put away" button above them, the dot again, or the window's stack in Spread.
-Nothing else puts them away. The surface takes presses only on the notes and
-that button, so a tap anywhere else on the window reaches the window. While the
+dot again, or the window's stack in Spread. Nothing else puts them away. The
+surface takes presses only on the notes, so a tap anywhere else on the window
+reaches the window. While a window's notes are up, its title bar shows a + to
+the left of the dot, which starts a new note stuck to it (`NewOn`). While the
 window is behind another, while Spread is open and while a note is open on the
 quick-note card, the notes step aside, and they come back with it. A tap on a
 note opens it on the card.

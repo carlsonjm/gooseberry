@@ -24,7 +24,7 @@ class WindowContext;
 // it, and Spread its stacks. A tap on the dot brings the window's notes up
 // over it, each where it was last placed, on a surface of Gooseberry's own
 // that follows the window; nothing moves or resizes the window itself. Notes
-// brought up stay up until Robin puts them away; they step aside while their
+// brought up stay up until Robin taps the dot or the stack again; they step aside while their
 // window is not in front, or while Spread covers the windows, and come back
 // with it.
 class StuckNotes : public QObject, protected QDBusContext
@@ -52,11 +52,9 @@ public:
 
     // A note let go on the surface, at these fractions of the window.
     Q_INVOKABLE void place(const QString &noteId, qreal x, qreal y);
-    // Where the surface takes presses, in its own coordinates: the notes and
-    // the button that puts them away. Everywhere else reaches the window.
+    // Where the surface takes presses, in its own coordinates: the notes.
+    // Everywhere else reaches the window.
     Q_INVOKABLE void setPressable(const QVariantList &rects);
-    // Puts away the notes of the window they are drawn over.
-    Q_INVOKABLE void putAway();
     // While the quick-note card is open the notes step aside, as in Spread,
     // and come back when it closes.
     void setCardOpen(bool open);
@@ -71,6 +69,8 @@ public Q_SLOTS:
     // While paused, as while Spread covers the windows, the surface steps
     // aside; nothing is put away.
     Q_SCRIPTABLE void Pause(bool paused);
+    // A new note on the quick-note card, stuck to that window.
+    Q_SCRIPTABLE bool NewOn(const QString &windowId, const QString &caption, const QString &app);
     Q_SCRIPTABLE bool StickTo(const QString &noteId, const QString &windowId, const QString &caption, const QString &app);
 
 Q_SIGNALS:
@@ -78,6 +78,8 @@ Q_SIGNALS:
     void shownChanged();
     // A note on the surface was tapped: it opens on the quick-note card.
     void openRequested(const QString &noteId);
+    // The title bar's + was tapped: a new note stuck to this window.
+    void newRequested(const QString &window, const QString &app);
 
 private:
     void refresh();

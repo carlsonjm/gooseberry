@@ -61,6 +61,12 @@ Shell::Shell(NoteStore *store, QQmlEngine *engine, QObject *parent)
             raiseCard();
         }
     });
+    // The title bar's + starts a note stuck to its window, on the card.
+    connect(m_stuck, &StuckNotes::newRequested, this, [this](const QString &window, const QString &app) {
+        m_capture->startNew({window, app, m_context->current().workspace});
+        m_stuck->setCardOpen(true);
+        raiseCard();
+    });
     // A reminder tapped opens its note on the card.
     connect(m_notifier, &Notifier::openRequested, this, &Shell::openNote);
     connect(m_context, &WindowContext::documentOpened, m_reminders, &Reminders::documentOpened);
