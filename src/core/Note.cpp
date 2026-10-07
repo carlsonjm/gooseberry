@@ -24,14 +24,17 @@ constexpr Colour Colours[] = {
 
 const QStringList KnownKeys = {
     QStringLiteral("gooseberry"), QStringLiteral("created"), QStringLiteral("changed"),
-    QStringLiteral("colour"), QStringLiteral("belongs"), QStringLiteral("window"),
-    QStringLiteral("app"), QStringLiteral("project"), QStringLiteral("workspace"),
+    QStringLiteral("colour"), QStringLiteral("stuck"), QStringLiteral("window"),
+    QStringLiteral("app"), QStringLiteral("workspace"),
     QStringLiteral("tucked"), QStringLiteral("remind"), QStringLiteral("reminded"), QStringLiteral("done"),
 };
 
 const QString OnOpen = QStringLiteral("opens");
+// Keys of the first format that the second replaced: read, never written.
+const QString Belongs = QStringLiteral("belongs");
+const QString Project = QStringLiteral("project");
 
-QString quoted(const QString &value)
+QString quotedText(const QString &value)
 {
     QString flat = value;
     flat.replace(QLatin1Char('\r'), QLatin1Char(' ')).replace(QLatin1Char('\n'), QLatin1Char(' '));
@@ -39,7 +42,7 @@ QString quoted(const QString &value)
     return QLatin1Char('"') + flat + QLatin1Char('"');
 }
 
-QString unquoted(const QString &raw)
+QString unquotedText(const QString &raw)
 {
     const QString value = raw.trimmed();
     if (value.size() >= 2 && value.startsWith(QLatin1Char('\'')) && value.endsWith(QLatin1Char('\''))) {
@@ -69,33 +72,19 @@ QString timeText(const QDateTime &time)
 
 } // namespace
 
-QString belongsName(Belongs belongs)
+QString inboxLabel()
 {
-    switch (belongs) {
-    case Belongs::Window:
-        return QStringLiteral("window");
-    case Belongs::Project:
-        return QStringLiteral("project");
-    case Belongs::Workspace:
-        return QStringLiteral("workspace");
-    case Belongs::Loose:
-        break;
-    }
-    return QStringLiteral("loose");
+    return QStringLiteral("Inbox");
 }
 
-Belongs belongsFromName(const QString &name)
+QString headerQuoted(const QString &value)
 {
-    if (name == QLatin1String("window")) {
-        return Belongs::Window;
-    }
-    if (name == QLatin1String("project")) {
-        return Belongs::Project;
-    }
-    if (name == QLatin1String("workspace")) {
-        return Belongs::Workspace;
-    }
-    return Belongs::Loose;
+    return quotedText(value);
+}
+
+QString headerUnquoted(const QString &raw)
+{
+    return unquotedText(raw);
 }
 
 QString Note::title() const
@@ -115,38 +104,22 @@ QString Note::title() const
 
 QString Note::placeLabel() const
 {
-    switch (belongs) {
-    case Belongs::Window:
-        return window.isEmpty() ? QStringLiteral("Loose") : window;
-    case Belongs::Project:
-        return project.isEmpty() ? QStringLiteral("Loose") : project;
-    case Belongs::Workspace:
-        return workspace.isEmpty() ? QStringLiteral("Workspace") : workspace;
-    case Belongs::Loose:
-        break;
-    }
-    return QStringLiteral("Loose");
+    return folder.isEmpty() ? inboxLabel() : folder;
 }
 
 QString Note::placeKey() const
 {
-    switch (belongs) {
-    case Belongs::Window:
-        if (!window.isEmpty()) {
-            return QStringLiteral("window:") + window;
-        }
-        break;
-    case Belongs::Project:
-        if (!project.isEmpty()) {
-            return QStringLiteral("project:") + project;
-        }
-        break;
-    case Belongs::Workspace:
-        return QStringLiteral("workspace:") + workspace;
-    case Belongs::Loose:
-        break;
-    }
-    return QStringLiteral("loose");
+    return folder.isEmpty() ? QStringLiteral("inbox") : QStringLiteral("folder:") + folder;
+}
+
+QString Note::stuckKey() const
+{
+    return isStuck() ? QStringLiteral("window:") + window : QString();
+}
+
+QString Note::whereLabel() const
+{
+    return isStuck() ? window : placeLabel();
 }
 
 QByteArray Note::serialize() const
@@ -157,18 +130,17 @@ QByteArray Note::serialize() const
     out += QStringLiteral("created: %1\n").arg(timeText(created));
     out += QStringLiteral("changed: %1\n").arg(timeText(changed));
     out += QStringLiteral("colour: %1\n").arg(colour);
-    out += QStringLiteral("belongs: %1\n").arg(belongsName(belongs));
+    if (stuck) {
+        out += QStringLiteral("stuck: true\n");
+    }
     if (!window.isEmpty()) {
-        out += QStringLiteral("window: %1\n").arg(quoted(window));
+        out += QStringLiteral("window: %1\n").arg(quotedText(window));
     }
     if (!app.isEmpty()) {
-        out += QStringLiteral("app: %1\n").arg(quoted(app));
-    }
-    if (!project.isEmpty()) {
-        out += QStringLiteral("project: %1\n").arg(quoted(project));
+        out += QStringLiteral("app: %1\n").arg(quotedText(app));
     }
     if (!workspace.isEmpty()) {
-        out += QStringLiteral("workspace: %1\n").arg(quoted(workspace));
+        out += QStringLiteral("workspace: %1\n").arg(quotedText(workspace));
     }
     out += QStringLiteral("tucked: %1\n").arg(tucked ? QStringLiteral("true") : QStringLiteral("false"));
     if (remind.isValid()) {
@@ -219,6 +191,7 @@ Note Note::parse(const QByteArray &bytes, const QString &id, const QDateTime &fa
     const QString header = content.mid(4, end - 4 + 1);
     note.text = content.mid(qMin(content.size(), end + 5));
 
+    QString belongs;
     for (const auto &rawLine : QStringView(header).split(QLatin1Char('\n'))) {
         const QString line = rawLine.toString();
         if (line.trimmed().isEmpty() || line.trimmed().startsWith(QLatin1Char('#'))) {
@@ -230,8 +203,12 @@ Note Note::parse(const QByteArray &bytes, const QString &id, const QDateTime &fa
         }
         const QString key = line.left(colon).trimmed();
         const QString raw = line.mid(colon + 1).trimmed();
-        const QString value = unquoted(raw);
-        if (!KnownKeys.contains(key)) {
+        const QString value = unquotedText(raw);
+        if (key == Belongs) {
+            belongs = value;
+        } else if (key == Project) {
+            note.formerProject = value.simplified();
+        } else if (!KnownKeys.contains(key)) {
             note.extra.append({key, raw});
         } else if (key == QLatin1String("gooseberry")) {
             bool ok = false;
@@ -249,14 +226,12 @@ Note Note::parse(const QByteArray &bytes, const QString &id, const QDateTime &fa
             }
         } else if (key == QLatin1String("colour")) {
             note.colour = value;
-        } else if (key == QLatin1String("belongs")) {
-            note.belongs = belongsFromName(value);
+        } else if (key == QLatin1String("stuck")) {
+            note.stuck = value == QLatin1String("true");
         } else if (key == QLatin1String("window")) {
             note.window = value;
         } else if (key == QLatin1String("app")) {
             note.app = value;
-        } else if (key == QLatin1String("project")) {
-            note.project = value;
         } else if (key == QLatin1String("workspace")) {
             note.workspace = value;
         } else if (key == QLatin1String("tucked")) {
@@ -277,6 +252,24 @@ Note Note::parse(const QByteArray &bytes, const QString &id, const QDateTime &fa
             note.reminded = QDateTime::fromString(value, Qt::ISODate);
         } else if (key == QLatin1String("done")) {
             note.done = QDateTime::fromString(value, Qt::ISODate);
+        }
+    }
+    if (note.format < 2) {
+        // The first format's one Belongs to answer becomes the two of the
+        // second: a note that belonged to its window is stuck to it, and one
+        // that belonged to a project is kept in that project's folder.
+        note.stuck = belongs == QLatin1String("window") && !note.window.isEmpty();
+        if (belongs != Project) {
+            note.formerProject.clear();
+        }
+    } else {
+        // Keys the second format no longer has are kept as written.
+        if (!belongs.isEmpty()) {
+            note.extra.append({Belongs, belongs});
+        }
+        if (!note.formerProject.isEmpty()) {
+            note.extra.append({Project, headerQuoted(note.formerProject)});
+            note.formerProject.clear();
         }
     }
     return note;

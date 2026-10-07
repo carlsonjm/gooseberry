@@ -55,7 +55,7 @@ private:
         note.text = text;
         note.window = QStringLiteral("SpreadGesture.qml");
         note.app = QStringLiteral("org.kde.kate");
-        note.belongs = Belongs::Window;
+        note.stuck = true;
         note.remind = remind.isValid() ? toTheSecond(remind) : QDateTime();
         note.remindOnOpen = onOpen;
         return m_store->create(note);
@@ -247,7 +247,7 @@ private Q_SLOTS:
         QVERIFY(!readFile(m_store->pathFor(capture.noteId())).contains("remind"));
 
         // A note with no window has no "next time this opens".
-        capture.startNewIn(QStringLiteral("loose"));
+        capture.startNewIn(QStringLiteral("inbox"));
         capture.setText(QStringLiteral("L"));
         capture.setRemindOnOpen();
         QVERIFY(!capture.hasReminder());

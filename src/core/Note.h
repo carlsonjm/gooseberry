@@ -9,28 +9,26 @@
 
 namespace Gooseberry {
 
-// The note format version this program reads and writes (docs/FORMAT.md).
-inline constexpr int NoteFormat = 1;
+// The note format version this program writes (docs/FORMAT.md). Notes of
+// the first format are read too, and written in this one when they change.
+inline constexpr int NoteFormat = 2;
 
-enum class Belongs {
-    Loose,
-    Window,
-    Project,
-    Workspace,
-};
-
-QString belongsName(Belongs belongs);
-Belongs belongsFromName(const QString &name);
+// The board's name for the folder a note lands in when none is chosen: the
+// notes folder itself.
+QString inboxLabel();
 
 // One note as it is kept on disk: a header and the Markdown text under it.
 struct Note {
     QString id; // The file name without ".md".
     QString text;
     QString colour = QStringLiteral("butter");
-    Belongs belongs = Belongs::Loose;
-    QString window; // The document or window the note was written on.
+    // The folder the note is kept in, by name; empty for Inbox. It is where
+    // the file is, never a header key.
+    QString folder;
+    // Stuck to its window: the note comes back on it when it opens again.
+    bool stuck = false;
+    QString window; // The document or window the note was written on or stuck to.
     QString app; // That window's application id.
-    QString project;
     QString workspace;
     QDateTime created;
     QDateTime changed;
@@ -45,6 +43,9 @@ struct Note {
     // When the note was marked done on the planner.
     QDateTime done;
     int format = NoteFormat;
+    // The project a note of the first format belonged to, which names the
+    // folder it is moved into. Never written.
+    QString formerProject;
     // Header keys this version does not know, kept in order so a newer
     // program's fields survive an edit made here.
     QList<QPair<QString, QString>> extra;
@@ -61,10 +62,17 @@ struct Note {
     // The first words: the first line with text, without Markdown markers.
     QString title() const;
 
-    // What the note belongs to, in the words the board uses.
+    // The folder the note is kept in, in the words the board uses.
     QString placeLabel() const;
-    // The board place this note sits in when it is not tucked away.
+    // The board place of that folder: "inbox" or "folder:<name>".
     QString placeKey() const;
+    // The window the note is stuck to, as the board names its place; empty
+    // when it is stuck to none.
+    QString stuckKey() const;
+    bool isStuck() const { return stuck && !window.isEmpty(); }
+    // Where the note is, in a few words: the window it is stuck to, or its
+    // folder.
+    QString whereLabel() const;
 
     QByteArray serialize() const;
     // Reads a note file. A file with no header is a Loose note; its times
@@ -76,6 +84,10 @@ struct Note {
 // "SpreadGesture.qml". Unsaved-change markers are dropped so the label stays
 // the same while the document is edited.
 QString documentName(const QString &windowTitle, const QString &appName);
+
+// The header's way of writing a text value, and of reading one back.
+QString headerQuoted(const QString &value);
+QString headerUnquoted(const QString &raw);
 
 // The note colours, by the names the header stores, and the colour used when
 // a header names one this version does not know.

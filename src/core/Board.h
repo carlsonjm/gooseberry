@@ -4,19 +4,20 @@
 #include <QAbstractListModel>
 #include <QDate>
 #include <QTimer>
+#include <QVariantMap>
 
 namespace Gooseberry {
 
 class NoteStore;
 struct Note;
 
-// The board's places: Loose, Today and Tucked away, then each window or
-// document, each project and each workspace that has notes. Gathered from the
-// notes themselves; nothing is filed by hand.
+// The board's places: Today; Inbox, each folder and New folder; each window
+// with notes stuck to it; and Tucked away. Folders are the person's, kept
+// even when empty; the windows are gathered from the notes.
 class Places : public QAbstractListModel
 {
     Q_OBJECT
-    Q_PROPERTY(QStringList projects READ projects NOTIFY projectsChanged)
+    Q_PROPERTY(QStringList folders READ folders NOTIFY foldersChanged)
 
 public:
     enum Role {
@@ -32,16 +33,33 @@ public:
     QVariant data(const QModelIndex &index, int role) const override;
     QHash<int, QByteArray> roleNames() const override;
 
-    // Project names, the most recently used first.
-    QStringList projects() const { return m_projects; }
+    // The folders by name, in alphabetical order; Inbox is not among them.
+    QStringList folders() const;
     Q_INVOKABLE QString labelFor(const QString &key) const;
     Q_INVOKABLE int countFor(const QString &key) const;
+
+    // Folders on the board. Each returns why it could not be done, in words
+    // for the person, or an empty string.
+    Q_INVOKABLE QString makeFolder(const QString &name);
+    Q_INVOKABLE QString renameFolder(const QString &from, const QString &to);
+    // Removes a folder, its notes going to Inbox. Gives back what undo()
+    // needs: the folder's name, the ids moved and its workspaces; empty when
+    // nothing was removed, with problem saying why.
+    Q_INVOKABLE QVariantMap removeFolder(const QString &name);
+    Q_INVOKABLE bool undoRemoveFolder(const QVariantMap &removed);
+    // Moves a note to a place's folder: "inbox" or "folder:<name>".
+    Q_INVOKABLE bool moveNote(const QString &id, const QString &placeKey);
+    // The folder notes written on a workspace go into, or empty for Inbox.
+    Q_INVOKABLE QString workspaceFolder(const QString &workspace) const;
+    Q_INVOKABLE bool setWorkspaceFolder(const QString &workspace, const QString &folder);
+    // Why the last change asked of the board could not be made.
+    Q_INVOKABLE QString problem() const { return m_problem; }
 
     // True when the note sits in the place: the board's one rule for it.
     static bool contains(const QString &key, const Note &note, const QDate &today);
 
 Q_SIGNALS:
-    void projectsChanged();
+    void foldersChanged();
 
 private:
     struct Place {
@@ -56,7 +74,7 @@ private:
 
     NoteStore *m_store;
     QList<Place> m_places;
-    QStringList m_projects;
+    QString m_problem;
     QTimer m_rebuild;
     QTimer m_midnight;
 };
@@ -79,7 +97,7 @@ public:
         ColourHexRole,
         PlaceKeyRole,
         PlaceLabelRole,
-        BelongsRole,
+        StuckToRole,
         TuckedRole,
         ChangedRole,
         ReadOnlyRole,
@@ -102,6 +120,17 @@ public:
 
     Q_INVOKABLE bool tuckAway(const QString &id);
     Q_INVOKABLE bool bringBack(const QString &id);
+    // Moves a note to the desktop's trash, giving back where it went, for
+    // restore(); empty when it could not.
+    Q_INVOKABLE QString remove(const QString &id);
+    Q_INVOKABLE bool restore(const QString &id, const QString &pathInTrash);
+    // Puts a note on the planner on a day: at the time of day it already
+    // has, else nine in the morning, or the next hour when that has gone.
+    Q_INVOKABLE bool planOn(const QString &id, const QDate &day);
+    // The note's reminder time, for undoing planOn(); invalid for none.
+    Q_INVOKABLE QDateTime remindOf(const QString &id) const;
+    // Sets the reminder time back, or takes it away when invalid.
+    Q_INVOKABLE bool setRemind(const QString &id, const QDateTime &remind);
 
 Q_SIGNALS:
     void placeChanged();

@@ -93,7 +93,8 @@ void Capture::startNew(const CaptureContext &context)
     note.window = context.window;
     note.app = context.app;
     note.workspace = context.workspace;
-    note.belongs = context.window.isEmpty() ? Belongs::Loose : Belongs::Window;
+    note.stuck = !context.window.isEmpty();
+    note.folder = m_store->workspaceFolder(context.workspace);
     reset(note, false);
 }
 
@@ -101,18 +102,24 @@ void Capture::startNewIn(const QString &placeKey)
 {
     Note note;
     note.workspace = m_context.workspace;
+    note.folder = m_store->workspaceFolder(m_context.workspace);
     const qsizetype colon = placeKey.indexOf(QLatin1Char(':'));
     const QString kind = placeKey.left(colon);
     const QString name = colon < 0 ? QString() : placeKey.mid(colon + 1);
-    if (kind == QLatin1String("window") && !name.isEmpty()) {
-        note.belongs = Belongs::Window;
+    if (kind == QLatin1String("folder") && m_store->hasFolder(name)) {
+        note.folder = name;
+    } else if (placeKey == QLatin1String("inbox")) {
+        note.folder.clear();
+    } else if (kind == QLatin1String("window") && !name.isEmpty()) {
+        // Stuck to the same window as the notes already on it.
+        note.stuck = true;
         note.window = name;
-    } else if (kind == QLatin1String("project") && !name.isEmpty()) {
-        note.belongs = Belongs::Project;
-        note.project = name;
-    } else if (kind == QLatin1String("workspace")) {
-        note.belongs = Belongs::Workspace;
-        note.workspace = name;
+        for (const Note &other : m_store->notes()) {
+            if (other.isStuck() && other.window == name && !other.app.isEmpty()) {
+                note.app = other.app;
+                break;
+            }
+        }
     }
     reset(note, false);
 }
@@ -296,22 +303,64 @@ void Capture::setColour(const QString &colour)
     keep();
 }
 
-void Capture::setBelongs(const QString &kind, const QString &project)
+void Capture::setFolder(const QString &folder)
+{
+    if (readOnly() || folder == m_note.folder || (!folder.isEmpty() && !m_store->hasFolder(folder))) {
+        return;
+    }
+    if (kept()) {
+        // Typing still waiting is written where the note is now, then the
+        // note moves.
+        flush();
+        if (!m_store->moveNote(m_note.id, folder)) {
+            setProblem(m_store->lastError());
+            return;
+        }
+        m_note.folder = folder;
+        m_note.changed = m_store->note(m_note.id)->changed;
+        setProblem({});
+    } else {
+        m_note.folder = folder;
+    }
+    Q_EMIT belongingChanged();
+}
+
+QString Capture::makeFolder(const QString &name)
+{
+    if (readOnly()) {
+        return {};
+    }
+    const QString simple = name.simplified();
+    if (!m_store->hasFolder(simple) && !m_store->makeFolder(simple)) {
+        return m_store->lastError();
+    }
+    setFolder(simple);
+    return {};
+}
+
+void Capture::setStuck(const QString &window, const QString &app)
 {
     if (readOnly()) {
         return;
     }
-    const Belongs belongs = belongsFromName(kind);
-    if (belongs == Belongs::Project) {
-        const QString name = project.simplified();
-        if (name.isEmpty()) {
+    if (window.isEmpty()) {
+        if (!m_note.stuck) {
             return;
         }
-        m_note.project = name;
-    } else if (belongs == Belongs::Window && m_note.window.isEmpty()) {
-        return;
+        // Unstuck, it still remembers the window, for Next time this opens.
+        m_note.stuck = false;
+    } else {
+        if (m_note.isStuck() && window == m_note.window && app == m_note.app) {
+            return;
+        }
+        const bool moved = window != m_note.window || app != m_note.app;
+        m_note.stuck = true;
+        m_note.window = window;
+        m_note.app = app;
+        if (moved) {
+            Q_EMIT contextChanged();
+        }
     }
-    m_note.belongs = belongs;
     Q_EMIT belongingChanged();
     keep();
 }
@@ -386,6 +435,10 @@ void Capture::storeChanged(const QString &id)
         if (const auto onDisk = m_store->note(id)) {
             m_note.reminded = onDisk->reminded;
             m_note.done = onDisk->done;
+            if (onDisk->folder != m_note.folder) {
+                m_note.folder = onDisk->folder;
+                Q_EMIT belongingChanged();
+            }
             if (onDisk->remind != m_note.remind || onDisk->remindOnOpen != m_note.remindOnOpen) {
                 m_note.remind = onDisk->remind;
                 m_note.remindOnOpen = onDisk->remindOnOpen;
@@ -409,13 +462,16 @@ void Capture::storeChanged(const QString &id)
         m_note.colour = onDisk->colour;
         Q_EMIT colourChanged();
     }
-    if (onDisk->belongs != m_note.belongs || onDisk->project != m_note.project) {
-        m_note.belongs = onDisk->belongs;
-        m_note.project = onDisk->project;
-        Q_EMIT belongingChanged();
-    }
+    const bool belonging = onDisk->folder != m_note.folder || onDisk->stuck != m_note.stuck;
+    const bool context = onDisk->window != m_note.window || onDisk->app != m_note.app;
     const bool reminder = onDisk->remind != m_note.remind || onDisk->remindOnOpen != m_note.remindOnOpen;
     m_note = *onDisk;
+    if (belonging) {
+        Q_EMIT belongingChanged();
+    }
+    if (context) {
+        Q_EMIT contextChanged();
+    }
     if (reminder) {
         Q_EMIT reminderChanged();
     }
