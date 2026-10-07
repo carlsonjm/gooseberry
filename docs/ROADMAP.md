@@ -65,7 +65,8 @@ notes sorted without opening a menu.
 
 Needs Kadunce (`DESKTOP.md` § Needs).
 
-- A stuck note as a folded corner on its window; a tap opens it.
+- A dot in the window's title bar; a tap shows its notes where they were
+  placed.
 - In Spread, each card's notes as a stack on its corner; a tap fans them.
 - A note carried to the top edge opens Spread and is stuck to the card it is
   dropped on.

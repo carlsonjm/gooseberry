@@ -34,23 +34,25 @@ comes first. (The maintainer, 3 October.)
 Rejected: a title or notebook chosen first, as most notes apps ask. That
 question is where the thought is lost.
 
-## A note can be stuck to a window, as a folded corner
+## A window's notes are a dot in its title bar
 
-A note stuck to a window shows as a folded paper tab peeking out from behind
-the window's bottom-right edge, in the gap around the card, with a count when
-there are several. It stays clear of the window's buttons, title and scroll
-bar. A tap brings the notes up over the window, each where Robin last placed
-it on that window, kept in proportion when the window is resized; a tap on the
-work folds them back. In Spread, each card's notes sit as a small stack at its bottom-right
-corner, the same size on every card, and a tap fans them out over
-that card. The corner never moves or resizes the window and never needs
-closing. (The maintainer, 7 October.) This replaces the 3 October ruling that a
-card's notes wait behind it in its Stack.
+A window with stuck notes shows a small dot in its title bar, left of
+minimize, in the top note's colour, with a count when there are several. A tap
+brings the notes up over the window, each where Robin last placed it on that
+window, kept in proportion when the window is resized; a tap on the dot or the
+work puts them away. In Spread, each card's notes sit as a small stack at its
+bottom-right corner, the same size on every card, and a tap fans them out over
+that card. Neither moves or resizes the window, and nothing needs closing. (The
+maintainer, 7 October.) This replaces the 3 October ruling that a card's notes
+wait behind it in its Stack.
 
-Rejected: the top-right corner, where the tab covers the window's buttons; a
-dot in the title bar, which applications that draw their own bar, such as web
-browsers, leave no room for (the maintainer, 7 October);
-notes always open on the window, which cover part of the work and
+The dot needs a title bar the desktop draws, such as Shuffle's. An application
+that draws its own top bar, as web browsers and many web-based applications
+do, has no dot; its notes are on its card's stack in Spread and on the board.
+
+Rejected: a tab on the window's edge, at the top-right or bottom-right, which
+covers part of what an application draws there, such as a chat list or account
+settings; notes always open on the window, which cover part of the work and
 need moving by hand; and notes only behind the card in its Stack, which hides
 that a window has notes at all.
 
@@ -127,8 +129,8 @@ The six screens in `mockup/` are the approved layout and behaviour: what each
 place holds, its sizes and touch targets, the note colours, and how capture,
 the board and the planner work. An agent builds to them without asking again.
 Where the mock-up and a later ruling disagree, the ruling wins: the rail beside
-the card is superseded by the folded corner (§ A note can be stuck to a
-window). (The maintainer, 4 October.)
+the card is superseded by the dot in the title bar (§ A window's notes are a dot
+in its title bar). (The maintainer, 4 October.)
 
 ## Milestone 0 is built in one pass
 
