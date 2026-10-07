@@ -90,6 +90,7 @@ stuck: true
 window: "SpreadGesture.qml"
 app: "org.kde.kate"
 workspace: "Desk"
+place: 0.712 0.084
 tucked: false
 remind: 2026-10-05T09:00:00-05:00
 ---
@@ -112,6 +113,7 @@ Times are ISO 8601 with their offset from UTC, to the second.
 | `window` | no | The document or window the note was written on, or was stuck to last |
 | `app` | no | That window's application, by its desktop file name |
 | `workspace` | no | The workspace the note was written on |
+| `place` | no | Where the note sits on its window when the window's notes are shown: its top-left corner as two fractions, of the window's width and of its height, each from 0 to 1, to three places. Left out when the note has never been placed there. From Milestone 3 |
 | `tucked` | yes | `true` when tucked away, otherwise `false` |
 | `remind` | no | The reminder: a time, which also puts the note on the planner on that day, or `opens` for the next time a window opens on the note's `window` in its `app` |
 | `reminded` | no | When the reminder was shown |
@@ -122,6 +124,10 @@ Times are ISO 8601 with their offset from UTC, to the second.
   it where it is. `window` and `app` stay when it is unstuck, so "next time
   this opens" still has a window to wait for. A note stuck to a window with no
   name is not stuck.
+- **Place** keeps a note where it was let go on its window, in proportion
+  when the window is resized. Setting it does not change `changed`, and
+  sticking the note to another window takes it away. A `place` this version
+  cannot read is kept as written, and the note is placed as one never placed.
 - **Colour** is the person's own sorting and means nothing to Gooseberry. A
   colour this version does not know is shown as butter and kept as written.
 - **The text** follows the closing `---` exactly as it was written: UTF-8, with
@@ -171,6 +177,7 @@ Times are ISO 8601 with their offset from UTC, to the second.
 | 1 | Milestone 0 | The first format |
 | 1 | Milestone 1 | `remind`, `reminded` and `done` added, and checklists written down; a reader of the first format ignores them, so the version stays |
 | 2 | Milestone 2 | Folders, one level down, with Inbox the notes folder itself, and `.workspaces`. In a note, `stuck` replaces the required `belongs`, and `project` goes, since the folder is the project |
+| 2 | Milestone 3 | `place` added; a reader of Milestone 2 ignores it, so the version stays |
 
 **Bringing the first version up to date.** A folder whose `.gooseberry` says
 `format: 1` is brought up to date when Gooseberry opens it. Each note that

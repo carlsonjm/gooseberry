@@ -3,6 +3,7 @@
 #include "Product.h"
 #include "QuickNoteService.h"
 #include "Shell.h"
+#include "StuckNotes.h"
 #include "SpreadGuest.h"
 
 #include <KAboutData>
@@ -73,6 +74,11 @@ int main(int argc, char *argv[])
     Gooseberry::QuickNoteService quickNote(&shell, &store);
     if (!quickNote.publish()) {
         qWarning() << "Gooseberry's quick note is not on the session bus";
+    }
+    // Which windows have notes stuck to them, for a title bar's dot and
+    // Spread's stacks.
+    if (!shell.stuck()->publish()) {
+        qWarning() << "Gooseberry's stuck notes are not on the session bus";
     }
     // Where Kadunce gives the card Spread's centre, it answers here.
     shell.guest()->publish();

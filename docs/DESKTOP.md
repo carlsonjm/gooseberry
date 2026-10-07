@@ -99,7 +99,7 @@ after 10 seconds, leaving the grown card showing the board itself.
   asks for room only if a rail beside the card is ever revisited.
 - **Notes drawn on cards in Spread.** A count of notes on a card's corner, and
   carrying a note from one card to another in Spread, are Kadunce's to draw and
-  answer.
+  answer, from § Stuck notes on the bus.
 - **Arranging on request.** Kadunce's outside interface is read-only by design.
   Stacking a note with its card for Robin would need Kadunce's request
   interface, which is not scheduled.
@@ -218,6 +218,65 @@ For All notes, Search calls `OpenBoard` with a token of its own and waits for
 is `io.github.carlsonjm.Gooseberry`, is on screen, and Search can hand the
 moment to Kadunce so the window takes the card's place.
 
+## Stuck notes on the bus
+
+From Milestone 3, Gooseberry tells the desktop which open windows have notes
+stuck to them, and answers a tap on them. A title bar draws the dot from it
+(Shuffle), and Spread draws each card's stack (Kadunce). Neither keeps notes:
+what they draw is always what this interface last said.
+
+- **Service:** `io.github.carlsonjm.gooseberry`, as for the quick note. A
+  caller never starts Gooseberry for this: it watches for the name and, while
+  it is absent, draws no dot and no stack.
+- **Object:** `/StuckNotes`. **Interface:**
+  `io.github.carlsonjm.Gooseberry.StuckNotes`.
+- **Version:** `ProtocolVersion()` returns `1`, with the same rule as the quick
+  note: a key or method a version-1 caller can ignore keeps the number.
+- **Callers inside the compositor** (a window decoration, an effect) call only
+  asynchronously, and never wait for a reply while drawing.
+
+One entry for each open window with at least one stuck note that is not
+tucked away, a dictionary of strings to variants:
+
+| Key | Type | What it is |
+| --- | --- | --- |
+| `windowIds` | `as` | The desktop's ids for that window, as Plasma's window list gives them: on Wayland the compositor's own id for the window, a UUID written with braces; on X11 the window id in decimal |
+| `caption` | `s` | The window's title as the desktop reports it now |
+| `app` | `s` | Its application, by desktop file name without `.desktop` |
+| `window` | `s` | The document the notes are stuck to, as a note's `window` header names it |
+| `count` | `u` | How many notes are stuck to it |
+| `colour`, `colourHex` | `s`, `s` | The top note's colour, by name and as `#RRGGBB` |
+| `notes` | `av` | Its notes, the top one first (the one changed last), each a dictionary: `id`, `title` (the first words), `text`, `colour`, `colourHex` |
+| `shown` | `b` | Its notes are over the window now |
+
+| Method | What it does |
+| --- | --- |
+| `ProtocolVersion() → u` | The version, `1` |
+| `Windows() → av` | Every entry as above, in no set order; empty when no open window has notes |
+| `Toggle(s windowId, s caption, s app) → b` | Shows that window's notes over it, each where it was last placed, or puts them away when they are shown. The window is found by `windowId` when it is given and open, otherwise by `caption` and `app`. Returns whether they are shown now; false when no window with notes matches |
+| `Hide()` | Puts away whatever notes are shown |
+| `StickTo(s noteId, s windowId, s caption, s app) → b` | Sticks the note to that window, found as `Toggle` finds it, keeping its folder. Returns false when the note or the window is not found, or the note cannot be changed |
+
+| Signal | When |
+| --- | --- |
+| `WindowsChanged(av windows)` | Any entry came, went or changed: a note stuck, unstuck, tucked, recoloured or retitled, a window opened, closed or retitled, or notes shown or put away. It carries every entry, as `Windows()` returns them |
+
+**Matching a window.** A caller that knows the compositor's id for a window,
+as Kadunce does, matches on `windowIds`. A title bar that knows only the
+window's title and class matches on `caption`, with any ` <2>`-style suffix the
+compositor adds to tell same-titled windows apart taken off both sides, and
+uses `app` only to choose between entries with the same caption (compared
+without case, and also matching when either ends with the other after a dot).
+
+**Shown over the window.** A tap on the dot brings the notes up on a surface
+of Gooseberry's own, above the windows and laid exactly over the one with the
+notes, following it as it moves or is resized; the window itself is never
+moved or resized. Each note stands where it was last let go there, written as
+the note's `place` (`FORMAT.md`); one never placed starts at the top-right,
+the newest on top. A tap on a note opens it on the quick-note card; a tap on
+the work around the notes, the dot again, another window coming to the front,
+or Spread opening puts them away.
+
 ## Split Rock
 
 Where Split Rock is installed and set up, Gooseberry is one of its tools: the
@@ -234,8 +293,8 @@ None is assumed.
 
 | Component | Need | Holds up |
 | --- | --- | --- |
-| Kadunce | A stack of a card's notes on its corner in Spread, from Gooseberry's notes | Stuck notes in Spread (Milestone 3) |
-| Shuffle | A notes dot in Shuffle's title bar for windows with notes, answering a tap; the current title bar cannot show one, so it needs its own drawing code | The dot (Milestone 3) |
+| Kadunce | A stack of a card's notes on its corner in Spread, from § Stuck notes on the bus, a tap fanning them and a hold carrying one to another card (`StickTo`); taken up in Milestone 3 | Stuck notes in Spread (Milestone 3) |
+| Shuffle | A notes dot in Shuffle's title bar for windows with notes, from § Stuck notes on the bus, a tap calling `Toggle`; Shuffle's title bar becomes compiled to draw it; taken up in Milestone 3 | The dot (Milestone 3) |
 | Kadunce | Accepting a note carried to the top edge: opening Spread and telling Gooseberry which card it was dropped on | Sticking by drag (Milestone 3) |
 | Kadunce | Its request interface, to stack a companion with a card | Stacking without a hand gesture |
 | Tettegouche | A notes source for Search, with a Notes tab | Notes in Search |

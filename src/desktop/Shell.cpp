@@ -9,6 +9,7 @@
 #include "ReminderWords.h"
 #include "Reminders.h"
 #include "SpreadGuest.h"
+#include "StuckNotes.h"
 #include "WindowContext.h"
 #include "Log.h"
 
@@ -48,7 +49,15 @@ Shell::Shell(NoteStore *store, QQmlEngine *engine, QObject *parent)
     , m_planner(new Planner(store, this))
     , m_reminders(new Reminders(store, this))
     , m_notifier(new Notifier(store, m_reminders, this))
+    , m_stuck(new StuckNotes(store, m_context, [this] {
+        return create(QStringLiteral("StuckWindow"));
+    }, this))
 {
+    // A note tapped over its window opens on the card.
+    connect(m_stuck, &StuckNotes::openRequested, this, [this](const QString &id) {
+        m_stuck->Hide();
+        openNote(id);
+    });
     // A reminder tapped opens its note on the card.
     connect(m_notifier, &Notifier::openRequested, this, &Shell::openNote);
     connect(m_context, &WindowContext::documentOpened, m_reminders, &Reminders::documentOpened);
@@ -137,6 +146,11 @@ QObject *Shell::guestObject() const
 QObject *Shell::plannerObject() const
 {
     return m_planner;
+}
+
+QObject *Shell::stuckObject() const
+{
+    return m_stuck;
 }
 
 void Shell::sleeping(bool goingToSleep)

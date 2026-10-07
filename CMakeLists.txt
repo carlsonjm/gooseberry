@@ -35,6 +35,7 @@ add_library(gooseberry-core STATIC
     src/core/Product.cpp src/core/Product.h
     src/core/Reminders.cpp src/core/Reminders.h
     src/core/Board.cpp src/core/Board.h
+    src/core/StuckWindows.cpp src/core/StuckWindows.h
     src/core/Trash.cpp src/core/Trash.h
 )
 target_include_directories(gooseberry-core PUBLIC src/core)
@@ -58,6 +59,7 @@ qt_add_qml_module(gooseberry-screens
         qml/Pill.qml
         qml/PlannerColumn.qml
         qml/QuickNote.qml
+        qml/StuckWindow.qml
         qml/TimePicker.qml
     RESOURCES
         qml/icons/note.svg
@@ -73,6 +75,7 @@ add_library(gooseberry-desktop STATIC
     src/desktop/ReminderWords.cpp src/desktop/ReminderWords.h
     src/desktop/Shell.cpp src/desktop/Shell.h
     src/desktop/SpreadGuest.cpp src/desktop/SpreadGuest.h
+    src/desktop/StuckNotes.cpp src/desktop/StuckNotes.h
     src/desktop/WindowContext.cpp src/desktop/WindowContext.h
 )
 target_include_directories(gooseberry-desktop PUBLIC src/desktop)

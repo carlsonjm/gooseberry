@@ -2,6 +2,7 @@
 #pragma once
 
 #include "Capture.h"
+#include "StuckWindows.h"
 
 #include <QObject>
 #include <QPersistentModelIndex>
@@ -32,8 +33,14 @@ public:
     // (the document's name), app, appName and front; one entry per
     // document, and none of Gooseberry's own.
     QVariantList openWindows() const;
+    // Every window open now, but Gooseberry's own, as the desktop's window
+    // list has them, with their ids and places.
+    QList<OpenWindow> windows() const;
 
 Q_SIGNALS:
+    // A window opened, closed, moved or was retitled, or another came to
+    // the front.
+    void windowsChanged();
     // Another window came to the front: Robin went back to the work.
     void workChanged();
     // The desktop said for the first time what is in front.
