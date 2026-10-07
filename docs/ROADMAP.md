@@ -44,35 +44,44 @@ own buttons were drawn as proposals and approved by the maintainer
 **Proves:** a week of the maintainer's days planned in Gooseberry, every
 reminder on time, and none shown twice.
 
-## Milestone 2: pen
+## Milestone 2: folders
 
-- Handwritten notes, with the pen palette and an eraser.
-- Handwriting read on the computer, so ink is found by search.
+Order from the maintainer, 7 October: folders, stuck notes, Search, sync and
+the phone companion, with pen last (`DECISIONS.md` § A note is kept in a
+folder).
 
-**Proves:** handwritten notes from daily use are found by a word in them.
+- Folders on the board, Inbox first and New folder last; a folder kept until
+  removed, its notes sent to Inbox when it is.
+- The quick note's two chips: the folder, and Stuck to, listing the open
+  windows. Search's Notes mode offers the same.
+- A workspace given a folder; notes written there go into it.
+- Hold a note on the board and drop it on a folder, a day or the trash.
+- Folders as real folders on disk, with existing notes moved in on update.
 
-## Milestone 3: with cards
+**Proves:** a project started on the board before its work, and a week of
+notes sorted without opening a menu.
 
-- Capture defaults to the card in front.
-- Notes come back with their card's document.
-- A card's notes kept in its Stack, shown only as a count until asked for.
+## Milestone 3: stuck to windows
 
-**Proves:** a week of daily use on Shuffle where notes on cards never need
+Needs Kadunce (`DESKTOP.md` § Needs).
+
+- A stuck note as a folded corner on its window; a tap opens it.
+- In Spread, each card's notes as a stack on its corner; a tap fans them.
+- A note carried to the top edge opens Spread and is stuck to the card it is
+  dropped on.
+- Notes come back on their document when it opens again.
+
+**Proves:** a week of daily use on Shuffle where notes on windows never need
 putting away by hand.
 
 ## Milestone 4: with Search
 
 Waits on Tettegouche taking up its need in `DESKTOP.md`.
 
-- Notes found in Search, typed and handwritten, each saying where it belongs.
+- Notes found in Search, each saying its folder and window.
 
-## Later
+## Milestone 5: sync and the phone
 
-- The notes tool for Split Rock: find, read and add, and next step from a
-  note.
-- Notes on cards in Spread, and carrying a note between cards, once Kadunce
-  offers it.
-- A rail of stickies beside the card, only if daily use asks for it.
 - Notes on several computers, through whatever folder sync the person already
   uses, with two copies of a note edited apart offered to merge rather than
   left side by side.
@@ -80,6 +89,18 @@ Waits on Tettegouche taking up its need in `DESKTOP.md`.
   the same folder. On Plasma Mobile it is the same program; on Android, a port
   of the core and screens, with the phone's own widget, share sheet and alarms.
   A reminder rings once, not on every device.
+
+## Milestone 6: pen
+
+- Handwritten notes, with the pen palette and an eraser.
+- Handwriting read on the computer, so ink is found by search.
+
+**Proves:** handwritten notes from daily use are found by a word in them.
+
+## Later
+
+- The notes tool for Split Rock: find, read and add, and next step from a
+  note.
 
 ## Not planned
 

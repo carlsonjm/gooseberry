@@ -34,17 +34,19 @@ comes first. (The maintainer, 3 October.)
 Rejected: a title or notebook chosen first, as most notes apps ask. That
 question is where the thought is lost.
 
-## On a card, notes stack behind it
+## A note can be stuck to a window, as a folded corner
 
-A card's notes are a Gooseberry window in that card's Stack, behind it. Going
-back to the card puts them away; side by side is a Bento pair. Like a note
-tucked behind the page rather than one stuck to the monitor's edge, it takes no
-room and never needs closing. (The maintainer, 3 October.)
+A note stuck to a window shows on it as a folded paper corner, with a count
+when there are several. A tap unfolds the notes over that corner; a tap on the
+work folds them back. In Spread, each card's notes sit as a small stack on its
+top-right corner, the same size on every card, and a tap fans them out over
+that card. The corner never moves or resizes the window and never needs
+closing. (The maintainer, 7 October.) This replaces the 3 October ruling that a
+card's notes wait behind it in its Stack.
 
-Rejected, for now: a rail of stickies beside the card, which needs Kadunce to
-offer room and a rule to fold it away, and is revisited only if daily use shows
-that seeing a note while working matters; and stickies floating over the card,
-which cover the work and each need moving or closing.
+Rejected: notes always open on the window, which cover part of the work and
+need moving by hand; and notes only behind the card in its Stack, which hides
+that a window has notes at all.
 
 ## Notes are plain files; Search makes them look at home
 
@@ -58,7 +60,7 @@ assistant can read.
 ## A card's notes reopen with it
 
 When a card's window closes, its notes stay with what was open in it, and come
-back in its Stack when that document opens again: a sticky note on the monitor,
+back stuck to it when that document opens again: a sticky note on the monitor,
 made virtual. Gooseberry remembers the application and the document's name or
 path; a note whose document cannot be found again waits in Loose, marked with
 where it came from. (The maintainer, 3 October.)
@@ -119,7 +121,8 @@ The six screens in `mockup/` are the approved layout and behaviour: what each
 place holds, its sizes and touch targets, the note colours, and how capture,
 the board and the planner work. An agent builds to them without asking again.
 Where the mock-up and a later ruling disagree, the ruling wins: the rail beside
-the card is superseded by notes stacked behind it. (The maintainer, 4 October.)
+the card is superseded by the folded corner (§ A note can be stuck to a
+window). (The maintainer, 4 October.)
 
 ## Milestone 0 is built in one pass
 
@@ -130,15 +133,30 @@ comes to the maintainer before it is guessed. (The maintainer, 4 October.)
 
 Rejected: options before each screen, which the mock-up already settles.
 
-## A project is named once
+## A note is kept in a folder, and may be stuck to a window
 
-Under Belongs to, a project's name is typed the first time it is used; after
-that it is one tap, and the project used last is offered first. A project lasts
-as long as a note belongs to it. (The maintainer, 4 October.)
+Every note is kept in exactly one folder; Inbox is where it lands unless
+another is chosen. Separately, a note may be stuck to one window, and comes
+back on it when that document opens again. Moving a note to another folder
+keeps it stuck. A folder can be made on the board before any workspace or
+window exists, lasts until it is removed, even empty, and removing it sends its
+notes to Inbox. A workspace can be given a folder, and notes written there go
+into it. The quick note shows both answers as chips, already filled in: the
+folder, and the window in front, with a list of the open windows a tap away.
+(The maintainer, 7 October.) This replaces "A project is named once" of
+4 October.
 
-Rejected: working a project out from where the document lives. Plain Plasma
-does not say where most windows' documents are, so the choice would rarely
-appear before notes on cards.
+Folders are one level deep and are real folders on disk, so a file manager and
+any folder sync see the same projects. Both are engineering's choice.
+
+On the board, a held note lifts and is dropped on a folder, a day or the trash.
+Where Kadunce offers it, a lifted note carried to the top edge opens Spread and
+is stuck to the card it is dropped on.
+
+Rejected: one Belongs to choice among window, project, workspace and Loose,
+which made a note pick between its project and its window; a project that ends
+with its last note, which left no way to start one ahead of time; and folders
+inside folders, which lengthen every choice.
 
 ## A quick note is a card the size of the search
 

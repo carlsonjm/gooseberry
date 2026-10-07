@@ -219,7 +219,8 @@ None is assumed.
 
 | Component | Need | Holds up |
 | --- | --- | --- |
-| Kadunce | A way to show a companion's count on a card in Spread | Notes in Spread |
+| Kadunce | Drawing a stuck note's folded corner on its window, and a stack of its notes on each card's corner in Spread, from Gooseberry's notes | Stuck notes (Milestone 3) |
+| Kadunce | Accepting a note carried to the top edge: opening Spread and telling Gooseberry which card it was dropped on | Sticking by drag (Milestone 3) |
 | Kadunce | Its request interface, to stack a companion with a card | Stacking without a hand gesture |
 | Tettegouche | A notes source for Search, with a Notes tab | Notes in Search |
 | Tettegouche | The quick note as one of Search's modes, over § The quick note in Search, behind a checkbox and only when Gooseberry is installed | Writing a note from Search |
