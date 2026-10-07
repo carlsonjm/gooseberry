@@ -4,6 +4,7 @@
 #include "Checklist.h"
 #include "NoteStore.h"
 
+#include <KLocalizedString>
 #include <QDateTime>
 #include <QVariantMap>
 
@@ -93,16 +94,16 @@ void Places::rebuild()
     QList<Note> notes = m_store->notes();
     std::sort(notes.begin(), notes.end(), newerFirst);
 
-    QList<Place> places = {{Today, QStringLiteral("Today"), QString(), 0}, {Inbox, inboxLabel(), QStringLiteral("folders"), 0}};
+    QList<Place> places = {{Today, i18nc("@title a place on the board", "Today"), QString(), 0}, {Inbox, inboxLabel(), QStringLiteral("folders"), 0}};
     // Every folder has a row, empty ones too: a folder lasts until it is
     // removed.
     const QStringList folders = m_store->folders();
     for (const QString &folder : folders) {
         places.append({FolderPrefix + folder, folder, QStringLiteral("folders"), 0});
     }
-    places.append({NewFolder, QStringLiteral("New folder"), QStringLiteral("folders"), 0});
+    places.append({NewFolder, i18nc("@action a place on the board", "New folder"), QStringLiteral("folders"), 0});
     QList<Place> windows;
-    Place tucked{Tucked, QStringLiteral("Tucked away"), QStringLiteral("end"), 0};
+    Place tucked{Tucked, i18nc("@title notes put out of sight", "Tucked away"), QStringLiteral("end"), 0};
 
     auto find = [&places](const QString &key) -> Place * {
         for (auto &place : places) {

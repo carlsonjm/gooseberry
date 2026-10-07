@@ -5,6 +5,7 @@ project_root="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 build_dir="${GOOSEBERRY_BUILD_DIR:-${project_root}/build}"
 
 python3 "${project_root}/tests/verify-public.py"
+python3 "${project_root}/tools/messages.py"
 
 cmake -S "${project_root}" -B "${build_dir}" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_TESTING=ON >/dev/null
 cmake --build "${build_dir}" -j"$(nproc)"

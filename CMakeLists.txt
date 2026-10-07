@@ -38,7 +38,8 @@ add_library(gooseberry-core STATIC
     src/core/Trash.cpp src/core/Trash.h
 )
 target_include_directories(gooseberry-core PUBLIC src/core)
-target_link_libraries(gooseberry-core PUBLIC Qt6::Core)
+target_link_libraries(gooseberry-core PUBLIC Qt6::Core KF6::I18n)
+target_compile_definitions(gooseberry-core PRIVATE TRANSLATION_DOMAIN="gooseberry")
 
 # The screens, in Kirigami, shared by the program and the screen tests.
 qt_add_library(gooseberry-screens STATIC)
@@ -92,6 +93,9 @@ target_link_libraries(gooseberry PRIVATE
     KF6::CoreAddons KF6::DBusAddons KF6::I18n KF6::I18nQml)
 
 install(TARGETS gooseberry ${KDE_INSTALL_TARGETS_DEFAULT_ARGS})
+# Translations, as po/<language>/gooseberry.po; python3 tools/messages.py
+# --templates po makes the template.
+ki18n_install(po)
 configure_file(data/${GOOSEBERRY_APP_ID}.desktop.in ${GOOSEBERRY_APP_ID}.desktop @ONLY)
 configure_file(data/${GOOSEBERRY_APP_ID}-autostart.desktop.in ${GOOSEBERRY_APP_ID}-autostart.desktop @ONLY)
 configure_file(data/io.github.carlsonjm.gooseberry.service.in io.github.carlsonjm.gooseberry.service @ONLY)
