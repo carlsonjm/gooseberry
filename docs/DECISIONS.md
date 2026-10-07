@@ -354,3 +354,12 @@ screens, as Kadunce, Tettegouche and Split Rock do. This is engineering's choice
 Rejected: a web toolkit, which is heavy on a tablet's battery and draws nothing
 like the rest of the desktop; and a second language and toolchain for a suite
 maintained by one person and agents.
+
+## The app icon keeps an icon theme's margin
+
+The icon's tile sits inside the margin icon themes leave around application
+artwork, 42 of 48 in Colloid, so it is the size of the apps beside it in a dock,
+a launcher or Search. (The maintainer, 7 October, for pixel-matched demo videos.)
+
+Rejected: the tile drawn to the icon's edges, chosen on 6 October, which reads
+a size larger than every themed app next to it.

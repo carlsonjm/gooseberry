@@ -1,7 +1,10 @@
 <svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- The tile sits inside the margin icon themes leave around app artwork (42 of 48 in Colloid), so it is drawn the size of the apps beside it. -->
+<g transform="translate(16 16) scale(0.875)">
 <rect width="256" height="256" rx="40" fill="#F2D98A"/>
 <path d="M88.792 59.2482H147.479C151.663 59.3078 155.653 61.0181 158.582 64.0066L187.132 92.5569C190.121 95.4854 191.831 99.4761 191.89 103.66V178.208C191.89 184.518 189.384 190.57 184.922 195.031C180.46 199.493 174.409 202 168.099 202H88.792C82.4819 202 76.4304 199.493 71.9685 195.031C67.5066 190.57 65 184.518 65 178.208V83.0401C65 76.7301 67.5066 70.6785 71.9685 66.2167C76.4304 61.7548 82.4819 59.2482 88.792 59.2482Z" stroke="#1A1A1A" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
 <path d="M144.307 54V85.7226C144.307 89.9293 145.978 93.9637 148.952 96.9383C151.927 99.9128 155.961 101.584 160.168 101.584H191.89L144.307 54Z" fill="#1A1A1A"/>
 <line x1="102.723" y1="132.555" x2="154.168" y2="132.555" stroke="#1A1A1A" stroke-width="12" stroke-linecap="round"/>
 <line x1="102.723" y1="164.277" x2="130.376" y2="164.277" stroke="#1A1A1A" stroke-width="12" stroke-linecap="round"/>
+</g>
 </svg>
