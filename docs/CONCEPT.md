@@ -30,9 +30,9 @@ Four places, one set of notes.
    writes. By default the note is stuck to whatever Robin is working on, and
    kept in the workspace's folder; one tap changes either. All notes grows the
    card into the board. Going back to the work puts the card away.
-2. **Notes on the work.** A note stuck to a window waits on its corner as a
-   folded sticky, with a count when there are several. A tap opens them; a tap
-   on the work folds them back.
+2. **Notes on the work.** A window with notes shows a dot in its title bar,
+   with a count when there are several. A tap brings them up where Robin left
+   them; another tap puts them away.
 3. **The board.** Every note in one place: Today, Inbox and each folder, the
    windows that have notes, and Tucked away. A held note drops on a folder.
 4. **The planner.** A note with a time goes on the planner, day by day, and
@@ -82,9 +82,9 @@ Four places, one set of notes.
 - **Finding the document again.** A window's identity lasts only while it is
   open, so a card's notes come back by the document's name or path. A renamed
   or moved document leaves its notes unstuck, in their folder (`DECISIONS.md`).
-- **The corner is Kadunce's to draw.** Kadunce owns every window and Spread,
-  so stuck notes on windows wait on Kadunce taking up its need (`DESKTOP.md`).
-  Without it, a window's notes are on the board.
+- **The dot needs a title bar the desktop draws.** An application that draws
+  its own top bar has no dot; its notes are on the board and, with Kadunce, in
+  Spread (`DESKTOP.md`).
 - **Handwriting recognition on the computer** may be too weak or too heavy for a
   tablet. Ink stays the note either way; only finding it depends on the reading.
 - **Habit.** A notes app that loses one thought, or asks one question too many,
