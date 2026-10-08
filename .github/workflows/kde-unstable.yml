@@ -1,0 +1,57 @@
+name: Next Plasma (kde-unstable)
+
+# Builds and checks Gooseberry against the next Plasma before it ships, from
+# Arch Linux's kde-unstable repository, with the same ./verify.sh as Arch
+# current. A red run here is an early warning about the coming release, not a
+# failure of the released one.
+on:
+  schedule:
+    - cron: "47 7 * * *"
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/kde-unstable.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: kde-unstable-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Next Plasma
+    runs-on: ubuntu-latest
+    container: archlinux:latest
+    timeout-minutes: 60
+    steps:
+      - name: Enable kde-unstable and the testing repositories it builds on
+        run: |
+          # kde-unstable sits above the testing repositories, which sit above
+          # the stable ones, as Arch documents for this repository.
+          sed -i '0,/^\[core\]/s//[kde-unstable]\nInclude = \/etc\/pacman.d\/mirrorlist\n\n[core-testing]\nInclude = \/etc\/pacman.d\/mirrorlist\n\n[extra-testing]\nInclude = \/etc\/pacman.d\/mirrorlist\n\n[core]/' /etc/pacman.conf
+          grep -n '^\[' /etc/pacman.conf
+          pacman -Syu --noconfirm --needed \
+            base-devel cmake extra-cmake-modules git python dbus \
+            qt6-base qt6-declarative \
+            kcoreaddons kdbusaddons ki18n kservice kwindowsystem kirigami \
+            layer-shell-qt plasma-workspace
+
+      - uses: actions/checkout@v5
+
+      - name: Record the KDE and Qt versions checked
+        run: |
+          {
+            echo "### Tested against"
+            echo '```'
+            pacman -Q plasma-workspace layer-shell-qt kirigami extra-cmake-modules qt6-base qt6-declarative
+            echo '```'
+          } | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Run ./verify.sh
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          dbus-run-session -- ./verify.sh
