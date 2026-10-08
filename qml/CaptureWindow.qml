@@ -33,10 +33,13 @@ Window {
     readonly property bool keysUp: keysRect.width > 0 && keysRect.height > 0 && keysRect.y < height
     // How far up from the window's bottom the card keeps clear.
     property real keysReach: keysUp ? height - keysRect.y + 10 : 0
+    // How long the card takes to move, at Plasma's animation speed: Instant,
+    // which Plasma also reports as reduced motion, moves it at once.
+    readonly property int travelDuration: Math.round(220 * Math.max(0, Kirigami.Units.longDuration) / 200)
     Behavior on keysReach {
         NumberAnimation {
             id: keysMotion
-            duration: 220
+            duration: root.travelDuration
             easing.type: Easing.OutCubic
         }
     }
@@ -156,20 +159,20 @@ Window {
         Behavior on x {
             enabled: root.asGuest
             NumberAnimation {
-                duration: 220
+                duration: root.travelDuration
                 easing.type: Easing.OutCubic
             }
         }
         Behavior on y {
             enabled: root.asGuest
             NumberAnimation {
-                duration: 220
+                duration: root.travelDuration
                 easing.type: Easing.OutCubic
             }
         }
         Behavior on width {
             NumberAnimation {
-                duration: 220
+                duration: root.travelDuration
                 easing.type: Easing.OutCubic
             }
         }
@@ -177,7 +180,7 @@ Window {
         Behavior on height {
             enabled: !keysMotion.running
             NumberAnimation {
-                duration: 220
+                duration: root.travelDuration
                 easing.type: Easing.OutCubic
             }
         }
