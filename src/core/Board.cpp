@@ -342,6 +342,14 @@ void PlaceNotes::setSearch(const QString &search)
     refresh();
 }
 
+bool PlaceNotes::matches(const Note &note, const QString &words)
+{
+    const QString needle = words.simplified();
+    return !needle.isEmpty()
+        && (note.text.contains(needle, Qt::CaseInsensitive) || note.placeLabel().contains(needle, Qt::CaseInsensitive)
+            || (note.isStuck() && note.window.contains(needle, Qt::CaseInsensitive)));
+}
+
 QStringList PlaceNotes::wanted() const
 {
     const QDate today = QDate::currentDate();
@@ -356,9 +364,7 @@ QStringList PlaceNotes::wanted() const
         if (needle.isEmpty() && m_place == Today && note.remind.isValid()) {
             continue;
         }
-        if (!needle.isEmpty() && !note.text.contains(needle, Qt::CaseInsensitive)
-            && !note.placeLabel().contains(needle, Qt::CaseInsensitive)
-            && !(note.isStuck() && note.window.contains(needle, Qt::CaseInsensitive))) {
+        if (!needle.isEmpty() && !matches(note, needle)) {
             continue;
         }
         notes.append(note);

@@ -119,10 +119,13 @@ already finds them by name, and by content where indexing allows, as files.
 Notes are kept that way, so Search finds them before it offers anything more;
 Tettegouche is the bridge that makes them look like notes.
 
+From Milestone 4, Search also asks Gooseberry for the notes with the words
+typed (`Find`, below) and lists them among its results, each with its colour
+and its folder or window, opening the note rather than a file.
+
 ### What Tettegouche does not offer
 
-- A Notes tab, with each note's colour, what it belongs to and when it was
-  written, opening the note rather than a file.
+- A Notes tab of its own, listing every note by when it was written.
 - Matching handwritten notes by the text read from their ink.
 
 ### The quick note in Search
@@ -186,6 +189,8 @@ dictionary of strings to variants:
 | `Remove() → a{sv}` | Moves the note to the desktop's trash and finishes it; nothing is deleted |
 | `UndoRemove() → a{sv}` | Brings back the note `Remove` sent to the trash; the reply's `restored` says whether it did |
 | `OpenBoard(s noteId, s requestToken) → b` | Opens the board as an ordinary window, on the place that note sits in, or on Today for an empty id |
+| `Find(s words, u limit) → av` | The notes with those words in their text, their folder's name or the window they are stuck to, as the board's search finds them, tucked away ones included; the most recently changed first, and no more than `limit` (0 for all). Each a dictionary: `id`, `title` (the first words), `excerpt` (the line with the words, when they are not in the title; else empty), `colour`, `colourHex`, `folder`, `folderLabel`, `stuck` (`b`), `window` and `app` (when stuck), `tucked` (`b`) and `changed` (ISO 8601). It changes nothing and opens nothing. From Milestone 4 |
+| `OpenNote(s noteId) → b` | Opens that note on Gooseberry's own card, as a tap on the board does; false for a note that is not there. From Milestone 4 |
 
 | Signal | When |
 | --- | --- |
@@ -212,6 +217,12 @@ the row says. A search that offers them shows the card's two chips in place of
 Belongs to: Folder offers `folders` and a field for a new one, sending
 `SetFolder`; Stuck to offers `windows` and "Don't stick to a window", sending
 `SetStuck`.
+
+**Added in Milestone 4, within version 1.** The methods `Find` and
+`OpenNote`. A search lists what `Find` gives among its results as notes, each
+saying its folder or window, and a tap calls `OpenNote`. Since a search asks
+as each letter is typed, it calls `Find` only while Gooseberry is running,
+without starting it, and never waits on the reply.
 
 For All notes, Search calls `OpenBoard` with a token of its own and waits for
 `BoardShown` with that token: from then the board's window, whose application

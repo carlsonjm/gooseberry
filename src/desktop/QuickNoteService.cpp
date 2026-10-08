@@ -20,6 +20,40 @@ const QStringList Kinds = {QStringLiteral("window"), QStringLiteral("project"), 
                            QStringLiteral("loose")};
 
 
+// The line of the note where the words are, when it is not the first: what a
+// search shows under the title so the match can be seen. Long lines are cut
+// around the words.
+QString excerpt(const Note &note, const QString &words)
+{
+    const QString needle = words.simplified();
+    const QString title = note.title();
+    if (needle.isEmpty() || title.contains(needle, Qt::CaseInsensitive)) {
+        return {};
+    }
+    const QStringList lines = note.text.split(QLatin1Char('\n'));
+    for (const QString &line : lines) {
+        const QString plain = line.simplified();
+        const qsizetype at = plain.indexOf(needle, 0, Qt::CaseInsensitive);
+        if (at < 0) {
+            continue;
+        }
+        constexpr qsizetype Room = 80;
+        if (plain.size() <= Room) {
+            return plain;
+        }
+        const qsizetype start = qBound(qsizetype(0), at - (Room - needle.size()) / 2, plain.size() - Room);
+        QString cut = plain.mid(start, Room).trimmed();
+        if (start > 0) {
+            cut.prepend(QStringLiteral("…"));
+        }
+        if (start + Room < plain.size()) {
+            cut.append(QStringLiteral("…"));
+        }
+        return cut;
+    }
+    return {};
+}
+
 // Marks a call from the bus, so the changes it makes are not told back as
 // changes from elsewhere.
 struct Calling {
@@ -278,6 +312,50 @@ bool QuickNoteService::OpenBoard(const QString &noteId, const QString &requestTo
         m_boardTokens.append(requestToken);
     }
     m_shell->showBoardOn(noteId);
+    return true;
+}
+
+QVariantList QuickNoteService::Find(const QString &words, uint limit)
+{
+    QList<Note> found;
+    for (const Note &note : m_store->notes()) {
+        if (PlaceNotes::matches(note, words)) {
+            found.append(note);
+        }
+    }
+    std::sort(found.begin(), found.end(), [](const Note &a, const Note &b) {
+        return a.changed != b.changed ? a.changed > b.changed : a.id > b.id;
+    });
+    if (limit > 0 && found.size() > qsizetype(limit)) {
+        found.resize(limit);
+    }
+    QVariantList results;
+    results.reserve(found.size());
+    for (const Note &note : std::as_const(found)) {
+        results.append(QVariantMap{
+            {QStringLiteral("id"), note.id},
+            {QStringLiteral("title"), note.title()},
+            {QStringLiteral("excerpt"), excerpt(note, words)},
+            {QStringLiteral("colour"), note.colour},
+            {QStringLiteral("colourHex"), colourHex(note.colour)},
+            {QStringLiteral("folder"), note.folder},
+            {QStringLiteral("folderLabel"), note.placeLabel()},
+            {QStringLiteral("stuck"), note.isStuck()},
+            {QStringLiteral("window"), note.isStuck() ? note.window : QString()},
+            {QStringLiteral("app"), note.isStuck() ? note.app : QString()},
+            {QStringLiteral("tucked"), note.tucked},
+            {QStringLiteral("changed"), note.changed.toOffsetFromUtc(note.changed.offsetFromUtc()).toString(Qt::ISODate)},
+        });
+    }
+    return results;
+}
+
+bool QuickNoteService::OpenNote(const QString &noteId)
+{
+    if (!m_store->note(noteId)) {
+        return false;
+    }
+    m_shell->openNote(noteId);
     return true;
 }
 

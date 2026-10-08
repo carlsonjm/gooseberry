@@ -60,6 +60,12 @@ public Q_SLOTS:
     // Opens the board on the note's place, as an ordinary window. BoardShown
     // follows with the same token once the window has drawn its first frame.
     Q_SCRIPTABLE bool OpenBoard(const QString &noteId, const QString &requestToken);
+    // Added in version 1, from Milestone 4. The notes with those words, as
+    // the board's search finds them, the most recently changed first and no
+    // more than limit; 0 is no limit. Each a dictionary, as DESKTOP.md lists.
+    Q_SCRIPTABLE QVariantList Find(const QString &words, uint limit);
+    // Opens the note on Gooseberry's own card, as a tap on the board does.
+    Q_SCRIPTABLE bool OpenNote(const QString &noteId);
 
 Q_SIGNALS:
     // The note changed by something other than a call here: the board, the
