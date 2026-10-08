@@ -82,7 +82,10 @@ putting away by hand.
 
 ## Milestone 4: with Search
 
-Waits on Tettegouche taking up its need in `DESKTOP.md`.
+**Status:** being built, 8 October. The board's own search was already
+there; Gooseberry now answers `Find` and `OpenNote` on the bus
+(`DESKTOP.md` § The quick note in Search), and Tettegouche lists the notes
+among its results.
 
 - Notes found in Search, each saying its folder and window.
 

@@ -114,6 +114,10 @@ public:
     void setSearch(const QString &search);
     int count() const { return int(m_ids.size()); }
 
+    // True when the words are in the note's text, its folder's name or the
+    // window it is stuck to: the board's search, and Find on the bus.
+    static bool matches(const Note &note, const QString &words);
+
     int rowCount(const QModelIndex &parent = {}) const override;
     QVariant data(const QModelIndex &index, int role) const override;
     QHash<int, QByteArray> roleNames() const override;

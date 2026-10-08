@@ -425,6 +425,55 @@ private Q_SLOTS:
         call(QStringLiteral("Done"));
     }
 
+    // From Milestone 4: Find gives the notes with the words, as the board's
+    // search finds them, tucked away ones included, and OpenNote opens one.
+    void findLooksThroughEveryNote()
+    {
+        call(QStringLiteral("Start"));
+        const QString id = call(QStringLiteral("SetText"), {QStringLiteral("Shopping\nbuy oat milk for the week")}).value(QStringLiteral("id")).toString();
+        call(QStringLiteral("SetFolder"), {QStringLiteral("Home")});
+        call(QStringLiteral("Done"));
+
+        const auto find = [this](const QString &words, uint limit) {
+            const QDBusMessage reply = m_note->call(QStringLiteral("Find"), words, limit);
+            return reply.type() == QDBusMessage::ReplyMessage ? asList(reply.arguments().value(0)) : QVariantList{QStringLiteral("error")};
+        };
+
+        QVariantList found = find(QStringLiteral("OAT  milk"), 0);
+        QCOMPARE(found.size(), 1);
+        const QVariantMap note = asMap(found.first());
+        QCOMPARE(note.value(QStringLiteral("id")).toString(), id);
+        QCOMPARE(note.value(QStringLiteral("title")).toString(), QStringLiteral("Shopping"));
+        QCOMPARE(note.value(QStringLiteral("excerpt")).toString(), QStringLiteral("buy oat milk for the week"));
+        QCOMPARE(note.value(QStringLiteral("folder")).toString(), QStringLiteral("Home"));
+        QCOMPARE(note.value(QStringLiteral("folderLabel")).toString(), QStringLiteral("Home"));
+        QVERIFY(!note.value(QStringLiteral("stuck")).toBool());
+        QVERIFY(!note.value(QStringLiteral("tucked")).toBool());
+        QVERIFY(note.value(QStringLiteral("colourHex")).toString().startsWith(QLatin1Char('#')));
+
+        // A match in the first line needs no excerpt; a folder's name finds its notes.
+        QCOMPARE(asMap(find(QStringLiteral("shop"), 0).value(0)).value(QStringLiteral("excerpt")).toString(), QString());
+        QCOMPARE(find(QStringLiteral("home"), 0).size(), 1);
+
+        bool tucked = false;
+        for (const QVariant &each : find(QStringLiteral("groceries"), 0)) {
+            tucked = tucked || asMap(each).value(QStringLiteral("tucked")).toBool();
+        }
+        QVERIFY(tucked);
+
+        QCOMPARE(find(QStringLiteral("no note has these words"), 0).size(), 0);
+        QCOMPARE(find(QStringLiteral("   "), 0).size(), 0);
+        QVERIFY(find(QStringLiteral("e"), 0).size() > 1);
+        QCOMPARE(find(QStringLiteral("e"), 1).size(), 1);
+
+        const QDBusReply<bool> missing = m_note->call(QStringLiteral("OpenNote"), QStringLiteral("no-such-note"));
+        QVERIFY(missing.isValid());
+        QVERIFY(!missing.value());
+        const QDBusReply<bool> opened = m_note->call(QStringLiteral("OpenNote"), id);
+        QVERIFY(opened.isValid());
+        QVERIFY(opened.value());
+    }
+
     // Gooseberry still running and well after all of it.
     void stillRunning()
     {
