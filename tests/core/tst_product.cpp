@@ -49,7 +49,7 @@ private Q_SLOTS:
     {
         QVERIFY(!shuffleInstalled());
         const QString surface = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation)
-            + QStringLiteral("/plasma/plasmoids/studio.warbler.shuffle.bottomsurface");
+            + QStringLiteral("/plasma/plasmoids/co.goodinput.shuffle.bottomsurface");
         QVERIFY(QDir().mkpath(surface));
         QVERIFY(shuffleInstalled());
         QVERIFY(QDir(surface).removeRecursively());
