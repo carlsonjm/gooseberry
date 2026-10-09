@@ -62,6 +62,7 @@ qt_add_qml_module(gooseberry-screens
         qml/QuickNote.qml
         qml/StuckWindow.qml
         qml/TimePicker.qml
+        qml/TouchSelect.qml
     RESOURCES
         qml/icons/note.svg
         qml/icons/tuck.svg

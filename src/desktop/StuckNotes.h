@@ -55,6 +55,9 @@ public:
     // Where the surface takes presses, in its own coordinates: the notes.
     // Everywhere else reaches the window.
     Q_INVOKABLE void setPressable(const QVariantList &rects);
+    // While words on a note are selected the surface takes the keys, so
+    // Ctrl+C copies them; otherwise the keys stay with the window.
+    Q_INVOKABLE void setTakesKeys(bool takes);
     // While the quick-note card is open the notes step aside, as in Spread,
     // and come back when it closes.
     void setCardOpen(bool open);

@@ -155,9 +155,10 @@ void StuckNotes::prepareSurface()
 {
     if (onWayland()) {
         // A surface of the desktop's own above the windows, laid exactly
-        // over the one whose notes it shows. It takes no keys: a note is
-        // written on the quick-note card. It takes presses only on the notes
-        // and their button (setPressable); the rest reaches the window.
+        // over the one whose notes it shows. It takes the keys only while
+        // words on a note are selected (setTakesKeys); a note is written on
+        // the quick-note card. It takes presses only on the notes and their
+        // button (setPressable); the rest reaches the window.
         auto *layer = LayerShellQt::Window::get(m_surface);
         layer->setLayer(LayerShellQt::Window::LayerTop);
         layer->setAnchors({LayerShellQt::Window::AnchorTop, LayerShellQt::Window::AnchorLeft});
@@ -281,6 +282,19 @@ void StuckNotes::setPressable(const QVariantList &rects)
     // An empty mask would take every press; one pixel in the corner takes
     // none that matter.
     m_surface->setMask(region.isEmpty() ? QRegion(0, 0, 1, 1) : region);
+}
+
+void StuckNotes::setTakesKeys(bool takes)
+{
+    if (!m_surface || !onWayland()) {
+        return;
+    }
+    // The desktop hands the keys to a surface over the windows as soon as it
+    // asks for them, and back to the window once it stops.
+    qCDebug(DESKTOP) << "stuck notes" << (takes ? "take" : "give back") << "the keys";
+    LayerShellQt::Window::get(m_surface)->setKeyboardInteractivity(takes ? LayerShellQt::Window::KeyboardInteractivityOnDemand
+                                                                         : LayerShellQt::Window::KeyboardInteractivityNone);
+    m_surface->requestUpdate();
 }
 
 bool StuckNotes::NewOn(const QString &windowId, const QString &caption, const QString &app)

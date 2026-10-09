@@ -7,9 +7,10 @@ import QtQuick.Window
 // stands where Robin last let it go, kept in proportion when the window is
 // resized, and one never placed starts at the top-right, the newest on top.
 // A note held and moved stays where it is let go; a tap opens it on the
-// quick-note card. The notes stay up until Robin taps the dot, or the stack
-// in Spread, again; a press anywhere else reaches the window underneath, as
-// if the notes were not there.
+// quick-note card; its words can be selected and copied where it stands. The
+// notes stay up until Robin taps the dot, or the stack in Spread, again; a
+// press anywhere else reaches the window underneath, as if the notes were not
+// there.
 Window {
     id: root
 
@@ -43,6 +44,42 @@ Window {
         root.stuck.setPressable(rects);
     }
 
+    // Words selected on a note, or Copy offered on one, while the surface
+    // holds the keys; told to the shell whenever that changes.
+    property bool takesKeys: false
+
+    function tellKeys() {
+        let wanted = false;
+        for (let i = 0; i < notesRepeater.count; ++i) {
+            const item = notesRepeater.itemAt(i);
+            if (item && (item.selecting || item.offerCopy)) {
+                wanted = true;
+            }
+        }
+        if (wanted !== takesKeys && root.stuck) {
+            takesKeys = wanted;
+            root.stuck.setTakesKeys(wanted);
+        }
+    }
+
+    // A press on the window underneath, or the notes going away, lets go of
+    // whatever words were selected.
+    function letGoAll() {
+        for (let i = 0; i < notesRepeater.count; ++i) {
+            const item = notesRepeater.itemAt(i);
+            if (item) {
+                item.letGo();
+            }
+        }
+        tellKeys();
+    }
+
+    onActiveChanged: {
+        if (!active) {
+            letGoAll();
+        }
+    }
+
     Timer {
         id: pressableLater
         interval: 0
@@ -51,12 +88,20 @@ Window {
 
     onWidthChanged: pressableLater.restart()
     onHeightChanged: pressableLater.restart()
-    onVisibleChanged: pressableLater.restart()
+    onVisibleChanged: {
+        pressableLater.restart();
+        if (!visible) {
+            letGoAll();
+        }
+    }
 
     Repeater {
         id: notesRepeater
         model: root.notes
-        onCountChanged: pressableLater.restart()
+        onCountChanged: {
+            pressableLater.restart();
+            Qt.callLater(root.tellKeys);
+        }
 
         Rectangle {
             id: note
@@ -66,10 +111,55 @@ Window {
             readonly property bool placed: modelData.x >= 0 && modelData.y >= 0
             readonly property real freeX: Math.max(0, root.width - width)
             readonly property real freeY: Math.max(0, root.height - height)
+            readonly property bool selecting: body.selectedText.length > 0 || touchSelect.selecting
+            property bool offerCopy: false
+            property bool copied: false
+
+            function placeIf(active) {
+                if (!active && root.width > 0 && root.height > 0) {
+                    root.stuck.place(modelData.id, x / root.width, y / root.height);
+                }
+            }
+
+            function copy() {
+                if (body.selectedText.length > 0) {
+                    body.copy();
+                } else {
+                    body.selectAll();
+                    body.copy();
+                    body.deselect();
+                }
+                copied = true;
+                copiedFor.restart();
+            }
+
+            // Whether words were selected as the press began, before the
+            // press itself could let go of them.
+            property bool heldWords: false
+
+            function pressedWith(pressed) {
+                if (pressed) {
+                    heldWords = selecting || offerCopy;
+                }
+            }
+
+            function tapped() {
+                if (heldWords) {
+                    letGo();
+                } else {
+                    root.stuck.openRequested(modelData.id);
+                }
+            }
+
+            function letGo() {
+                body.deselect();
+                offerCopy = false;
+                copied = false;
+            }
 
             objectName: "stuck-" + modelData.id
             width: root.noteWidth
-            height: Math.min(root.noteWidth, body.implicitHeight + 28)
+            height: Math.min(root.noteWidth, body.implicitHeight + 28) + (tools.visible ? tools.height + 6 : 0)
             radius: 10
             color: modelData.colourHex
             // The newest note is first in the list and lies on top.
@@ -81,6 +171,8 @@ Window {
             onXChanged: pressableLater.restart()
             onYChanged: pressableLater.restart()
             onHeightChanged: pressableLater.restart()
+            onSelectingChanged: Qt.callLater(root.tellKeys)
+            onOfferCopyChanged: Qt.callLater(root.tellKeys)
 
             Rectangle {
                 anchors.fill: parent
@@ -90,38 +182,138 @@ Window {
                 color: "#33000000"
             }
 
-            Text {
+            // The words, selectable as on any page: dragged across with a
+            // mouse, or held with a finger and slid along. Selected, Copy
+            // shows on the note; Ctrl+C works too.
+            TextEdit {
                 id: body
-                anchors {
-                    fill: parent
-                    margins: 14
-                }
+                objectName: "stuckWords-" + note.modelData.id
+                x: 14
+                y: 14
+                width: parent.width - 28
+                height: Math.min(implicitHeight, root.noteWidth - 28)
                 text: note.modelData.text
                 color: "#1A1A1A"
+                selectionColor: Qt.rgba(0, 0, 0, 0.2)
+                selectedTextColor: "#1A1A1A"
                 font.pixelSize: 14
                 font.weight: Font.Medium
-                wrapMode: Text.Wrap
-                elide: Text.ElideRight
-                textFormat: Text.PlainText
-                maximumLineCount: 8
+                wrapMode: TextEdit.Wrap
+                textFormat: TextEdit.PlainText
+                readOnly: true
+                selectByMouse: true
+                persistentSelection: true
+                clip: true
+                Accessible.ignored: true
+
+                // The words keep a press on them, a mouse's to select; a tap
+                // on them still opens the note, or lets go of what is
+                // selected.
+                TapHandler {
+                    onPressedChanged: note.pressedWith(pressed)
+                    onTapped: note.tapped()
+                }
+
+                TapHandler {
+                    acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+                    acceptedButtons: Qt.RightButton
+                    onTapped: note.offerCopy = true
+                }
+            }
+
+            // A tap opens the note, unless words are selected: then it lets
+            // them go. A finger moves the note from anywhere on it; a mouse
+            // moves it from anywhere but the words, which keep a press that
+            // starts on them to select.
+            TapHandler {
+                onPressedChanged: note.pressedWith(pressed)
+                onTapped: note.tapped()
             }
 
             TapHandler {
-                onTapped: root.stuck.openRequested(note.modelData.id)
+                acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad | PointerDevice.Stylus
+                acceptedButtons: Qt.RightButton
+                onTapped: note.offerCopy = true
             }
 
             DragHandler {
-                id: drag
                 target: note
+                enabled: !touchSelect.selecting
                 xAxis.minimum: 0
                 xAxis.maximum: note.freeX
                 yAxis.minimum: 0
                 yAxis.maximum: note.freeY
-                onActiveChanged: {
-                    if (!active && root.width > 0 && root.height > 0) {
-                        root.stuck.place(note.modelData.id, note.x / root.width, note.y / root.height);
+                onActiveChanged: note.placeIf(active)
+            }
+
+            TouchSelect {
+                id: touchSelect
+                x: body.x
+                y: body.y
+                width: body.width
+                height: body.height
+                target: body
+                onSelected: body.forceActiveFocus()
+            }
+
+            // Copy, and Select all, along the note's foot while words are
+            // selected or after a right-click.
+            Row {
+                id: tools
+                objectName: "stuckTools-" + note.modelData.id
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
+                anchors.margins: 6
+                spacing: 4
+                visible: note.selecting || note.offerCopy
+
+                Repeater {
+                    model: [
+                        { name: "copy", label: note.copied ? i18n("Copied") : body.selectedText.length > 0 ? i18n("Copy") : i18n("Copy all") },
+                        { name: "selectAll", label: i18n("Select all") }
+                    ]
+                    delegate: Rectangle {
+                        required property var modelData
+                        objectName: "stuck-" + modelData.name
+                        width: Math.max(44, word.implicitWidth + 20)
+                        height: 30
+                        radius: 15
+                        color: press.pressed ? "#3A3A3A" : "#1A1A1A"
+                        Accessible.role: Accessible.Button
+                        Accessible.name: modelData.label
+
+                        Text {
+                            id: word
+                            anchors.centerIn: parent
+                            text: parent.modelData.label
+                            color: "#FFFFFF"
+                            font.pixelSize: 12
+                            font.weight: Font.DemiBold
+                        }
+
+                        // Taller than drawn, for a finger.
+                        MouseArea {
+                            id: press
+                            anchors.fill: parent
+                            anchors.topMargin: -7
+                            anchors.bottomMargin: -7
+                            onClicked: {
+                                if (parent.modelData.name === "copy") {
+                                    note.copy();
+                                } else {
+                                    body.selectAll();
+                                    note.offerCopy = true;
+                                }
+                            }
+                        }
                     }
                 }
+            }
+
+            Timer {
+                id: copiedFor
+                interval: 1500
+                onTriggered: note.copied = false
             }
         }
     }
