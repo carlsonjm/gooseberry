@@ -52,6 +52,8 @@ public:
 
     // A note let go on the surface, at these fractions of the window.
     Q_INVOKABLE void place(const QString &noteId, qreal x, qreal y);
+    // A note resized on the surface, to this size in the desktop's pixels.
+    Q_INVOKABLE void resize(const QString &noteId, qreal width, qreal height);
     // Where the surface takes presses, in its own coordinates: the notes.
     // Everywhere else reaches the window.
     Q_INVOKABLE void setPressable(const QVariantList &rects);

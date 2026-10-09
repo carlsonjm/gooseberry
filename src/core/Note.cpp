@@ -26,7 +26,7 @@ constexpr Colour Colours[] = {
 const QStringList KnownKeys = {
     QStringLiteral("gooseberry"), QStringLiteral("created"), QStringLiteral("changed"),
     QStringLiteral("colour"), QStringLiteral("stuck"), QStringLiteral("window"),
-    QStringLiteral("app"), QStringLiteral("workspace"), QStringLiteral("place"),
+    QStringLiteral("app"), QStringLiteral("workspace"), QStringLiteral("place"), QStringLiteral("size"),
     QStringLiteral("tucked"), QStringLiteral("remind"), QStringLiteral("reminded"), QStringLiteral("done"),
 };
 
@@ -146,6 +146,9 @@ QByteArray Note::serialize() const
     if (hasPlace()) {
         out += QStringLiteral("place: %1 %2\n").arg(place.x(), 0, 'f', 3).arg(place.y(), 0, 'f', 3);
     }
+    if (hasSize()) {
+        out += QStringLiteral("size: %1 %2\n").arg(qRound(size.width())).arg(qRound(size.height()));
+    }
     out += QStringLiteral("tucked: %1\n").arg(tucked ? QStringLiteral("true") : QStringLiteral("false"));
     if (remind.isValid()) {
         out += QStringLiteral("remind: %1\n").arg(timeText(remind));
@@ -248,6 +251,20 @@ Note Note::parse(const QByteArray &bytes, const QString &id, const QDateTime &fa
             const double y = parts.size() == 2 ? parts.at(1).toDouble(&okY) : -1;
             if (okX && okY && x >= 0 && x <= 1 && y >= 0 && y <= 1) {
                 note.place = QPointF(x, y);
+            } else {
+                note.extra.append({key, raw});
+            }
+        } else if (key == QLatin1String("size")) {
+            // Two whole numbers of pixels, width then height, within what a
+            // note is kept at; anything else is kept as written and the note
+            // is drawn at the size every note starts at.
+            const QStringList parts = value.split(QLatin1Char(' '), Qt::SkipEmptyParts);
+            bool okW = false;
+            bool okH = false;
+            const int w = parts.size() == 2 ? parts.at(0).toInt(&okW) : 0;
+            const int h = parts.size() == 2 ? parts.at(1).toInt(&okH) : 0;
+            if (okW && okH && w >= SmallestSide && w <= LargestSide && h >= SmallestSide && h <= LargestSide) {
+                note.size = QSizeF(w, h);
             } else {
                 note.extra.append({key, raw});
             }

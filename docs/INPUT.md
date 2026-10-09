@@ -21,6 +21,7 @@ below is built.
 | Remove a note | Tap the note on the board, then Remove | None yet |
 | Find a note | Type in Search notes on the board | None yet |
 | Copy words from a note | Hold a word | `Ctrl+C` |
+| Resize a note over a window | Drag its bottom-right corner | None yet |
 
 ## Capture a note
 
@@ -200,3 +201,8 @@ On the quick-note card and on the notes stuck over a window alike.
 | Tap a note over a window with words selected | The words are let go; the next tap opens the note, as before. |
 | Tap or click the window under the notes | The words are let go, and the keys go back to the window. |
 
+## Resize a note over a window
+
+| Input | What happens |
+| --- | --- |
+| Drag its bottom-right corner | The note grows or shrinks with the finger or pointer, never smaller than a few words or larger than the window. Let go, it keeps that size, the next time the notes come up and on any window it is stuck to later. Its words take the new room. |

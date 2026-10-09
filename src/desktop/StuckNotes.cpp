@@ -100,6 +100,8 @@ QVariantList StuckNotes::currentShownNotes() const
             {QStringLiteral("colourHex"), colourHex(note.colour)},
             {QStringLiteral("x"), note.place.x()},
             {QStringLiteral("y"), note.place.y()},
+            {QStringLiteral("width"), note.hasSize() ? note.size.width() : -1.0},
+            {QStringLiteral("height"), note.hasSize() ? note.size.height() : -1.0},
         });
     }
     return list;
@@ -343,6 +345,18 @@ void StuckNotes::place(const QString &noteId, qreal x, qreal y)
     }
     note->place = QPointF(qBound(0.0, x, 1.0), qBound(0.0, y, 1.0));
     // Where a note sits on its window is not a change to the note.
+    m_store->save(*note, NoteStore::Touch::Kept);
+}
+
+void StuckNotes::resize(const QString &noteId, qreal width, qreal height)
+{
+    auto note = m_store->note(noteId);
+    if (!note || note->newerFormat() || m_store->readOnly()) {
+        return;
+    }
+    note->size = QSizeF(qBound<qreal>(Note::SmallestSide, qRound(width), Note::LargestSide),
+                        qBound<qreal>(Note::SmallestSide, qRound(height), Note::LargestSide));
+    // Nor is how big it is drawn there.
     m_store->save(*note, NoteStore::Touch::Kept);
 }
 

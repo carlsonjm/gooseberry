@@ -112,6 +112,19 @@ Window {
             readonly property real freeX: Math.max(0, root.width - width)
             readonly property real freeY: Math.max(0, root.height - height)
             readonly property bool selecting: body.selectedText.length > 0 || touchSelect.selecting
+            // Resized by its corner, a note keeps that size; otherwise it is
+            // as wide as every note and as tall as its words.
+            readonly property bool sized: modelData.width > 0 && modelData.height > 0
+            readonly property real toolsRoom: tools.visible ? tools.height + 6 : 0
+            readonly property real fitHeight: Math.min(root.noteWidth, body.implicitHeight + 28) + toolsRoom
+            // The size while the corner is held, and as it was let go until
+            // the note comes back with it kept.
+            property bool resizing: false
+            property real liveWidth: -1
+            property real liveHeight: -1
+            // When the corner was last let go: the lift that ends a resize is
+            // not a tap on the note.
+            property real resizedAt: 0
             property bool offerCopy: false
             property bool copied: false
 
@@ -144,10 +157,29 @@ Window {
             }
 
             function tapped() {
+                if (resizing || Date.now() - resizedAt < 400) {
+                    return;
+                }
                 if (heldWords) {
                     letGo();
                 } else {
                     root.stuck.openRequested(modelData.id);
+                }
+            }
+
+            function resizeBy(fromWidth, fromHeight, dx, dy) {
+                liveWidth = Math.max(120, Math.min(root.width - x, fromWidth + dx));
+                liveHeight = Math.max(80, Math.min(root.height - y, fromHeight + dy));
+            }
+
+            function resized() {
+                if (!resizing) {
+                    return;
+                }
+                resizing = false;
+                resizedAt = Date.now();
+                if (liveWidth > 0 && liveHeight > 0) {
+                    root.stuck.resize(modelData.id, liveWidth, liveHeight);
                 }
             }
 
@@ -158,8 +190,8 @@ Window {
             }
 
             objectName: "stuck-" + modelData.id
-            width: root.noteWidth
-            height: Math.min(root.noteWidth, body.implicitHeight + 28) + (tools.visible ? tools.height + 6 : 0)
+            width: Math.min(root.width, liveWidth > 0 ? liveWidth : sized ? modelData.width : root.noteWidth)
+            height: Math.min(root.height, liveHeight > 0 ? liveHeight : sized ? modelData.height : fitHeight)
             radius: 10
             color: modelData.colourHex
             // The newest note is first in the list and lies on top.
@@ -191,7 +223,8 @@ Window {
                 x: 14
                 y: 14
                 width: parent.width - 28
-                height: Math.min(implicitHeight, root.noteWidth - 28)
+                height: note.sized || note.liveHeight > 0 ? Math.max(0, note.height - 28 - note.toolsRoom)
+                                                          : Math.min(implicitHeight, root.noteWidth - 28)
                 text: note.modelData.text
                 color: "#1A1A1A"
                 selectionColor: Qt.rgba(0, 0, 0, 0.2)
@@ -238,7 +271,7 @@ Window {
 
             DragHandler {
                 target: note
-                enabled: !touchSelect.selecting
+                enabled: !touchSelect.selecting && !note.resizing
                 xAxis.minimum: 0
                 xAxis.maximum: note.freeX
                 yAxis.minimum: 0
@@ -263,7 +296,8 @@ Window {
                 objectName: "stuckTools-" + note.modelData.id
                 anchors.right: parent.right
                 anchors.bottom: parent.bottom
-                anchors.margins: 6
+                anchors.rightMargin: 26
+                anchors.bottomMargin: 6
                 spacing: 4
                 visible: note.selecting || note.offerCopy
 
@@ -307,6 +341,64 @@ Window {
                             }
                         }
                     }
+                }
+            }
+
+            // The corner that resizes the note, by finger or pointer; the note
+            // keeps the size it is let go at, on this window and any other.
+            Item {
+                id: grip
+                objectName: "stuckResize-" + note.modelData.id
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
+                width: 44
+                height: 44
+                Accessible.role: Accessible.Grip
+                Accessible.name: i18n("Resize")
+
+                property real fromWidth: 0
+                property real fromHeight: 0
+
+                Canvas {
+                    anchors.right: parent.right
+                    anchors.bottom: parent.bottom
+                    anchors.margins: 6
+                    width: 12
+                    height: 12
+                    onPaint: {
+                        const ctx = getContext("2d");
+                        ctx.reset();
+                        ctx.strokeStyle = "rgba(26, 26, 26, 0.45)";
+                        ctx.lineWidth = 1.5;
+                        ctx.lineCap = "round";
+                        ctx.beginPath();
+                        ctx.moveTo(width - 1, 1);
+                        ctx.lineTo(1, height - 1);
+                        ctx.moveTo(width - 1, height / 2);
+                        ctx.lineTo(width / 2, height - 1);
+                        ctx.stroke();
+                    }
+                }
+
+                // Pressed here, a mouse resizes rather than selects.
+                MouseArea {
+                    anchors.fill: parent
+                    acceptedButtons: Qt.LeftButton
+                    preventStealing: true
+                    cursorShape: Qt.SizeFDiagCursor
+                    property point from
+                    onPressed: mouse => {
+                        from = mapToItem(note, mouse.x, mouse.y);
+                        grip.fromWidth = note.width;
+                        grip.fromHeight = note.height;
+                        note.resizing = true;
+                    }
+                    onPositionChanged: mouse => {
+                        const at = mapToItem(note, mouse.x, mouse.y);
+                        note.resizeBy(grip.fromWidth, grip.fromHeight, at.x - from.x, at.y - from.y);
+                    }
+                    onReleased: note.resized()
+                    onCanceled: note.resized()
                 }
             }
 

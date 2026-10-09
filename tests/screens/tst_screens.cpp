@@ -24,6 +24,7 @@
 #include <QQuickView>
 #include <QQuickWindow>
 #include <QSignalSpy>
+#include <QSizeF>
 #include <QTest>
 #include <QtQml/qqmlextensionplugin.h>
 
@@ -112,7 +113,9 @@ public:
                                {QStringLiteral("text"), QStringLiteral("DOCKERHUB_USERNAME\ndocker login -u someone\n\nTOKEN\ndckr_pat_ABCDEF-ghijk")},
                                {QStringLiteral("colourHex"), QStringLiteral("#F2D98A")},
                                {QStringLiteral("x"), -1.0},
-                               {QStringLiteral("y"), -1.0}}};
+                               {QStringLiteral("y"), -1.0},
+                               {QStringLiteral("width"), -1.0},
+                               {QStringLiteral("height"), -1.0}}};
         connect(this, &FakeStuck::openRequested, this, [this](const QString &id) {
             opened.append(id);
         });
@@ -120,6 +123,7 @@ public:
 
     QStringList opened;
     QList<bool> keys;
+    QList<QSizeF> sizes;
 
 Q_SIGNALS:
     void openRequested(const QString &id);
@@ -128,6 +132,7 @@ public Q_SLOTS:
     void setPressable(const QVariantList &) { }
     void place(const QString &, qreal, qreal) { }
     void setTakesKeys(bool takes) { keys.append(takes); }
+    void resize(const QString &, qreal width, qreal height) { sizes.append(QSizeF(width, height)); }
 
 private:
     QVariantList m_notes;
@@ -462,6 +467,38 @@ private Q_SLOTS:
         QTRY_VERIFY(tools->isVisible());
         tap(window, itemNamed(window->contentItem(), QStringLiteral("stuck-copy")));
         QCOMPARE(QGuiApplication::clipboard()->text(), text);
+        QTest::qWait(400);
+        tap(window, words);
+
+        // The corner resizes the note, with a mouse and with a finger,
+        // without opening it, and the size it is let go at is kept.
+        QQuickItem *grip = itemNamed(window->contentItem(), QStringLiteral("stuckResize-n1"));
+        QVERIFY(grip);
+        const QSizeF fit = stuckNote->size();
+        const auto corner = [grip] {
+            return grip->mapToScene(QPointF(grip->width() - 10, grip->height() - 10)).toPoint();
+        };
+        const int opened = stuck.opened.size();
+        sweep(window, corner(), corner() + QPoint(80, 60));
+        QVERIFY(stuckNote->width() > fit.width());
+        QVERIFY(stuckNote->height() > fit.height());
+        QCOMPARE(stuck.sizes.size(), 1);
+        QCOMPARE(stuck.sizes.constLast(), stuckNote->size());
+        // Larger, the words have the room.
+        QVERIFY(words->height() > fit.height() - 28);
+        QTest::qWait(400);
+        const QPoint start = corner();
+        QTest::touchEvent(window, finger).press(0, start, window);
+        for (int step = 1; step <= 10; ++step) {
+            QTest::qWait(10);
+            QTest::touchEvent(window, finger).move(0, start + QPoint(-4 * step, -3 * step), window);
+        }
+        QTest::touchEvent(window, finger).release(0, start + QPoint(-40, -30), window);
+        QTRY_COMPARE(stuck.sizes.size(), 2);
+        QCOMPARE(stuck.sizes.constLast(), stuckNote->size());
+        QVERIFY(stuck.sizes.constLast().width() < stuck.sizes.constFirst().width());
+        QTest::qWait(500);
+        QCOMPARE(stuck.opened.size(), opened);
     }
 
     void cursorIsReadyAndTypingKeeps()
