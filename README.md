@@ -6,22 +6,22 @@ Write a thought down in one tap. Keep it beside the work it belongs to, put it
 on the planner when it has a time, or tuck it away without losing it. Nothing
 asks for a title, a folder or a save before an idea is kept.
 
-**Status:** Milestone 0, capture and keep, and Milestone 1, the planner, are
-built and waiting on their proof: the quick-note card, the board, tucking away
-and removing; reminders at a time or the next time a document opens, the
-planner and checklists. The pen comes next. The concept is in [docs/CONCEPT.md](docs/CONCEPT.md) and
-the plan in [docs/ROADMAP.md](docs/ROADMAP.md).
+**Status:** capture, the board, the planner, folders, notes stuck to windows
+and notes in Search are built. The concept is in
+[docs/CONCEPT.md](docs/CONCEPT.md) and the plan in
+[docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## What it does
 
-- **Captures.** One tap opens a page with the cursor already in it. Type, or
-  write with a pen. It is saved as you go.
+- **Captures.** One tap opens a page with the cursor already in it. It is
+  saved as you type.
 - **Keeps notes in folders.** Each note is kept in a folder, Inbox unless you
   choose, and can be stuck to the window you are working in. Start a folder
   before any work exists; give one to a workspace and its notes go there.
 - **Plans.** A note with a time goes on the planner and reminds you; everything
   else is an idea, and waits without a date.
-- **Finds.** Typed and handwritten notes both turn up when you search.
+- **Finds.** A note turns up when you search the board, or Search where
+  Tettegouche is installed.
 
 ## What it never does
 

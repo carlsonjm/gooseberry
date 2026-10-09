@@ -123,6 +123,10 @@ the start. (The maintainer, 3 October.)
 Rejected: building for the desktop first and separating later, which turns a
 companion into a second app.
 
+Note, 8 October: the phone companion and sync across computers were dropped,
+and so was the pen. The core stays apart from the desktop parts, which still
+serves, but nothing more is built for a phone.
+
 ## The mock-up is the approved visual direction
 
 The six screens in `mockup/` are the approved layout and behaviour: what each
