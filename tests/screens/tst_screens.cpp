@@ -487,13 +487,13 @@ private Q_SLOTS:
         // Larger, the words have the room.
         QVERIFY(words->height() > fit.height() - 28);
         QTest::qWait(400);
-        const QPoint start = corner();
-        QTest::touchEvent(window, finger).press(0, start, window);
+        const QPoint held = corner();
+        QTest::touchEvent(window, finger).press(0, held, window);
         for (int step = 1; step <= 10; ++step) {
             QTest::qWait(10);
-            QTest::touchEvent(window, finger).move(0, start + QPoint(-4 * step, -3 * step), window);
+            QTest::touchEvent(window, finger).move(0, held + QPoint(-4 * step, -3 * step), window);
         }
-        QTest::touchEvent(window, finger).release(0, start + QPoint(-40, -30), window);
+        QTest::touchEvent(window, finger).release(0, held + QPoint(-40, -30), window);
         QTRY_COMPARE(stuck.sizes.size(), 2);
         QCOMPARE(stuck.sizes.constLast(), stuckNote->size());
         QVERIFY(stuck.sizes.constLast().width() < stuck.sizes.constFirst().width());
