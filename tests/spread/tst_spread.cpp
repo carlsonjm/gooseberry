@@ -39,7 +39,7 @@ namespace {
 
 const QString KWin = QStringLiteral("org.kde.KWin");
 const QString KadunceObject = QStringLiteral("/Kadunce");
-const QString KadunceInterface = QStringLiteral("studio.warbler.Kadunce");
+const QString KadunceInterface = QStringLiteral("co.goodinput.Kadunce");
 const QString FakeConnection = QStringLiteral("fake-kadunce");
 const QString BoardId = QStringLiteral("io.github.carlsonjm.Gooseberry.desktop");
 
@@ -70,7 +70,7 @@ QQuickItem *itemNamed(QQuickItem *root, const QString &name)
 class FakeKadunce : public QObject, protected QDBusContext
 {
     Q_OBJECT
-    Q_CLASSINFO("D-Bus Interface", "studio.warbler.Kadunce")
+    Q_CLASSINFO("D-Bus Interface", "co.goodinput.Kadunce")
 
 public:
     struct Call {
@@ -138,7 +138,7 @@ public Q_SLOTS:
         const QJsonArray applications{
             QJsonObject{{QStringLiteral("windowId"), QStringLiteral("w-work")}, {QStringLiteral("appId"), QStringLiteral("org.kde.kate")}},
             QJsonObject{{QStringLiteral("windowId"), QStringLiteral("w-board")}, {QStringLiteral("appId"), QStringLiteral("io.github.carlsonjm.Gooseberry")}}};
-        const QJsonObject root{{QStringLiteral("schema"), QStringLiteral("studio.warbler.kadunce.workspace-context")},
+        const QJsonObject root{{QStringLiteral("schema"), QStringLiteral("co.goodinput.kadunce.workspace-context")},
                                {QStringLiteral("version"), 1},
                                {QStringLiteral("cardStage"), stage},
                                {QStringLiteral("applications"), applications}};

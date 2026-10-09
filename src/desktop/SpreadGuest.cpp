@@ -23,7 +23,7 @@ namespace {
 
 const QString Kadunce = QStringLiteral("org.kde.KWin");
 const QString KadunceObject = QStringLiteral("/Kadunce");
-const QString KadunceInterface = QStringLiteral("studio.warbler.Kadunce");
+const QString KadunceInterface = QStringLiteral("co.goodinput.Kadunce");
 const QString OwnInterface = QStringLiteral("io.github.carlsonjm.Gooseberry.CompanionGuest");
 
 // Room round the card a finger may land in and still be the card's.
@@ -51,7 +51,7 @@ QJsonObject workspaceContext()
         return {};
     }
     const QJsonObject root = QJsonDocument::fromJson(reply.value().toUtf8()).object();
-    if (root.value(QStringLiteral("schema")).toString() != QLatin1String("studio.warbler.kadunce.workspace-context")
+    if (root.value(QStringLiteral("schema")).toString() != QLatin1String("co.goodinput.kadunce.workspace-context")
         || root.value(QStringLiteral("version")).toInt() != 1) {
         return {};
     }
