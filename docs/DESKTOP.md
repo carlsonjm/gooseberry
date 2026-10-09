@@ -97,9 +97,6 @@ after 10 seconds, leaving the grown card showing the board itself.
 - **Room beside a card.** Kadunce makes room on the Active card for the keys
   and for nothing else. Gooseberry stacks notes behind the card instead, and
   asks for room only if a rail beside the card is ever revisited.
-- **Notes drawn on cards in Spread.** A count of notes on a card's corner, and
-  carrying a note from one card to another in Spread, are Kadunce's to draw and
-  answer, from § Stuck notes on the bus.
 - **Arranging on request.** Kadunce's outside interface is read-only by design.
   Stacking a note with its card for Robin would need Kadunce's request
   interface, which is not scheduled.
@@ -126,7 +123,6 @@ and its folder or window, opening the note rather than a file.
 ### What Tettegouche does not offer
 
 - A Notes tab of its own, listing every note by when it was written.
-- Matching handwritten notes by the text read from their ink.
 
 ### The quick note in Search
 
@@ -302,20 +298,21 @@ Where Split Rock is installed and set up, Gooseberry is one of its tools: the
 assistant can find notes, read one, and add one when Robin asks, and says when
 it reads one. From a note, "next step" sends only that note, and offers a
 checklist, a reminder or a better home; nothing changes until Robin chooses.
-What Robin keeps from the assistant becomes notes here too (`DECISIONS.md`). Gooseberry
-needs no assistant, and offers none of its own.
+What Robin keeps from the assistant becomes notes here too (`DECISIONS.md`).
+This waits while Split Rock's own work is on hold. Gooseberry needs no
+assistant, and offers none of its own.
 
 ## Needs
 
 Each is for that component to take up in the open, under its own contracts.
-None is assumed.
+None is assumed. Already taken up: Kadunce draws each card's stack in Spread and
+carries a note to another card (`StickTo`); Shuffle's title bar draws the dot;
+Tettegouche lists notes among its results (`Find`) and hosts the quick note as
+its Notes mode.
 
 | Component | Need | Holds up |
 | --- | --- | --- |
-| Kadunce | A stack of a card's notes on its corner in Spread, from § Stuck notes on the bus, a tap fanning them and a hold carrying one to another card (`StickTo`); taken up in Milestone 3 | Stuck notes in Spread (Milestone 3) |
-| Shuffle | A notes dot in Shuffle's title bar for windows with notes, from § Stuck notes on the bus, a tap calling `Toggle`; Shuffle's title bar becomes compiled to draw it; taken up in Milestone 3 | The dot (Milestone 3) |
 | Kadunce | Accepting a note carried to the top edge: opening Spread and telling Gooseberry which card it was dropped on | Sticking by drag (Milestone 3) |
 | Kadunce | Its request interface, to stack a companion with a card | Stacking without a hand gesture |
-| Tettegouche | A notes source for Search, with a Notes tab | Notes in Search |
-| Tettegouche | The quick note as one of Search's modes, over § The quick note in Search, behind a checkbox and only when Gooseberry is installed | Writing a note from Search |
-| Split Rock | Use Gooseberry's notes tool where present | The notes tool |
+| Tettegouche | A Notes tab in Search, listing every note | Browsing notes from Search |
+| Split Rock | Use Gooseberry's notes tool where present; on hold while Split Rock's own work is | The notes tool |

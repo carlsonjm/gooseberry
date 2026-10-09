@@ -14,7 +14,7 @@ Paths are from the repository root.
 | `docs/DECISIONS.md` | Every settled ruling and what it rejected |
 | `docs/FORMAT.md` | The note format: where the folder is, what is in it, each note's header, and its version |
 | `docs/TESTING.md` | What the automated checks prove, and the checks by hand against each milestone's proof |
-| `docs/ROADMAP.md` | What is planned, in order, what is not, and the decisions still open |
+| `docs/ROADMAP.md` | What is built, what is still to come, what is not planned, and the decisions still open |
 | `docs/INPUT.md` | Every input, opening with its controls map |
 | `tests/verify-public.py` | Keeps public text fit to publish; the same script as the other components |
 | `verify.sh` | Runs every check: public text, the build and the tests |

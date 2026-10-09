@@ -39,7 +39,7 @@ folder. It is for tests and trials.
 | `.gooseberry` | The folder format, as the line `format: 2` |
 | `.workspaces` | Which folder each workspace's new notes go into, when one has been given a folder |
 | `<id>.md` | One note in Inbox: the header, then the note's text |
-| `<id>.svg` | The note's ink, when it has any, as a drawing, beside its note; from the pen milestone |
+| `<id>.svg` | Ink beside its note, as a drawing. Gooseberry writes none, since the pen is not planned, but one found there moves and goes to the trash with its note |
 | `<folder>/` | One folder, by its name, holding its notes and their ink as above |
 
 - **The id** is the moment the note was started, in local time, and four

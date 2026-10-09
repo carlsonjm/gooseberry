@@ -1,10 +1,7 @@
 # Input
 
-Every tap and key Gooseberry answers, and what you see happen. Milestone 0
-builds capture, the board, tucking away and removing; Milestone 1 builds
-reminders, the planner and checklists; Milestone 2 builds folders, sticking a
-note to a window from the card, and carrying notes on the board; Pen arrives
-with its milestone and is marked so below.
+Every tap and key Gooseberry answers, and what you see happen. Everything
+below is built.
 
 | Task | Touch | Keyboard |
 | --- | --- | --- |
@@ -14,7 +11,6 @@ with its milestone and is marked so below.
 | Stick a note to a window | Tap Stuck to | None yet |
 | Start a folder | Tap New folder on the board | None yet |
 | Move a note | Hold a note on the board | None yet |
-| Write with a pen | Tap Pen | None yet |
 | Set a reminder | Tap Remind | None yet |
 | Make a checklist | Tap Checklist | None yet |
 | Plan the day | Tap a day in the strip | None yet |
@@ -93,15 +89,6 @@ in the workspace's folder, or Inbox, and stuck to the window in front.
 | Let go over a day in the strip | The note goes on the planner that day, at the time it had or 9 AM; Undo takes it back off. |
 | Let go over Trash | The note goes to the desktop's trash; Undo brings it back. |
 | Let go anywhere else | Nothing changes. |
-
-## Write with a pen
-
-Not yet built: the last milestone.
-
-| Input | What happens |
-| --- | --- |
-| Tap Pen | The page takes ink. A pen touching the page does the same. |
-| Tap Type | The page takes typing again. |
 
 ## Set a reminder
 

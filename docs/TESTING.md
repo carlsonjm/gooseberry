@@ -31,9 +31,8 @@ each screen there, to compare with the mock-up by eye.
 ## By hand: Milestone 0
 
 Milestone 0's proof is a week of daily use on the tablet without a lost note,
-with capture fast enough that nothing is written elsewhere instead
-(`ROADMAP.md`). These checks come first, once, after installing; then the week
-of use.
+with capture fast enough that nothing is written elsewhere instead. These
+checks come first, once, after installing; then the week of use.
 
 1. Over a document, tap Gooseberry. The card opens in the middle of the
    screen with the cursor in the note and the on-screen keys up, the whole card
@@ -81,7 +80,7 @@ installed and set up:
 ## By hand: Milestone 1
 
 Milestone 1's proof is a week of the maintainer's days planned in Gooseberry,
-every reminder on time and none shown twice (`ROADMAP.md`). These checks come
+every reminder on time and none shown twice. These checks come
 first, once, after installing; then the week of use.
 
 1. Write a note and tap Remind. The times offered fit the hour of the day; tap
@@ -112,7 +111,7 @@ first, once, after installing; then the week of use.
 ## By hand: Milestone 2
 
 Milestone 2's proof is a project started on the board before its work, and a
-week of notes sorted without opening a menu (`ROADMAP.md`). These checks come
+week of notes sorted without opening a menu. These checks come
 first, once, after installing over Milestone 1's notes; then the week of use.
 
 1. Before installing, note which projects the board shows. After, each is a
@@ -137,7 +136,7 @@ first, once, after installing over Milestone 1's notes; then the week of use.
 ## By hand: Milestone 3
 
 Milestone 3's proof is a week of daily use on Shuffle where notes on windows
-never need putting away by hand (`ROADMAP.md`). These checks come first, on
+never need putting away by hand. These checks come first, on
 Shuffle with Kadunce, once Shuffle's title bar with the dot is installed.
 
 1. Over a document in an application with Shuffle's title bar, write a quick

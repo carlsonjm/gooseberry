@@ -6,10 +6,11 @@ For every task, read only this startup set, in order:
 2. `docs/CONCEPT.md`
 3. `docs/ROADMAP.md`
 4. The suite record, kept privately in the Shuffle repository and read from its
-   checkout beside this one: `../shuffle/docs/suite/CURRENT_STATE.md`,
-   `../shuffle/docs/suite/ROADMAP-CC.md` and `../shuffle/docs/suite/SWARM.md`.
-   When it is not checked out, say that the suite plan was unavailable rather
-   than inventing an order.
+   checkout beside this one: `../shuffle/docs/suite/CURRENT_STATE.md` and
+   `../shuffle/docs/suite/SWARM.md`. Its `ROADMAP-CC.md` is no longer
+   maintained and stays only as a record. When the suite record is not checked
+   out, say that the suite plan was unavailable rather than inventing an
+   order.
 
 Then open only the documents the work touches; `docs/README.md` routes each
 subject to its document. Before proposing an approach, check
