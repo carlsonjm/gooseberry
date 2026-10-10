@@ -11,7 +11,9 @@
 #include <KLocalizedQmlContext>
 #include <KLocalizedString>
 
+#include <QClipboard>
 #include <QGuiApplication>
+#include <QPointingDevice>
 #include <QColor>
 #include <QIcon>
 #include <QQmlComponent>
@@ -22,6 +24,7 @@
 #include <QQuickView>
 #include <QQuickWindow>
 #include <QSignalSpy>
+#include <QSizeF>
 #include <QTest>
 #include <QtQml/qqmlextensionplugin.h>
 
@@ -95,6 +98,61 @@ public Q_SLOTS:
     }
 };
 
+// Stands in for the shell's stuck notes, with one note up, and records what
+// the surface asks of it.
+class FakeStuck : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QVariantList shownNotes MEMBER m_notes CONSTANT)
+
+public:
+    FakeStuck()
+    {
+        m_notes = {QVariantMap{{QStringLiteral("id"), QStringLiteral("n1")},
+                               {QStringLiteral("title"), QStringLiteral("Docker")},
+                               {QStringLiteral("text"), QStringLiteral("DOCKERHUB_USERNAME\ndocker login -u someone\n\nTOKEN\ndckr_pat_ABCDEF-ghijk")},
+                               {QStringLiteral("colourHex"), QStringLiteral("#F2D98A")},
+                               {QStringLiteral("x"), -1.0},
+                               {QStringLiteral("y"), -1.0},
+                               {QStringLiteral("width"), -1.0},
+                               {QStringLiteral("height"), -1.0}}};
+        connect(this, &FakeStuck::openRequested, this, [this](const QString &id) {
+            opened.append(id);
+        });
+    }
+
+    QStringList opened;
+    QList<bool> keys;
+    QList<QSizeF> sizes;
+
+Q_SIGNALS:
+    void openRequested(const QString &id);
+
+public Q_SLOTS:
+    void setPressable(const QVariantList &) { }
+    void place(const QString &, qreal, qreal) { }
+    void setTakesKeys(bool takes) { keys.append(takes); }
+    void resize(const QString &, qreal width, qreal height) { sizes.append(QSizeF(width, height)); }
+
+private:
+    QVariantList m_notes;
+};
+
+class FakeStuckShell : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QObject *stuck MEMBER m_stuck CONSTANT)
+
+public:
+    explicit FakeStuckShell(QObject *stuck)
+        : m_stuck(stuck)
+    {
+    }
+
+private:
+    QObject *m_stuck;
+};
+
 namespace {
 
 // Every item drawn under root, including those a list made, as a person sees them.
@@ -164,6 +222,35 @@ void carry(QQuickWindow *window, QQuickItem *item, QQuickItem *to)
         QTest::qWait(16);
     }
     QTest::mouseRelease(window, Qt::LeftButton, {}, target);
+    QTest::qWait(30);
+}
+
+// Where the character at position in a piece of text is drawn, in the scene.
+QPoint characterAt(QQuickItem *text, int position)
+{
+    QRectF rect;
+    QMetaObject::invokeMethod(text, "positionToRectangle", Q_RETURN_ARG(QRectF, rect), Q_ARG(int, position));
+    return text->mapToScene(QPointF(rect.x() + 2, rect.center().y())).toPoint();
+}
+
+// A finger held still on a point until it counts as a hold, then lifted.
+void hold(QQuickWindow *window, QPointingDevice *finger, QPoint at)
+{
+    QTest::touchEvent(window, finger).press(0, at, window);
+    QTest::qWait(QGuiApplication::styleHints()->mousePressAndHoldInterval() + 300);
+    QTest::touchEvent(window, finger).release(0, at, window);
+    QTest::qWait(50);
+}
+
+// A mouse dragged across, in steps, as a person selects words.
+void sweep(QQuickWindow *window, QPoint from, QPoint to)
+{
+    QTest::mousePress(window, Qt::LeftButton, {}, from);
+    for (int step = 1; step <= 10; ++step) {
+        QTest::mouseMove(window, from + (to - from) * step / 10);
+        QTest::qWait(10);
+    }
+    QTest::mouseRelease(window, Qt::LeftButton, {}, to);
     QTest::qWait(30);
 }
 
@@ -271,6 +358,147 @@ private Q_SLOTS:
         QCOMPARE(pageAt.y(), headerAt.y() + 44 + 14);
         QCOMPARE(pageAt.x(), 22.0);
         QCOMPARE(page->width(), note()->width() - 44);
+    }
+
+    // The page's words are selected by a mouse dragged across them, or by a
+    // finger held on one, which takes a code or a command whole, and copied
+    // with Copy as well as Ctrl+C.
+    void wordsOnThePageCopy()
+    {
+        m_capture->setText(QStringLiteral("docker login -u someone\ndckr_pat_ABCDEF-ghijk"));
+        auto *editor = note()->property("editor").value<QQuickItem *>();
+        QVERIFY(editor->property("selectByMouse").toBool());
+        QQuickItem *copy = named(QStringLiteral("copy"));
+        QVERIFY(copy);
+        QVERIFY(!copy->isVisible());
+        const QString text = m_capture->text();
+
+        QPointingDevice *finger = QTest::createTouchDevice();
+        hold(m_view.get(), finger, characterAt(editor, text.indexOf(QStringLiteral("dckr")) + 3));
+        QTRY_COMPARE(editor->property("selectedText").toString(), QStringLiteral("dckr_pat_ABCDEF-ghijk"));
+        QVERIFY(copy->isVisible());
+        tap(m_view.get(), copy);
+        QCOMPARE(QGuiApplication::clipboard()->text(), QStringLiteral("dckr_pat_ABCDEF-ghijk"));
+        // Copying keeps the note as it was.
+        QCOMPARE(m_capture->text(), text);
+
+        editor->setProperty("cursorPosition", 0);
+        QVERIFY(!copy->isVisible());
+        sweep(m_view.get(), characterAt(editor, 0), characterAt(editor, 6));
+        QCOMPARE(editor->property("selectedText").toString(), QStringLiteral("docker"));
+        QTest::keyClick(m_view.get(), Qt::Key_C, Qt::ControlModifier);
+        QCOMPARE(QGuiApplication::clipboard()->text(), QStringLiteral("docker"));
+    }
+
+    // A stuck note's words are selected where the note stands and copied,
+    // while a tap still opens it and a finger or the note's edge still moves
+    // it; the surface takes the keys only while words are selected.
+    void stuckNoteWordsCopy()
+    {
+        FakeStuck stuck;
+        FakeStuckShell shell(&stuck);
+        QQmlComponent component(m_view->engine(), QStringLiteral("io.github.carlsonjm.gooseberry"), QStringLiteral("StuckWindow"));
+        std::unique_ptr<QQuickWindow> surface(qobject_cast<QQuickWindow *>(
+            component.createWithInitialProperties({{QStringLiteral("shell"), QVariant::fromValue<QObject *>(&shell)}})));
+        QVERIFY2(surface, qPrintable(component.errorString()));
+        surface->resize(800, 600);
+        surface->setVisible(true);
+        QVERIFY(QTest::qWaitForWindowExposed(surface.get()));
+        QQuickWindow *window = surface.get();
+        QQuickItem *stuckNote = itemNamed(window->contentItem(), QStringLiteral("stuck-n1"));
+        QQuickItem *words = itemNamed(window->contentItem(), QStringLiteral("stuckWords-n1"));
+        QQuickItem *tools = itemNamed(window->contentItem(), QStringLiteral("stuckTools-n1"));
+        QVERIFY(stuckNote);
+        QVERIFY(words);
+        QVERIFY(tools);
+        QVERIFY(!tools->isVisible());
+        const QString text = words->property("text").toString();
+        QTest::qWait(50);
+
+        // A mouse selects across the words, without moving the note.
+        const QPointF before = stuckNote->position();
+        sweep(window, characterAt(words, 0), characterAt(words, 6));
+        QCOMPARE(words->property("selectedText").toString(), QStringLiteral("DOCKER"));
+        QCOMPARE(stuckNote->position(), before);
+        QTRY_COMPARE(stuck.keys, QList<bool>{true});
+        QVERIFY(tools->isVisible());
+        tap(window, itemNamed(window->contentItem(), QStringLiteral("stuck-copy")));
+        QCOMPARE(QGuiApplication::clipboard()->text(), QStringLiteral("DOCKER"));
+        QVERIFY(stuck.opened.isEmpty());
+
+        // A click lets the words go and gives the keys back; the next opens
+        // the note.
+        QTest::qWait(400);
+        tap(window, words);
+        QTRY_COMPARE(stuck.keys, (QList<bool>{true, false}));
+        QVERIFY(words->property("selectedText").toString().isEmpty());
+        QVERIFY(stuck.opened.isEmpty());
+        QTest::qWait(400);
+        tap(window, words);
+        QCOMPARE(stuck.opened, QStringList{QStringLiteral("n1")});
+
+        // A finger held on the code takes it whole; Copy copies it.
+        QPointingDevice *finger = QTest::createTouchDevice();
+        QTest::qWait(400);
+        hold(window, finger, characterAt(words, text.indexOf(QStringLiteral("dckr")) + 3));
+        QTRY_COMPARE(words->property("selectedText").toString(), QStringLiteral("dckr_pat_ABCDEF-ghijk"));
+        QCOMPARE(stuck.opened.size(), 1);
+        tap(window, itemNamed(window->contentItem(), QStringLiteral("stuck-copy")));
+        QCOMPARE(QGuiApplication::clipboard()->text(), QStringLiteral("dckr_pat_ABCDEF-ghijk"));
+
+        // A finger dragged without a hold still moves the note.
+        QTest::qWait(400);
+        tap(window, words);
+        QTRY_VERIFY(words->property("selectedText").toString().isEmpty());
+        const QPointF from = stuckNote->position();
+        const QPoint start = characterAt(words, 2);
+        QTest::touchEvent(window, finger).press(0, start, window);
+        for (int step = 1; step <= 10; ++step) {
+            QTest::qWait(10);
+            QTest::touchEvent(window, finger).move(0, start + QPoint(-12 * step, 6 * step), window);
+        }
+        QTest::touchEvent(window, finger).release(0, start + QPoint(-120, 60), window);
+        QTRY_VERIFY(stuckNote->position() != from);
+        QVERIFY(words->property("selectedText").toString().isEmpty());
+
+        // A right-click offers to copy the whole note.
+        QTest::qWait(400);
+        QTest::mouseClick(window, Qt::RightButton, {}, characterAt(words, 2));
+        QTRY_VERIFY(tools->isVisible());
+        tap(window, itemNamed(window->contentItem(), QStringLiteral("stuck-copy")));
+        QCOMPARE(QGuiApplication::clipboard()->text(), text);
+        QTest::qWait(400);
+        tap(window, words);
+
+        // The corner resizes the note, with a mouse and with a finger,
+        // without opening it, and the size it is let go at is kept.
+        QQuickItem *grip = itemNamed(window->contentItem(), QStringLiteral("stuckResize-n1"));
+        QVERIFY(grip);
+        const QSizeF fit = stuckNote->size();
+        const auto corner = [grip] {
+            return grip->mapToScene(QPointF(grip->width() - 10, grip->height() - 10)).toPoint();
+        };
+        const int opened = stuck.opened.size();
+        sweep(window, corner(), corner() + QPoint(80, 60));
+        QVERIFY(stuckNote->width() > fit.width());
+        QVERIFY(stuckNote->height() > fit.height());
+        QCOMPARE(stuck.sizes.size(), 1);
+        QCOMPARE(stuck.sizes.constLast(), stuckNote->size());
+        // Larger, the words have the room.
+        QVERIFY(words->height() > fit.height() - 28);
+        QTest::qWait(400);
+        const QPoint held = corner();
+        QTest::touchEvent(window, finger).press(0, held, window);
+        for (int step = 1; step <= 10; ++step) {
+            QTest::qWait(10);
+            QTest::touchEvent(window, finger).move(0, held + QPoint(-4 * step, -3 * step), window);
+        }
+        QTest::touchEvent(window, finger).release(0, held + QPoint(-40, -30), window);
+        QTRY_COMPARE(stuck.sizes.size(), 2);
+        QCOMPARE(stuck.sizes.constLast(), stuckNote->size());
+        QVERIFY(stuck.sizes.constLast().width() < stuck.sizes.constFirst().width());
+        QTest::qWait(500);
+        QCOMPARE(stuck.opened.size(), opened);
     }
 
     void cursorIsReadyAndTypingKeeps()

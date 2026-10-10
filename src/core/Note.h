@@ -6,6 +6,7 @@
 #include <QList>
 #include <QPair>
 #include <QPointF>
+#include <QSizeF>
 #include <QString>
 
 namespace Gooseberry {
@@ -36,6 +37,10 @@ struct Note {
     // it keeps its place in proportion when the window is resized. Negative
     // when it has never been placed.
     QPointF place{-1, -1};
+    // How big the note is drawn over its window, in the desktop's pixels, as
+    // it was last resized there. Empty when it never was; it is then drawn at
+    // the size every note starts at.
+    QSizeF size;
     QDateTime created;
     QDateTime changed;
     bool tucked = false;
@@ -77,6 +82,10 @@ struct Note {
     QString stuckKey() const;
     bool isStuck() const { return stuck && !window.isEmpty(); }
     bool hasPlace() const { return place.x() >= 0 && place.y() >= 0; }
+    bool hasSize() const { return size.width() > 0 && size.height() > 0; }
+    // The smallest and largest size a note is kept at on its window.
+    static constexpr int SmallestSide = 80;
+    static constexpr int LargestSide = 4000;
     // Where the note is, in a few words: the window it is stuck to, or its
     // folder.
     QString whereLabel() const;

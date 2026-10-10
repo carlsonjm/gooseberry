@@ -71,6 +71,25 @@ private Q_SLOTS:
         QVERIFY(read.serialize().contains("place: 1.5 x\n"));
     }
 
+    void sizeRoundTripsAndOddOnesAreKept()
+    {
+        Note note = stuckNote(QStringLiteral("a"), QStringLiteral("plan.md"), QStringLiteral("org.kde.kate"), 0);
+        QVERIFY(!note.hasSize());
+        QVERIFY(!note.serialize().contains("size:"));
+        note.size = QSizeF(320.4, 180);
+        const QByteArray bytes = note.serialize();
+        QVERIFY(bytes.contains("size: 320 180\n"));
+        const Note read = Note::parse(bytes, note.id, {});
+        QCOMPARE(read.size, QSizeF(320, 180));
+        QVERIFY(read.extra.isEmpty());
+
+        const QByteArray odd = "---\ngooseberry: 2\ncreated: 2026-10-07T09:00:00-05:00\nchanged: 2026-10-07T09:00:00-05:00\n"
+                               "colour: butter\nsize: 20 big\ntucked: false\n---\nHi\n";
+        const Note kept = Note::parse(odd, QStringLiteral("a"), {});
+        QVERIFY(!kept.hasSize());
+        QVERIFY(kept.serialize().contains("size: 20 big\n"));
+    }
+
     void entriesListOnlyWindowsWithNotes()
     {
         const QList<OpenWindow> windows{

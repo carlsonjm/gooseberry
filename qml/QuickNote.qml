@@ -132,7 +132,8 @@ Item {
         clip: true
         contentWidth: width
         contentHeight: column.y + column.height + 22
-        interactive: contentHeight > height
+        // Still while a finger selects words on the page.
+        interactive: contentHeight > height && !touchSelect.selecting
         boundsBehavior: Flickable.StopAtBounds
 
         // The header: the application, the note's colours centred, and All
@@ -268,6 +269,7 @@ Item {
                 }
 
                 QQC2.ScrollView {
+                    id: pageScroll
                     anchors.fill: parent
                     visible: !quick.capture.checklist
                     QQC2.TextArea {
@@ -293,8 +295,25 @@ Item {
                         topPadding: 18
                         bottomPadding: 18
                         background: null
+                        // Selecting with a mouse or a touchpad stays on in
+                        // tablet mode, where the desktop's style turns it off
+                        // once the screen has been touched.
+                        selectByMouse: true
                         Accessible.name: i18n("Note")
+
+                        TouchSelect {
+                            id: touchSelect
+                            anchors.fill: parent
+                            target: area
+                        }
                     }
+                }
+
+                Binding {
+                    target: pageScroll.contentItem
+                    property: "interactive"
+                    value: false
+                    when: touchSelect.selecting
                 }
             }
 
@@ -500,6 +519,16 @@ Item {
                 }
                 Item {
                     Layout.fillWidth: true
+                }
+                // Words selected on the page, to copy with a tap as well as
+                // with Ctrl+C or the right-click menu.
+                Pill {
+                    visible: area.selectedText.length > 0 && !quick.capture.checklist
+                    tall: true
+                    objectName: "copy"
+                    text: i18n("Copy")
+                    iconName: "edit-copy"
+                    onClicked: area.copy()
                 }
                 Pill {
                     visible: quick.capture.kept && !quick.capture.readOnly
