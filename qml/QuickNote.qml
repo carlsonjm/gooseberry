@@ -135,8 +135,8 @@ Item {
         // Still while a finger selects words on the page.
         interactive: contentHeight > height && !touchSelect.selecting
         boundsBehavior: Flickable.StopAtBounds
-        // A wheel notch scrolls by Plasma's step, as KDE's own lists do.
-        Kirigami.WheelHandler { target: flick }
+        // A wheel notch scrolls 80 pixels at Plasma's usual three lines per notch.
+        Kirigami.WheelHandler { target: flick; verticalStepSize: Qt.styleHints.wheelScrollLines * 80 / 3 }
 
         // The header: the application, the note's colours centred, and All
         // notes at the right.
