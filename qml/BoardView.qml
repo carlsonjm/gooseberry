@@ -231,6 +231,8 @@ Item {
                     clip: true
                     model: board.places
                     boundsBehavior: Flickable.StopAtBounds
+                    // A wheel notch scrolls 80 pixels at Plasma's usual three lines per notch.
+                    Kirigami.WheelHandler { target: placeList; verticalStepSize: Qt.styleHints.wheelScrollLines * 80 / 3 }
                     section.property: "section"
                     section.delegate: QQC2.Label {
                         required property string section
