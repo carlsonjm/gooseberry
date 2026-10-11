@@ -20,6 +20,8 @@ below is built.
 | Bring a note back | Tap Tucked away on the board, then the note | None yet |
 | Remove a note | Tap the note on the board, then Remove | None yet |
 | Find a note | Type in Search notes on the board | None yet |
+| Bring up a window's notes | Tap the dot in its title bar | None yet |
+| Move a note over a window | Drag it | None yet |
 | Copy words from a note | Hold a word | `Ctrl+C` |
 | Resize a note over a window | Drag its bottom-right corner | None yet |
 
@@ -30,6 +32,7 @@ below is built.
 | Hold Gooseberry, then tap New note | The quick-note card opens in the middle of the screen, the size of the desktop's search, with the cursor in it. What you write is kept from its first letter. |
 | The same in Kadunce's Spread | The card takes Spread's centre, between the cards on either side, as the desktop's search does. A tap on the cards around it is Spread's. |
 | Tap New note on the board | The same, for a note kept in the folder the board is showing, or stuck to the window it is showing. |
+| Tap + beside a window's dot, while its notes are up | The same, for a note stuck to that window; closed, it is up over the window with the others (`DESKTOP.md` § Stuck notes on the bus). |
 
 Gooseberry is its entry in the launcher or a search, or its button pinned to
 the panel or the dock; holding it opens its menu, with New note and All notes.
@@ -48,6 +51,11 @@ kept by Gooseberry (`DESKTOP.md`).
 With the on-screen keys up, the card rises only as far as it must to stay
 above them, then shortens; what does not fit scrolls. It returns as the keys go
 down.
+
+The card moves at Plasma's animation speed: rising over the keys, growing into
+the board, and following its place in Spread. With Plasma's animations set to
+Instant, which Plasma also reports as reduced motion, it is where it goes at
+once.
 
 A quick note closed with nothing written on it leaves nothing behind. A note emptied
 of its text and closed goes to the desktop's trash.
@@ -187,9 +195,32 @@ today again.
 | --- | --- |
 | Type in Search notes on the board | The board shows every note with those words, or in a folder or stuck to a window of that name, tucked away ones too, whatever place was chosen. Clearing the search goes back to the place. |
 
+## Bring up a window's notes
+
+Where the desktop's title bar draws Gooseberry's dot, as Shuffle's does
+(`DESKTOP.md` § Stuck notes on the bus).
+
+| Input | What happens |
+| --- | --- |
+| Tap the dot in its title bar | The window's notes come up over it, each where it was last let go there, one never placed at the top-right, the newest on top. They stay up until the dot is tapped again. |
+| Tap a note | It opens on the quick-note card; the notes step aside while the card is up. |
+| Tap or type in the window around the notes | The window takes it; the notes stay up. |
+| Tap the dot again | The notes go away, the + with them. |
+
+In Kadunce's Spread, each card's notes are a small stack at its bottom-right;
+a tap fans them out over the card, and a note held there can be carried to
+another card, which sticks it to that window.
+
+## Move a note over a window
+
+| Input | What happens |
+| --- | --- |
+| Drag it | It follows the finger or pointer and stays where it is let go, in proportion when the window is resized. With a mouse, drag it from its edge or the space under its words. |
+
 ## Copy words from a note
 
-On the quick-note card and on the notes stuck over a window alike.
+On the quick-note card's page, for a note of plain text, and on the notes
+stuck over a window alike. On a checklist, Copy does not show.
 
 | Input | What happens |
 | --- | --- |
@@ -206,3 +237,9 @@ On the quick-note card and on the notes stuck over a window alike.
 | Input | What happens |
 | --- | --- |
 | Drag its bottom-right corner | The note grows or shrinks with the finger or pointer, never smaller than a few words or larger than the window. Let go, it keeps that size, the next time the notes come up and on any window it is stuck to later. Its words take the new room. |
+
+## Scroll with a mouse wheel
+
+| Input | What happens |
+| --- | --- |
+| Turn the wheel over the quick-note card's page, or over the places down the board's side | Each notch moves 80 pixels, at Plasma's usual three lines a notch; more lines a notch in Plasma's settings move further. |

@@ -13,11 +13,15 @@ and notes in Search are built. The concept is in
 
 ## What it does
 
-- **Captures.** One tap opens a page with the cursor already in it. It is
-  saved as you type.
+- **Captures.** New note, from Gooseberry's menu or from Search, opens a page
+  with the cursor already in it. It is saved as you type.
 - **Keeps notes in folders.** Each note is kept in a folder, Inbox unless you
   choose, and can be stuck to the window you are working in. Start a folder
   before any work exists; give one to a workspace and its notes go there.
+- **Sticks notes to the work.** Where the title bar shows Gooseberry's dot, as
+  Shuffle's does, a window with notes shows one; a tap brings its notes up over
+  the window, to move, resize, or copy words from, and another tap puts them
+  away. In Kadunce's Spread, each card's notes sit as a small stack.
 - **Plans.** A note with a time goes on the planner and reminds you; everything
   else is an idea, and waits without a date.
 - **Finds.** A note turns up when you search the board, or Search where
@@ -31,10 +35,10 @@ and notes in Search are built. The concept is in
 
 ## Installing
 
-Gooseberry needs KDE Plasma 6 with Qt 6.9 and KDE Frameworks 6.17 or newer, and
+Gooseberry needs KDE Plasma 6.4, Qt 6.9 and KDE Frameworks 6.17 or newer, and
 their development files to build: CMake, Extra CMake Modules, Kirigami,
-KCoreAddons, KDBusAddons, KI18n, KWindowSystem, Layer Shell Qt and Plasma's
-task manager library.
+KCoreAddons, KDBusAddons, KI18n, KService, KWindowSystem, Layer Shell Qt and
+Plasma's task manager library.
 
 ```sh
 ./install.sh
@@ -51,9 +55,12 @@ each ([docs/FORMAT.md](docs/FORMAT.md)).
 ## With cards and Search
 
 Gooseberry works on any KDE Plasma desktop. Where the Kadunce card workspace is
-running, the card in front is a window a note can be stuck to. Where Tettegouche's Search is
-installed, notes are found there too. What each adds, and what it needs, is in
-[docs/DESKTOP.md](docs/DESKTOP.md).
+running, the quick note opened in Spread takes its centre, and each card shows
+its notes there as a small stack. Where Tettegouche's Search is installed,
+notes are found there too, and Search can host the quick note itself. What each
+adds, and what it needs, is in [docs/DESKTOP.md](docs/DESKTOP.md). Inside
+Shuffle, Gooseberry is called Notes; its notes folder keeps the name
+`Gooseberry`.
 
 ## Development
 

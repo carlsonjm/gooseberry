@@ -21,6 +21,16 @@ Milestones 0 to 4 are built, each with its checks by hand in `TESTING.md`:
 - **Milestone 4, with Search.** Gooseberry answers `Find` and `OpenNote`, and
   Tettegouche lists notes among its results and hosts the quick note.
 
+Also built, each in `INPUT.md`:
+
+- Words on a stuck note and on the card's page selected by a held finger or a
+  mouse and copied, and a stuck note resized by its corner, keeping its size
+  (`FORMAT.md` § A note).
+- The quick-note card moving at Plasma's animation speed, at once where
+  animations are set to Instant.
+- A mouse wheel moving the card's page and the board's places 80 pixels a
+  notch.
+
 Gooseberry is ready for translation; its first translations come after 1.0.
 
 ## Still to come

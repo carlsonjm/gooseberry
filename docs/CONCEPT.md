@@ -63,7 +63,8 @@ Four places, one set of notes.
   with something that has to be closed.
 - **Big and touchable.** 44 px touch targets, room to type, and every action
   reachable by touch alone.
-- **Plain words.** Belongs to, Tuck away, Remind. No jargon in the interface.
+- **Plain words.** Folder, Stuck to, Tuck away, Remind. No jargon in the
+  interface.
 
 ## What Gooseberry relies on
 
@@ -71,15 +72,16 @@ Four places, one set of notes.
 | --- | --- | --- |
 | Keeping notes | A folder of plain Markdown files | Other apps, the file index and folder sync can all read them |
 | Reminders | The desktop's standard notifications | Whatever shows notifications on that desktop shows them |
-| Knowing what Robin is working on | Kadunce's read-only workspace snapshot, where Kadunce runs | Without Kadunce, the window in front as the desktop reports it |
+| Knowing what Robin is working on | Plasma's own window list: the window in front and the workspace's name | The same with or without Kadunce; Kadunce's snapshot only says what Kadunce is showing, for where the quick note stands (`DESKTOP.md`) |
 | Being found | Tettegouche's Search, where installed | `DESKTOP.md` § Needs |
 | The assistant | Split Rock, where installed and set up, using Gooseberry as a tool | Optional; Gooseberry needs no assistant |
 
 ## Risks
 
 - **Finding the document again.** A window's identity lasts only while it is
-  open, so a card's notes come back by the document's name or path. A renamed
-  or moved document leaves its notes unstuck, in their folder (`DECISIONS.md`).
+  open, so a card's notes come back by the document's name. A renamed
+  document leaves its notes waiting under the old name, on the board and in
+  their folder (`DECISIONS.md`).
 - **The dot needs a title bar the desktop draws.** An application that draws
   its own top bar has no dot; its notes are on the board and, with Kadunce, in
   Spread (`DESKTOP.md`).

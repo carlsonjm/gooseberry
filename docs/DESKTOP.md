@@ -9,13 +9,14 @@ required.
 
 Milestone 0 needs nothing from Kadunce, Tettegouche or Shuffle. On any Plasma
 desktop it reads two things from the desktop itself: the window in front, which
-a note belongs to by default, and the current workspace's name. From Milestone
-1 it also notices a window opening on a document, for "next time this opens",
-and shows reminders through the desktop's standard notifications
-(`org.freedesktop.Notifications` on the session bus), so whatever shows
-notifications on that desktop shows them. Both come from
-Plasma's own window list, which Plasma opens to Gooseberry because its desktop
-file asks for it. Where the desktop says nothing, a note starts Loose.
+a new note is stuck to by default, and the current workspace's name, whose
+folder a new note is kept in. From Milestone 1 it also notices a window opening
+on a document, for "next time this opens", and shows reminders through the
+desktop's standard notifications (`org.freedesktop.Notifications` on the
+session bus), so whatever shows notifications on that desktop shows them. Both
+come from Plasma's own window list, which Plasma opens to Gooseberry because
+its desktop file asks for it. Where the desktop says nothing, a note starts
+stuck to nothing, in the workspace's folder or Inbox.
 
 A dock, a panel or Search starts Gooseberry by its desktop file,
 `io.github.carlsonjm.Gooseberry`:
@@ -37,14 +38,12 @@ session.
 ### What Kadunce offers today
 
 Kadunce publishes a versioned, read-only workspace snapshot on the session bus
-(its `docs/TETTEGOUCHE-CONTEXT.md`, version 1). From it Gooseberry can read:
-
-- the window in front, its application and title, and whether it is a card;
-- every application window on the current desktop, with its card membership;
-- the Active card and, when it is in a Stack, the Stack's other cards in order.
-
-That is enough for capture to default to "This card", and for a Gooseberry
-window that Robin has placed in a Stack to know which card's notes to show.
+(its `docs/TETTEGOUCHE-CONTEXT.md`, version 1): the window in front, every
+application window with its card membership, the Active card and its Stack.
+Gooseberry reads from it only what Kadunce is showing, Spread or an Active
+card, and which card is selected, for where the quick-note card stands
+(below). The window a note is stuck to comes from Plasma's window list, with
+or without Kadunce.
 
 A Stack and a Bento pair are made by hand in Kadunce. Robin can already hold a
 Gooseberry window and let it go on a card to stack them, or drag it to an edge
@@ -95,15 +94,16 @@ after 10 seconds, leaving the grown card showing the board itself.
 ### What Kadunce does not offer
 
 - **Room beside a card.** Kadunce makes room on the Active card for the keys
-  and for nothing else. Gooseberry stacks notes behind the card instead, and
-  asks for room only if a rail beside the card is ever revisited.
-- **Arranging on request.** Kadunce's outside interface is read-only by design.
-  Stacking a note with its card for Robin would need Kadunce's request
-  interface, which is not scheduled.
+  and for nothing else. Gooseberry shows a card's notes over its window and as
+  a stack in Spread instead, and asks for room only if a rail beside the card
+  is ever revisited.
+- **Stacking on request.** Kadunce takes a request to open an application at
+  a point (its `docs/REQUESTS.md`), but none to stack a window with a card.
+  Stacking a Gooseberry window with its card for Robin would need one.
 - **Identity that outlives a window.** A card's identity lasts as long as its
-  window. A note that should come back with a document needs an anchor
-  Gooseberry keeps itself, such as the application and the document's name or
-  path.
+  window. A note that comes back with a document uses an anchor Gooseberry
+  keeps itself: the application and the document's name, read from the
+  window's title.
 
 ## Tettegouche: notes in Search
 
@@ -278,19 +278,21 @@ compositor adds to tell same-titled windows apart taken off both sides, and
 uses `app` only to choose between entries with the same caption (compared
 without case, and also matching when either ends with the other after a dot).
 
-**Shown over the window.** A tap on the dot brings the notes up on a surface
-of Gooseberry's own, above the windows and laid exactly over the one with the
-notes, following it as it moves or is resized; the window itself is never
-moved or resized. Each note stands where it was last let go there, written as
-the note's `place` (`FORMAT.md`); one never placed starts at the top-right,
-the newest on top. Notes brought up stay up until Robin puts them away: with the
-dot again, or the window's stack in Spread. Nothing else puts them away. The
+**Shown over the window.** A tap on the dot brings the notes up on a surface of
+Gooseberry's own, above the windows and laid exactly over the one with the
+notes, following it as it moves or is resized; the window itself is never moved
+or resized. Each note stands where it was last let go there, written as the
+note's `place` (`FORMAT.md`); one never placed starts at the top-right, the
+newest on top. Each is as big as it was last resized there, written as its
+`size`. Notes brought up stay up until Robin puts them away: with the dot
+again, or the window's stack in Spread. Nothing else puts them away. The
 surface takes presses only on the notes, so a tap anywhere else on the window
-reaches the window. While a window's notes are up, its title bar shows a + to
-the left of the dot, which starts a new note stuck to it (`NewOn`). While the
-window is behind another, while Spread is open and while a note is open on the
-quick-note card, the notes step aside, and they come back with it. A tap on a
-note opens it on the card.
+reaches the window, and it takes the keys only while words on a note are
+selected, for `Ctrl+C` (`INPUT.md` § Copy words from a note). While a window's
+notes are up, its title bar shows a + to the left of the dot, which starts a
+new note stuck to it (`NewOn`). While the window is behind another, while
+Spread is open and while a note is open on the quick-note card, the notes step
+aside, and they come back with it. A tap on a note opens it on the card.
 
 ## Split Rock
 
@@ -313,6 +315,6 @@ its Notes mode.
 | Component | Need | Holds up |
 | --- | --- | --- |
 | Kadunce | Accepting a note carried to the top edge: opening Spread and telling Gooseberry which card it was dropped on | Sticking by drag (Milestone 3) |
-| Kadunce | Its request interface, to stack a companion with a card | Stacking without a hand gesture |
+| Kadunce | A request to stack a window with a card | Stacking without a hand gesture |
 | Tettegouche | A Notes tab in Search, listing every note | Browsing notes from Search |
 | Split Rock | Use Gooseberry's notes tool where present; on hold while Split Rock's own work is | The notes tool |
