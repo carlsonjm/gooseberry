@@ -9,8 +9,8 @@ Gooseberry is a separate program with its own repository and name, and works on
 any KDE Plasma desktop. A product that includes it may give it another name
 there. (The maintainer, 3 October.) Where Shuffle is installed, the window
 titles, the application's displayed name and its sentences say Notes; elsewhere
-they say Gooseberry. One build decides at start, by whether Shuffle's bottom
-surface is installed. Ids, the desktop file, the bus names and the notes folder
+they say Gooseberry. One build decides at start, by whether Shuffle's Bottom
+Surface is installed. Ids, the desktop file, the bus names and the notes folder
 keep Gooseberry's name either way.
 
 Rejected: building notes inside a product's own repository. Notes would only
@@ -58,9 +58,8 @@ that a window has notes at all.
 
 ## Notes are plain files; Search makes them look at home
 
-Notes are kept as a folder of plain Markdown files, ink beside each as a
-drawing. Tettegouche's Search is the bridge that shows them as notes rather
-than files. (The maintainer, 3 October.)
+Notes are kept as a folder of plain Markdown files. Tettegouche's Search is the
+bridge that shows them as notes rather than files. (The maintainer, 3 October.)
 
 Rejected: a database of Gooseberry's own, which no other app, file index or
 assistant can read.
@@ -69,12 +68,12 @@ assistant can read.
 
 When a card's window closes, its notes stay with what was open in it, and come
 back stuck to it when that document opens again: a sticky note on the monitor,
-made virtual. Gooseberry remembers the application and the document's name or
-path; a note whose document cannot be found again waits in Loose, marked with
-where it came from. (The maintainer, 3 October.)
+made virtual. Gooseberry remembers the application and the document's name,
+read from the window's title; a note whose document cannot be found again
+stays in its folder, and on the board under the name it was stuck to. (The
+maintainer, 3 October.)
 
-Rejected: turning a closed card's notes Loose, which never brings them back and
-fills Loose up.
+Rejected: unsticking a closed card's notes, which never brings them back.
 
 ## Gooseberry's folder is its own
 
@@ -106,26 +105,25 @@ computer, such as hardware and maintenance. (The maintainer, 3 October.)
 Rejected: kept items staying only in Split Rock's notebook, which splits the
 person's notes in two and keeps them off the board and the planner.
 
-## The core is built for a mobile companion
+## The core stays apart from the desktop
 
-A mobile companion is a likely later step, so Gooseberry is built for it from
-the start. (The maintainer, 3 October.)
+Notes, the board, the planner and reminders are one core, apart from what any
+desktop adds. It was ruled when a mobile companion was a likely later step
+(the maintainer, 3 October); the phone companion, sync across computers and
+the pen have since been dropped, and nothing more is built for a phone, but
+the separation still serves.
 
 - **One core, desktop parts outside it.** Notes, the board, the planner and
   reminders live in a core that knows nothing of Kadunce, Tettegouche, Split
   Rock or any panel. What those add sits outside it and is found at run time.
-- **Screens in Kirigami.** The same screens then run on Plasma Mobile as they
-  are, and are the starting point for a port to Android.
+- **Screens in Kirigami,** KDE's touch-ready toolkit, which draws them in the
+  desktop's own style.
 - **The note format is a contract.** The folder layout and the header at the
-  top of each note are written down and versioned before Milestone 0 ends, since
-  a second device reading the same folder depends on them.
+  top of each note are written down and versioned, since any other program
+  reading the same folder, a folder sync tool's copy included, depends on them.
 
-Rejected: building for the desktop first and separating later, which turns a
-companion into a second app.
-
-Note, 8 October: the phone companion and sync across computers were dropped,
-and so was the pen. The core stays apart from the desktop parts, which still
-serves, but nothing more is built for a phone.
+Rejected: building for the desktop first and separating later, which would
+have tied the core to one desktop.
 
 ## The mock-up is the approved visual direction
 
@@ -187,9 +185,10 @@ search's 8 px corners with a 1 px outline and a 22 px inner margin; a 44 px
 header with a 32 px tile in the note's yellow carrying the notes glyph and the
 application's name at the left, the five colours centred, and All notes at the
 right as a 30 px pill 14 px from the edge; the note pad 14 px under the header,
-across the width, with 14 px corners in the note's colour; then Belongs to, and
-Saved as you go, Tuck away, Remove and Done at the bottom. All notes grows the
-card to the whole work area less a 10 px gutter in 220 ms, easing out, with no
+across the width, with 14 px corners in the note's colour; then the Folder and
+Stuck to chips, and Saved as you go, Tuck away, Remove and Done at the bottom.
+All notes grows the card to the whole work area less a 10 px gutter in 220 ms
+at Plasma's usual animation speed, easing out, with no
 Back button at that size: a note opened or started on the board, or `Esc`,
 brings the card back.
 
@@ -267,7 +266,8 @@ October):
 - **A reminder offers Done and In 10 minutes,** and tapping it opens the note.
   In 10 minutes is a new reminder, shown once like any other.
 
-Checklist and Remind sit in a row under the note, above Belongs to; the note
+Checklist and Remind sit in a row under the note, above the Folder and Stuck
+to chips; the note
 pad gives up the room for them.
 
 Rejected: a day and time picker every time, which costs two or three taps even

@@ -19,7 +19,7 @@ session.
 | `tst_keep` | A second copy of the test types a note and is ended as a crash ends a program, after one letter, mid-sentence and after a pause, and as a logout ends it mid-sentence; after a pause or a logout the note is all there, a crash mid-sentence keeps it up to the last pause, nothing half-written is left beside it, and it is back on the board after a restart |
 | `tst_planner` | Reminders, done and checklists kept in the note, read back as written, and a reminder this version cannot read kept as it was; a due reminder is recorded in its note before it is told, then never shown again, through a look at the clock or a restart; one not yet due waits and comes on time, within a second; with nothing to show it, it waits unrecorded; "next time this opens" only for that document in that application, once; In 10 minutes is a new reminder; recording a reminder shown leaves the note's changed time alone; a reminder shown while typing waits for a pause is not lost when the typing is written; on the card, a reminder is kept at once, a new one shown again, and "next time this opens" only for a note written on a window; checklists made from text, ticked, added to, taken back, with their heading; Today holds the notes planned for today and those written today, the planned ones on the planner rather than among the ideas; the planner's day strip, rows in time order with Done and the next one to come, the days ahead, another day chosen; and what Remind offers through the day |
 | `tst_stuck` | From Milestone 3: a note's place on its window is written to three places and read back, left out when never placed, and one this version cannot read kept as written; its size the same way, in whole pixels; only open windows with stuck notes that are not tucked away are told, with their count, the top note's colour and the notes newest first, and the ones brought up marked; a window is found by its id, with or without braces, then by its title without the compositor's ` <2>`, the application choosing between same-titled windows, and a title only one window has found whatever its class |
-| `tst_product` | The name the person sees is Notes where Shuffle's bottom surface is installed and Gooseberry elsewhere; Shuffle is found by that folder alone; messages from the notes folder use the name, and the folder itself keeps `Gooseberry` |
+| `tst_product` | The name the person sees is Notes where Shuffle's Bottom Surface is installed and Gooseberry elsewhere; Shuffle is found by that folder alone; messages from the notes folder use the name, and the folder itself keeps `Gooseberry` |
 | `tst_reminders_bus` | Reminders as the desktop shows them: the real Gooseberry on a bus of the test's own, with the test standing in for the desktop's notifications. With nothing to show notifications a due reminder waits unrecorded, then is shown once something can; the notification carries the note's first words, when and where, Open, Done and In 10 minutes, Gooseberry's own entry, and the desktop's own time on screen; one due while Gooseberry runs is shown on time, once; Done marks the note done and In 10 minutes sets a new reminder ten minutes on; started again, Gooseberry shows nothing it has shown |
 | `tst_quicknote_bus` | The quick note's session-bus interface, used by a client that loads none of Gooseberry's code against the real Gooseberry, on a bus and in a home of the test's own: the version; Start gives an empty note and its choices and keeps nothing; text, colour and Belongs to are on disk when each call returns, and nonsense is refused; from Milestone 2, Folder's choices, SetFolder making a folder and moving the note into it and back to Inbox, SetStuck sticking and unsticking with the note's own window offered, and a bad folder name refused; Start resumes the open note; from Milestone 3, the stuck notes interface's version, no windows told and nothing toggled, shown, started or stuck, and a pause taken, where the desktop reports no windows; a change made to the file elsewhere comes back as Changed; Done, Tuck away, and Remove to the trash with Undo; OpenBoard opens the board and BoardShown follows with the caller's token; from Milestone 1, what Remind offers, a reminder set, refused and taken away, and a checklist made, ticked and turned back, each on disk when the call returns |
 | `tst_spread` | The quick-note card in Kadunce's card workspace, the real card and board against a stand-in Kadunce on a bus of the test's own: without Kadunce, with an older one or a newer protocol, refused the centre, or outside Spread and an Active card, the card stands alone and asks nothing; in Spread it asks only after the version is exactly 1, with its own bus name, object and interface, is drawn at the given place and takes only the presses there; All notes grows it to the Active card's room from the same bus name, prepares the board's launch by its desktop id, opens the board, ignores another request's word, and fades where it stood on its own; put away it gives the centre back once; dismissed it closes, keeping the note, and asks nothing back; growing refused, the launch refused, and the board never arriving each end the guest as `DESKTOP.md` says; over an Active card there is no guest, and the grown card fades only once the board is reported as the selected card, or stays after the wait |
@@ -34,11 +34,10 @@ Milestone 0's proof is a week of daily use on the tablet without a lost note,
 with capture fast enough that nothing is written elsewhere instead. These
 checks come first, once, after installing; then the week of use.
 
-1. Over a document, tap Gooseberry. The card opens in the middle of the
-   screen with the cursor in the note and the on-screen keys up, the whole card
-   above the keys and every control reachable; Stuck to names the
-   document. Hold Gooseberry and tap All notes: the board opens as an ordinary
-   window.
+1. Over a document, hold Gooseberry and tap New note. The card opens in the
+   middle of the screen with the cursor in the note and the on-screen keys up,
+   the whole card above the keys and every control reachable; Stuck to names
+   the document. Tap Gooseberry: the board opens as an ordinary window.
 2. Type one letter and nothing else, then tap the work around the card. Open
    the board: the note is there under Today.
 3. Write a note, choose a colour and a folder, and finish it. Each choice is
@@ -62,18 +61,20 @@ checks come first, once, after installing; then the week of use.
 Only the tablet shows whether Kadunce and the card move together. With Kadunce
 installed and set up:
 
-1. Open Spread and tap Gooseberry. The card sits in Spread's centre, the cards
-   on either side moved in to make room, as with the desktop's search; the
-   keys come up and the card stays above them. A tap on a card beside it is
-   Spread's.
+1. Open Spread, hold Gooseberry and tap New note. The card sits in Spread's
+   centre, the cards on either side moved in to make room, as with the
+   desktop's search; the keys come up and the card stays above them. A tap on a
+   card beside it is Spread's.
 2. Write a word, then tap All notes. The cards beside it fade, the card grows
    to the Active card's size, the board appears in its place, and the card
    fades out over it. The board is the Active card.
-3. Open Spread, tap Gooseberry, and put the card away. Spread is as it was.
+3. Open Spread, open the card with New note, and put the card away. Spread is
+   as it was.
 4. With the card in Spread's centre, open the desktop's search. The card
    closes, its note kept, and the search takes the centre.
-5. Over an Active card, tap Gooseberry, then All notes. The card grows, the
-   board takes the Active card's place, and only then does the card fade.
+5. Over an Active card, open the card with New note, then tap All notes. The
+   card grows, the board takes the Active card's place, and only then does the
+   card fade.
 6. Without Kadunce running, steps 1 and 2 behave as in § By hand:
    Milestone 0.
 
@@ -120,9 +121,9 @@ first, once, after installing over Milestone 1's notes; then the week of use.
 2. On the board, tap New folder, name it, press Enter. The empty folder shows,
    and stays after Gooseberry is restarted.
 3. Under the folder's name, tap New notes on (this workspace) go here. Over a
-   document, tap Gooseberry: Folder names that folder and Stuck to names the
-   document. Write a line; the note is in the folder and under the document's
-   window on the board.
+   document, open the card with New note: Folder names that folder and Stuck to
+   names the document. Write a line; the note is in the folder and under the
+   document's window on the board.
 4. On the card, tap Stuck to: the open windows are listed, the one in front
    first. Tap another; then Don't stick to a window. The folder never changes.
 5. With a finger, hold a note on the board until it lifts, carry it over a
