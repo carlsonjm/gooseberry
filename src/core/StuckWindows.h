@@ -34,6 +34,11 @@ namespace StuckWindows {
 // first.
 QList<Note> notesOn(const OpenWindow &window, const QList<Note> &notes);
 
+// The notes in the order ids names them, any it does not name first in the
+// order they came. Notes being typed on keep their places on the window this
+// way, though the note typed on becomes the one changed last.
+QList<Note> keptInOrder(const QList<Note> &notes, const QStringList &ids);
+
 // One entry for each window with notes, as the bus gives it; shownKeys are
 // the keys of the windows whose notes are up.
 QVariantList entries(const QList<OpenWindow> &windows, const QList<Note> &notes, const QSet<QString> &shownKeys);

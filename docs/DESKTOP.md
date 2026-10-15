@@ -263,9 +263,10 @@ tucked away, a dictionary of strings to variants:
 | `Toggle(s windowId, s caption, s app) → b` | Shows that window's notes over it, each where it was last placed, or puts them away when they are shown. The window is found by `windowId` when it is given and open, otherwise by `caption` and `app`. Returns whether they are shown now; false when no window with notes matches |
 | `Show(s windowId, s caption, s app) → b` | Brings that window's notes up, found as `Toggle` finds it; nothing changes when they are up already. Returns false when no window with notes matches |
 | `Hide()` | Puts away every window's notes |
-| `Pause(b paused)` | While paused, notes that are up step aside without being put away, and come back when the pause ends. Spread pauses while it is open, so its own stacks are the only notes on screen |
+| `Pause(b paused)` | While paused, notes that are up step aside without being put away, and come back when the pause ends; a note being typed on is kept and the typing ends. Spread pauses while it is open, so the notes it draws on its cards are the only notes on screen |
 | `NewOn(s windowId, s caption, s app) → b` | Opens the quick-note card on a new note stuck to that window, found as `Toggle` finds it; it is kept from its first letter, as any quick note. Returns false when no open window matches or notes cannot be written. A title bar calls it from its + button |
 | `StickTo(s noteId, s windowId, s caption, s app) → b` | Sticks the note to that window, found as `Toggle` finds it, keeping its folder. Returns false when the note or the window is not found, or the note cannot be changed |
+| `Write(s noteId, s windowId, s caption, s app) → b` | Brings that window's notes up, as `Show` does, with that note ready to type on where it stands: once they are drawn over the window, the cursor is in it and the on-screen keys come up. While paused it waits for the pause to end. Returns false when the window is not found or the note is not stuck to it. Spread calls it when a note on a card is tapped, and opens the card; a caller from before it calls `Show` |
 
 | Signal | When |
 | --- | --- |
@@ -293,15 +294,21 @@ notes, following it as it moves or is resized; the window itself is never moved
 or resized. Each note stands where it was last let go there, written as the
 note's `place` (`FORMAT.md`); one never placed starts at the top-right, the
 newest on top. Each is as big as it was last resized there, written as its
-`size`. Notes brought up stay up until Robin puts them away: with the dot
-again, or the window's stack in Spread. Nothing else puts them away. The
-surface takes presses only on the notes, so a tap anywhere else on the window
-reaches the window, and it takes the keys only while words on a note are
-selected, for `Ctrl+C` (`INPUT.md` § Copy words from a note). While a window's
+`size`. Notes brought up stay up until Robin puts them away with the dot
+again. Nothing else puts them away. The surface takes presses only on the
+notes, so a tap anywhere else on the window reaches the window. A note is
+typed on where it stands, never in a popup: a tap on it puts the cursor in it,
+and its words are kept as the quick note keeps them, from the first letter
+(`Capture`). The surface takes the keys only while a note on it is typed on,
+or while words on one are selected, for `Ctrl+C` (`INPUT.md` § Copy words from
+a note): the desktop brings a top-layer surface to the front as soon as it
+will take the keys, so it never asks for them otherwise. A tap anywhere else,
+`Esc`, Spread opening or another window's notes coming up ends the typing;
+what was typed is kept. While a window's
 notes are up, its title bar shows a + to the left of the dot, which starts a
 new note stuck to it (`NewOn`). While the window is behind another, while
 Spread is open and while a note is open on the quick-note card, the notes step
-aside, and they come back with it. A tap on a note opens it on the card.
+aside, and they come back with it.
 
 ## Split Rock
 

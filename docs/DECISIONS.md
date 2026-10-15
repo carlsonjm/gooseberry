@@ -60,14 +60,30 @@ that a window has notes at all.
 In Spread, each note placed on its window stands on that window's card in the
 same place, as big as it is there, both scaled with the card, so the card and
 the window agree. Notes never placed sit as a small stack at the card's
-bottom-right corner, the same size on every card. A tap on a note or on the
-stack does what the dot does, and fans the stack out over the card
-(`DESKTOP.md` § Stuck notes on the bus). (The maintainer, 15 October.) This
-replaces, for placed notes, the 7 October ruling that every card's notes sit
-in its corner stack.
+bottom-right corner, the same size on every card. Each moves with its card
+as Spread opens and closes, as one picture with the window. A tap on a note or
+on the stack opens the card, as the next ruling says (`DESKTOP.md` § Stuck
+notes on the bus). (The maintainer, 15 October.) This replaces, for placed
+notes, the 7 October ruling that every card's notes sit in its corner stack.
 
 Rejected: every note in the corner stack, which moves a note Robin put
 somewhere on purpose and makes Spread disagree with the window.
+
+## A stuck note is typed on its window, never in a popup
+
+A note stuck to a window is written where it stands over that window. A tap on
+it there puts the cursor in it and brings up the on-screen keys, and what is
+typed is kept as the quick note keeps it, from the first letter. In Spread, a
+tap on a note opens its card, as a tap anywhere on the card does, with the
+note out on the window ready to type; a tap on the stack opens the card with
+the window's notes out (`DESKTOP.md` § Stuck notes on the bus). A tap
+elsewhere on the window ends the typing. (The maintainer, 15 October.) This
+replaces the rulings that a tap on a note over a window opens it on the
+quick-note card, and that a tap in Spread fans the card's notes out over it.
+
+Rejected: opening the note on the quick-note card, and fanning the notes out
+over the card in Spread. Each puts a large popup between Robin and a note
+that belongs to the window, when all Robin wants is to type on it.
 
 ## Notes are plain files; Search makes them look at home
 

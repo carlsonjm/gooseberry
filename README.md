@@ -20,8 +20,9 @@ and notes in Search are built. The concept is in
   before any work exists; give one to a workspace and its notes go there.
 - **Sticks notes to the work.** Where the title bar shows Gooseberry's dot, as
   Shuffle's does, a window with notes shows one; a tap brings its notes up over
-  the window, to move, resize, or copy words from, and another tap puts them
-  away. In Kadunce's Spread, each card's notes sit as a small stack.
+  the window, to type on where they stand, move, resize, or copy words from,
+  and another tap puts them away. In Kadunce's Spread, each card shows its
+  notes where they stand on the window.
 - **Plans.** A note with a time goes on the planner and reminds you; everything
   else is an idea, and waits without a date.
 - **Finds.** A note turns up when you search the board, or Search where
@@ -56,7 +57,7 @@ each ([docs/FORMAT.md](docs/FORMAT.md)).
 
 Gooseberry works on any KDE Plasma desktop. Where the Kadunce card workspace is
 running, the quick note opened in Spread takes its centre, and each card shows
-its notes there as a small stack. Where Tettegouche's Search is installed,
+its notes there where they stand on the window. Where Tettegouche's Search is installed,
 notes are found there too, and Search can host the quick note itself. What each
 adds, and what it needs, is in [docs/DESKTOP.md](docs/DESKTOP.md). Inside
 Shuffle, Gooseberry is called Notes; its notes folder keeps the name

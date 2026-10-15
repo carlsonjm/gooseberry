@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "StuckNotes.h"
 
+#include "Capture.h"
 #include "Log.h"
 #include "NoteStore.h"
 #include "WindowContext.h"
@@ -13,6 +14,8 @@
 #include <QQuickWindow>
 #include <QRegion>
 #include <QScreen>
+
+#include <algorithm>
 
 namespace Gooseberry {
 
@@ -31,7 +34,10 @@ StuckNotes::StuckNotes(NoteStore *store, WindowContext *context, std::function<Q
     , m_store(store)
     , m_context(context)
     , m_makeSurface(std::move(makeSurface))
+    , m_writer(new Capture(store, this))
 {
+    // Words changed elsewhere while a note is typed on reach the surface.
+    connect(m_writer, &Capture::textChanged, this, &StuckNotes::writingTextChanged);
     m_refresh.setSingleShot(true);
     m_refresh.setInterval(0);
     connect(&m_refresh, &QTimer::timeout, this, &StuckNotes::refresh);
@@ -48,6 +54,8 @@ StuckNotes::StuckNotes(NoteStore *store, WindowContext *context, std::function<Q
 
 StuckNotes::~StuckNotes()
 {
+    // Typing still waiting for a pause is kept before anything goes.
+    m_writer->flush();
     delete m_surface;
 }
 
@@ -92,11 +100,24 @@ QVariantList StuckNotes::currentShownNotes() const
     if (!window) {
         return list;
     }
-    for (const Note &note : StuckWindows::notesOn(*window, m_store->notes())) {
+    QList<Note> notes = StuckWindows::notesOn(*window, m_store->notes());
+    if (!m_writingId.isEmpty()) {
+        // The note typed on becomes the one changed last; the notes keep the
+        // places they had when typing began, so none moves under the words.
+        QStringList order;
+        for (const QVariant &shown : std::as_const(m_shownNotes)) {
+            order.append(shown.toMap().value(QStringLiteral("id")).toString());
+        }
+        notes = StuckWindows::keptInOrder(notes, order);
+    }
+    for (const Note &note : std::as_const(notes)) {
+        const bool writing = note.id == m_writingId && !m_writingShown.isEmpty();
         list.append(QVariantMap{
             {QStringLiteral("id"), note.id},
-            {QStringLiteral("title"), note.title()},
-            {QStringLiteral("text"), note.text},
+            // Its words as typing began: the surface holds the words typed
+            // since, and a change here would make the note anew under them.
+            {QStringLiteral("title"), writing ? m_writingShown.value(QStringLiteral("title")).toString() : note.title()},
+            {QStringLiteral("text"), writing ? m_writingShown.value(QStringLiteral("text")).toString() : note.text},
             {QStringLiteral("colourHex"), colourHex(note.colour)},
             {QStringLiteral("x"), note.place.x()},
             {QStringLiteral("y"), note.place.y()},
@@ -123,11 +144,26 @@ void StuckNotes::refresh()
     }
     m_shownKeys.intersect(open);
     // The notes are drawn over the window in front when it has them up; a
-    // desktop that says no window is in front leaves them where they were.
-    if (!active.isEmpty() || !m_shownKeys.contains(m_drawnKey)) {
+    // desktop that says no window is in front leaves them where they were,
+    // and so does one that has not yet said the window they were brought up
+    // on came to the front.
+    if (!active.isEmpty() && active != m_activeWhenShown) {
+        m_activeWhenShown.clear();
+    }
+    const bool behind = !active.isEmpty() && active == m_activeWhenShown;
+    if ((!active.isEmpty() && !behind) || !m_shownKeys.contains(m_drawnKey)) {
         m_drawnKey = m_shownKeys.contains(active) ? active : QString();
     }
     const bool drawn = !m_paused && !m_cardOpen && !m_drawnKey.isEmpty();
+    // Typing on a note ends when it is no longer up over its window, or when
+    // another window's notes are drawn. While the notes step aside for
+    // Spread it waits, so a note asked for from Spread is ready on the window.
+    bool writingEnded = false;
+    if (!m_writingId.isEmpty()
+        && (!m_shownKeys.contains(m_writingKey) || !noteOnWindow(m_writingId, m_writingKey)
+            || (drawn && m_drawnKey != m_writingKey))) {
+        writingEnded = endWriting();
+    }
     if (drawn) {
         if (!m_surface) {
             m_surface = m_makeSurface ? m_makeSurface() : nullptr;
@@ -151,16 +187,120 @@ void StuckNotes::refresh()
         m_entries = entries;
         Q_EMIT WindowsChanged(m_entries);
     }
+    if (writingEnded) {
+        Q_EMIT writingChanged();
+    }
+}
+
+bool StuckNotes::noteOnWindow(const QString &noteId, const QString &key) const
+{
+    for (const OpenWindow &window : m_windows) {
+        if (window.key() != key) {
+            continue;
+        }
+        const QList<Note> notes = StuckWindows::notesOn(window, m_store->notes());
+        return std::any_of(notes.cbegin(), notes.cend(), [&noteId](const Note &note) {
+            return note.id == noteId;
+        });
+    }
+    return false;
+}
+
+QString StuckNotes::writingText() const
+{
+    return m_writingId.isEmpty() ? QString() : m_writer->text();
+}
+
+bool StuckNotes::beginWriting(const QString &noteId, const QString &key)
+{
+    if (noteId == m_writingId && key == m_writingKey) {
+        return true;
+    }
+    const bool ended = endWriting();
+    const auto note = m_store->note(noteId);
+    if (!note || m_store->readOnly() || note->newerFormat() || !m_writer->open(noteId)) {
+        if (ended) {
+            refresh();
+            Q_EMIT writingChanged();
+        }
+        return false;
+    }
+    m_writingId = noteId;
+    m_writingKey = key;
+    m_writingShown = {{QStringLiteral("title"), note->title()}, {QStringLiteral("text"), note->text}};
+    qCDebug(DESKTOP) << "typing on note" << noteId << "where it stands";
+    refresh();
+    Q_EMIT writingChanged();
+    Q_EMIT writingTextChanged();
+    return true;
+}
+
+bool StuckNotes::endWriting()
+{
+    if (m_writingId.isEmpty()) {
+        return false;
+    }
+    qCDebug(DESKTOP) << "typing on note" << m_writingId << "ends";
+    m_writingId.clear();
+    m_writingKey.clear();
+    m_writingShown.clear();
+    // Written now, as the quick note is when its card goes; a note left with
+    // no words goes to the trash, as there.
+    m_writer->finish();
+    return true;
+}
+
+void StuckNotes::write(const QString &noteId)
+{
+    const OpenWindow *window = drawnWindow();
+    if (!window || !noteOnWindow(noteId, window->key())) {
+        return;
+    }
+    beginWriting(noteId, window->key());
+}
+
+void StuckNotes::setWritingText(const QString &text)
+{
+    if (!m_writingId.isEmpty()) {
+        m_writer->setText(text);
+    }
+}
+
+void StuckNotes::stopWriting()
+{
+    if (endWriting()) {
+        refresh();
+        Q_EMIT writingChanged();
+    }
+}
+
+bool StuckNotes::Write(const QString &noteId, const QString &windowId, const QString &caption, const QString &app)
+{
+    m_windows = m_context->windows();
+    const qsizetype at = StuckWindows::find(m_windows, windowId, caption, app);
+    if (at < 0) {
+        qCDebug(DESKTOP) << "no window with note" << noteId << "for" << windowId << caption << app;
+        return false;
+    }
+    const OpenWindow window = m_windows.at(at);
+    if (!noteOnWindow(noteId, window.key())) {
+        qCDebug(DESKTOP) << "note" << noteId << "is not stuck to" << window.caption;
+        return false;
+    }
+    setShown(window, true);
+    return beginWriting(noteId, window.key());
 }
 
 void StuckNotes::prepareSurface()
 {
     if (onWayland()) {
         // A surface of the desktop's own above the windows, laid exactly
-        // over the one whose notes it shows. It takes the keys only while
-        // words on a note are selected (setTakesKeys); a note is written on
-        // the quick-note card. It takes presses only on the notes and their
-        // button (setPressable); the rest reaches the window.
+        // over the one whose notes it shows. It takes the keys only while a
+        // note on it is typed on or words on one are selected
+        // (setTakesKeys): the desktop brings a top-layer surface to the
+        // front as soon as it will take the keys, so it never asks for them
+        // otherwise. It takes presses only on the notes and their button
+        // (setPressable); the rest reaches the window.
         auto *layer = LayerShellQt::Window::get(m_surface);
         layer->setLayer(LayerShellQt::Window::LayerTop);
         layer->setAnchors({LayerShellQt::Window::AnchorTop, LayerShellQt::Window::AnchorLeft});
@@ -181,6 +321,12 @@ void StuckNotes::setShown(const OpenWindow &window, bool shown)
         // Brought up from a title bar or Spread: drawn over that window now,
         // even before the desktop says it is in front.
         m_drawnKey = window.key();
+        m_activeWhenShown.clear();
+        for (const OpenWindow &open : std::as_const(m_windows)) {
+            if (open.active && open.key() != window.key()) {
+                m_activeWhenShown = open.key();
+            }
+        }
     } else {
         m_shownKeys.remove(window.key());
     }
@@ -259,16 +405,27 @@ void StuckNotes::Hide()
 void StuckNotes::Pause(bool paused)
 {
     if (paused != m_paused) {
+        // Spread opening ends any typing, and keeps it; a note asked for
+        // while it is open waits for it to close.
+        const bool ended = paused && endWriting();
         m_paused = paused;
         refresh();
+        if (ended) {
+            Q_EMIT writingChanged();
+        }
     }
 }
 
 void StuckNotes::setCardOpen(bool open)
 {
     if (open != m_cardOpen) {
+        // The note goes to the card whole, so typing on the window ends.
+        const bool ended = open && endWriting();
         m_cardOpen = open;
         refresh();
+        if (ended) {
+            Q_EMIT writingChanged();
+        }
     }
 }
 

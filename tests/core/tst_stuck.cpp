@@ -162,6 +162,36 @@ private Q_SLOTS:
         QCOMPARE(value(3, "y"), 0.0);
     }
 
+    // While a note is typed on where it stands, the notes over the window
+    // keep the order they had, though the one typed on is changed last; a
+    // note that came since goes on top.
+    void notesTypedOnKeepTheirPlaces()
+    {
+        const Note older = stuckNote(QStringLiteral("older"), QStringLiteral("plan.md"), QStringLiteral("org.kde.kate"), 1);
+        const Note typed = stuckNote(QStringLiteral("typed"), QStringLiteral("plan.md"), QStringLiteral("org.kde.kate"), 9);
+        const Note top = stuckNote(QStringLiteral("top"), QStringLiteral("plan.md"), QStringLiteral("org.kde.kate"), 5);
+        const Note fresh = stuckNote(QStringLiteral("fresh"), QStringLiteral("plan.md"), QStringLiteral("org.kde.kate"), 10);
+        const auto ids = [](const QList<Note> &notes) {
+            QStringList list;
+            for (const Note &note : notes) {
+                list.append(note.id);
+            }
+            return list;
+        };
+        // Changed last, the note typed on would come first; kept in order,
+        // it stays where it was.
+        const QStringList before{QStringLiteral("top"), QStringLiteral("typed"), QStringLiteral("older")};
+        QCOMPARE(ids(StuckWindows::keptInOrder({typed, top, older}, before)), before);
+        QCOMPARE(ids(StuckWindows::keptInOrder({fresh, typed, top, older}, before)),
+                 (QStringList{QStringLiteral("fresh"), QStringLiteral("top"), QStringLiteral("typed"), QStringLiteral("older")}));
+        // A note gone is simply gone.
+        QCOMPARE(ids(StuckWindows::keptInOrder({typed, older}, before)),
+                 (QStringList{QStringLiteral("typed"), QStringLiteral("older")}));
+        // With no order to keep, the notes stay as they came.
+        QCOMPARE(ids(StuckWindows::keptInOrder({typed, top, older}, {})),
+                 (QStringList{QStringLiteral("typed"), QStringLiteral("top"), QStringLiteral("older")}));
+    }
+
     void findsByIdThenCaption()
     {
         const QList<OpenWindow> windows{

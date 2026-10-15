@@ -104,6 +104,8 @@ class FakeStuck : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QVariantList shownNotes MEMBER m_notes CONSTANT)
+    Q_PROPERTY(QString writingId MEMBER m_writingId NOTIFY writingChanged)
+    Q_PROPERTY(QString writingText MEMBER m_writingText NOTIFY writingTextChanged)
 
 public:
     FakeStuck()
@@ -116,19 +118,49 @@ public:
                                {QStringLiteral("y"), -1.0},
                                {QStringLiteral("width"), -1.0},
                                {QStringLiteral("height"), -1.0}}};
-        connect(this, &FakeStuck::openRequested, this, [this](const QString &id) {
-            opened.append(id);
-        });
     }
 
-    QStringList opened;
+    // The notes asked to be typed on, the words typed, and how often typing
+    // was ended.
+    QStringList written;
+    QStringList typed;
+    int stopped = 0;
     QList<bool> keys;
     QList<QSizeF> sizes;
 
+    // Words changed elsewhere while the note is typed on.
+    void changeElsewhere(const QString &text)
+    {
+        m_writingText = text;
+        Q_EMIT writingTextChanged();
+    }
+
 Q_SIGNALS:
-    void openRequested(const QString &id);
+    void writingChanged();
+    void writingTextChanged();
 
 public Q_SLOTS:
+    void write(const QString &id)
+    {
+        written.append(id);
+        m_writingId = id;
+        m_writingText = m_notes.constFirst().toMap().value(QStringLiteral("text")).toString();
+        Q_EMIT writingChanged();
+        Q_EMIT writingTextChanged();
+    }
+    void setWritingText(const QString &text)
+    {
+        typed.append(text);
+        m_writingText = text;
+    }
+    void stopWriting()
+    {
+        ++stopped;
+        if (!m_writingId.isEmpty()) {
+            m_writingId.clear();
+            Q_EMIT writingChanged();
+        }
+    }
     void setPressable(const QVariantList &) { }
     void place(const QString &, qreal, qreal) { }
     void setTakesKeys(bool takes) { keys.append(takes); }
@@ -136,6 +168,8 @@ public Q_SLOTS:
 
 private:
     QVariantList m_notes;
+    QString m_writingId;
+    QString m_writingText;
 };
 
 class FakeStuckShell : public QObject
@@ -391,8 +425,9 @@ private Q_SLOTS:
     }
 
     // A stuck note's words are selected where the note stands and copied,
-    // while a tap still opens it and a finger or the note's edge still moves
-    // it; the surface takes the keys only while words are selected.
+    // while a tap types on it there and a finger or the note's edge still
+    // moves it; the surface takes the keys only while words are selected or
+    // the note is typed on.
     void stuckNoteWordsCopy()
     {
         FakeStuck stuck;
@@ -424,25 +459,30 @@ private Q_SLOTS:
         QVERIFY(tools->isVisible());
         tap(window, itemNamed(window->contentItem(), QStringLiteral("stuck-copy")));
         QCOMPARE(QGuiApplication::clipboard()->text(), QStringLiteral("DOCKER"));
-        QVERIFY(stuck.opened.isEmpty());
+        QVERIFY(stuck.written.isEmpty());
 
-        // A click lets the words go and gives the keys back; the next opens
-        // the note.
+        // A click lets the words go and gives the keys back; the next types
+        // on the note where it stands, never on a card.
         QTest::qWait(400);
         tap(window, words);
         QTRY_COMPARE(stuck.keys, (QList<bool>{true, false}));
         QVERIFY(words->property("selectedText").toString().isEmpty());
-        QVERIFY(stuck.opened.isEmpty());
+        QVERIFY(stuck.written.isEmpty());
         QTest::qWait(400);
         tap(window, words);
-        QCOMPARE(stuck.opened, QStringList{QStringLiteral("n1")});
+        QCOMPARE(stuck.written, QStringList{QStringLiteral("n1")});
+        QTRY_COMPARE(stuck.keys, (QList<bool>{true, false, true}));
+        QVERIFY(!words->property("readOnly").toBool());
+        stuck.stopWriting();
+        QTRY_COMPARE(stuck.keys, (QList<bool>{true, false, true, false}));
+        QVERIFY(words->property("readOnly").toBool());
 
         // A finger held on the code takes it whole; Copy copies it.
         QPointingDevice *finger = QTest::createTouchDevice();
         QTest::qWait(400);
         hold(window, finger, characterAt(words, text.indexOf(QStringLiteral("dckr")) + 3));
         QTRY_COMPARE(words->property("selectedText").toString(), QStringLiteral("dckr_pat_ABCDEF-ghijk"));
-        QCOMPARE(stuck.opened.size(), 1);
+        QCOMPARE(stuck.written.size(), 1);
         tap(window, itemNamed(window->contentItem(), QStringLiteral("stuck-copy")));
         QCOMPARE(QGuiApplication::clipboard()->text(), QStringLiteral("dckr_pat_ABCDEF-ghijk"));
 
@@ -478,7 +518,7 @@ private Q_SLOTS:
         const auto corner = [grip] {
             return grip->mapToScene(QPointF(grip->width() - 10, grip->height() - 10)).toPoint();
         };
-        const int opened = stuck.opened.size();
+        const int written = stuck.written.size();
         sweep(window, corner(), corner() + QPoint(80, 60));
         QVERIFY(stuckNote->width() > fit.width());
         QVERIFY(stuckNote->height() > fit.height());
@@ -498,7 +538,58 @@ private Q_SLOTS:
         QCOMPARE(stuck.sizes.constLast(), stuckNote->size());
         QVERIFY(stuck.sizes.constLast().width() < stuck.sizes.constFirst().width());
         QTest::qWait(500);
-        QCOMPARE(stuck.opened.size(), opened);
+        QCOMPARE(stuck.written.size(), written);
+    }
+
+    // A tap on a stuck note types on it where it stands: its words take the
+    // cursor at their end, what is typed is handed on to be kept as the
+    // quick note keeps it, words changed elsewhere reach it, and Esc ends it.
+    void stuckNoteIsTypedWhereItStands()
+    {
+        FakeStuck stuck;
+        FakeStuckShell shell(&stuck);
+        QQmlComponent component(m_view->engine(), QStringLiteral("io.github.carlsonjm.gooseberry"), QStringLiteral("StuckWindow"));
+        std::unique_ptr<QQuickWindow> surface(qobject_cast<QQuickWindow *>(
+            component.createWithInitialProperties({{QStringLiteral("shell"), QVariant::fromValue<QObject *>(&shell)}})));
+        QVERIFY2(surface, qPrintable(component.errorString()));
+        surface->resize(800, 600);
+        surface->setVisible(true);
+        QVERIFY(QTest::qWaitForWindowExposed(surface.get()));
+        QQuickWindow *window = surface.get();
+        window->requestActivate();
+        QVERIFY(QTest::qWaitForWindowActive(window));
+        QQuickItem *words = itemNamed(window->contentItem(), QStringLiteral("stuckWords-n1"));
+        QVERIFY(words);
+        const QString text = words->property("text").toString();
+        QVERIFY(words->property("readOnly").toBool());
+        QTest::qWait(50);
+
+        tap(window, words);
+        QCOMPARE(stuck.written, QStringList{QStringLiteral("n1")});
+        QTRY_VERIFY(words->hasActiveFocus());
+        QVERIFY(!words->property("readOnly").toBool());
+        QCOMPARE(words->property("cursorPosition").toInt(), text.size());
+        QTRY_COMPARE(stuck.keys, QList<bool>{true});
+        // A tap on the note while it is typed on asks nothing more.
+        QTest::qWait(400);
+        tap(window, words);
+        QCOMPARE(stuck.written.size(), 1);
+
+        words->setProperty("cursorPosition", text.size());
+        QTest::keyClicks(window, QStringLiteral(" ok"));
+        QTRY_COMPARE(stuck.typed.constLast(), text + QStringLiteral(" ok"));
+        QCOMPARE(words->property("text").toString(), text + QStringLiteral(" ok"));
+
+        // Changed elsewhere, as on another device, the words on the window follow.
+        stuck.changeElsewhere(QStringLiteral("From elsewhere"));
+        QTRY_COMPARE(words->property("text").toString(), QStringLiteral("From elsewhere"));
+        QCOMPARE(stuck.typed.constLast(), text + QStringLiteral(" ok"));
+
+        // Esc ends it, the keys go back, and the words are the bus's again.
+        QTest::keyClick(window, Qt::Key_Escape);
+        QTRY_VERIFY(stuck.stopped >= 1);
+        QTRY_COMPARE(stuck.keys, (QList<bool>{true, false}));
+        QTRY_VERIFY(words->property("readOnly").toBool());
     }
 
     void cursorIsReadyAndTypingKeeps()

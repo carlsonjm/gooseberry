@@ -6,17 +6,21 @@ import QtQuick.Window
 // bar. The surface lies exactly over the window and follows it; each note
 // stands where Robin last let it go, kept in proportion when the window is
 // resized, and one never placed starts at the top-right, the newest on top.
-// A note held and moved stays where it is let go; a tap opens it on the
-// quick-note card; its words can be selected and copied where it stands. The
-// notes stay up until Robin taps the dot, or the stack in Spread, again; a
-// press anywhere else reaches the window underneath, as if the notes were not
-// there.
+// A note held and moved stays where it is let go; a tap on it types on it
+// where it stands, never in a popup, and its words can be selected and
+// copied there. The notes stay up until Robin taps the dot again; a press
+// anywhere else reaches the window underneath, as if the notes were not
+// there, and ends the typing.
 Window {
     id: root
 
     required property QtObject shell
     readonly property QtObject stuck: shell.stuck
     readonly property var notes: stuck ? stuck.shownNotes : []
+    // The note typed on where it stands, and where its cursor was, so a note
+    // made anew under the words, as when it is moved, keeps its place.
+    readonly property string writingId: stuck && stuck.writingId ? stuck.writingId : ""
+    property int writingCursor: -1
     // The same size on every window, smaller only on a narrow one.
     readonly property real noteWidth: Math.min(220, Math.max(140, width * 0.3))
     // Clear of the title bar, where an unplaced note starts.
@@ -52,7 +56,7 @@ Window {
         let wanted = false;
         for (let i = 0; i < notesRepeater.count; ++i) {
             const item = notesRepeater.itemAt(i);
-            if (item && (item.selecting || item.offerCopy)) {
+            if (item && (item.selecting || item.offerCopy || item.writing)) {
                 wanted = true;
             }
         }
@@ -74,9 +78,33 @@ Window {
         tellKeys();
     }
 
+    // The note typed on takes the cursor, and the on-screen keys come up for
+    // it, once the surface is drawn and holds the keys.
+    function focusWriting() {
+        for (let i = 0; i < notesRepeater.count; ++i) {
+            const item = notesRepeater.itemAt(i);
+            if (item && item.writing) {
+                item.takeCursor();
+            }
+        }
+    }
+
+    onWritingIdChanged: {
+        writingCursor = -1;
+        Qt.callLater(root.tellKeys);
+        Qt.callLater(root.focusWriting);
+    }
+
     onActiveChanged: {
-        if (!active) {
+        if (active) {
+            Qt.callLater(root.focusWriting);
+        } else {
             letGoAll();
+            // A press on the window underneath, or the keys going to it,
+            // ends the typing; what was typed is kept.
+            if (root.writingId !== "" && root.stuck) {
+                root.stuck.stopWriting();
+            }
         }
     }
 
@@ -92,6 +120,8 @@ Window {
         pressableLater.restart();
         if (!visible) {
             letGoAll();
+        } else {
+            Qt.callLater(root.focusWriting);
         }
     }
 
@@ -101,6 +131,7 @@ Window {
         onCountChanged: {
             pressableLater.restart();
             Qt.callLater(root.tellKeys);
+            Qt.callLater(root.focusWriting);
         }
 
         Rectangle {
@@ -112,6 +143,8 @@ Window {
             readonly property real freeX: Math.max(0, root.width - width)
             readonly property real freeY: Math.max(0, root.height - height)
             readonly property bool selecting: body.selectedText.length > 0 || touchSelect.selecting
+            // Typed on where it stands.
+            readonly property bool writing: root.writingId !== "" && root.writingId === modelData.id
             // Resized by its corner, a note keeps that size; otherwise it is
             // as wide as every note and as tall as its words.
             readonly property bool sized: modelData.width > 0 && modelData.height > 0
@@ -162,8 +195,37 @@ Window {
                 }
                 if (heldWords) {
                     letGo();
-                } else {
-                    root.stuck.openRequested(modelData.id);
+                } else if (!writing) {
+                    root.stuck.write(modelData.id);
+                }
+            }
+
+            // The words as they are kept, the cursor where it was, and the
+            // keys; on a touch screen the on-screen keys come up with them.
+            function takeCursor() {
+                if (!writing) {
+                    return;
+                }
+                if (body.text !== root.stuck.writingText) {
+                    body.text = root.stuck.writingText;
+                }
+                if (!body.activeFocus) {
+                    body.forceActiveFocus();
+                    body.cursorPosition = root.writingCursor >= 0 ? Math.min(root.writingCursor, body.length)
+                                                                  : body.length;
+                }
+                Qt.inputMethod.show();
+            }
+
+            onWritingChanged: {
+                if (!writing) {
+                    body.deselect();
+                    body.focus = false;
+                }
+            }
+            Component.onCompleted: {
+                if (writing) {
+                    Qt.callLater(root.focusWriting);
                 }
             }
 
@@ -225,7 +287,6 @@ Window {
                 width: parent.width - 28
                 height: note.sized || note.liveHeight > 0 ? Math.max(0, note.height - 28 - note.toolsRoom)
                                                           : Math.min(implicitHeight, root.noteWidth - 28)
-                text: note.modelData.text
                 color: "#1A1A1A"
                 selectionColor: Qt.rgba(0, 0, 0, 0.2)
                 selectedTextColor: "#1A1A1A"
@@ -233,15 +294,49 @@ Window {
                 font.weight: Font.Medium
                 wrapMode: TextEdit.Wrap
                 textFormat: TextEdit.PlainText
-                readOnly: true
+                // Typed on only while it is the note written on; otherwise
+                // its words are read and copied where it stands.
+                readOnly: !note.writing
                 selectByMouse: true
                 persistentSelection: true
                 clip: true
                 Accessible.ignored: true
 
+                // Its words come from the bus while it is not typed on; while
+                // it is, from the person, each change kept as the quick note
+                // keeps it.
+                Binding {
+                    target: body
+                    property: "text"
+                    value: note.modelData.text
+                    when: !note.writing
+                    restoreMode: Binding.RestoreNone
+                }
+                onTextChanged: {
+                    if (note.writing && root.stuck && text !== root.stuck.writingText) {
+                        root.stuck.setWritingText(text);
+                    }
+                }
+                onCursorPositionChanged: {
+                    if (note.writing && activeFocus) {
+                        root.writingCursor = cursorPosition;
+                    }
+                }
+                Keys.onEscapePressed: root.stuck.stopWriting()
+
+                Connections {
+                    target: note.writing ? root.stuck : null
+                    // Words changed elsewhere while typed on, kept by the
+                    // same rules as on the quick note.
+                    function onWritingTextChanged() {
+                        if (body.text !== root.stuck.writingText) {
+                            body.text = root.stuck.writingText;
+                        }
+                    }
+                }
+
                 // The words keep a press on them, a mouse's to select; a tap
-                // on them still opens the note, or lets go of what is
-                // selected.
+                // on them types on the note, or lets go of what is selected.
                 TapHandler {
                     onPressedChanged: note.pressedWith(pressed)
                     onTapped: note.tapped()
@@ -254,10 +349,10 @@ Window {
                 }
             }
 
-            // A tap opens the note, unless words are selected: then it lets
-            // them go. A finger moves the note from anywhere on it; a mouse
-            // moves it from anywhere but the words, which keep a press that
-            // starts on them to select.
+            // A tap types on the note where it stands, unless words are
+            // selected: then it lets them go. A finger moves the note from
+            // anywhere on it; a mouse moves it from anywhere but the words,
+            // which keep a press that starts on them to select.
             TapHandler {
                 onPressedChanged: note.pressedWith(pressed)
                 onTapped: note.tapped()

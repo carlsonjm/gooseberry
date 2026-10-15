@@ -62,6 +62,15 @@ QList<Note> notesOn(const OpenWindow &window, const QList<Note> &notes)
     return on;
 }
 
+QList<Note> keptInOrder(const QList<Note> &notes, const QStringList &ids)
+{
+    QList<Note> ordered = notes;
+    std::stable_sort(ordered.begin(), ordered.end(), [&ids](const Note &a, const Note &b) {
+        return ids.indexOf(a.id) < ids.indexOf(b.id);
+    });
+    return ordered;
+}
+
 QVariantList entries(const QList<OpenWindow> &windows, const QList<Note> &notes, const QSet<QString> &shownKeys)
 {
     QVariantList list;
