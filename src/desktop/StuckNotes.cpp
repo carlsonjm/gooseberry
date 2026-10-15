@@ -41,6 +41,9 @@ StuckNotes::StuckNotes(NoteStore *store, WindowContext *context, std::function<Q
     m_refresh.setSingleShot(true);
     m_refresh.setInterval(0);
     connect(&m_refresh, &QTimer::timeout, this, &StuckNotes::refresh);
+    m_foldLater.setSingleShot(true);
+    m_foldLater.setInterval(150);
+    connect(&m_foldLater, &QTimer::timeout, this, &StuckNotes::foldIfLeft);
     const auto later = [this] {
         m_refresh.start();
     };
@@ -143,6 +146,7 @@ void StuckNotes::refresh()
         }
     }
     m_shownKeys.intersect(open);
+    m_foldedKeys.intersect(m_shownKeys);
     // The notes are drawn over the window in front when it has them up; a
     // desktop that says no window is in front leaves them where they were,
     // and so does one that has not yet said the window they were brought up
@@ -152,9 +156,10 @@ void StuckNotes::refresh()
     }
     const bool behind = !active.isEmpty() && active == m_activeWhenShown;
     if ((!active.isEmpty() && !behind) || !m_shownKeys.contains(m_drawnKey)) {
-        m_drawnKey = m_shownKeys.contains(active) ? active : QString();
+        drawOver(m_shownKeys.contains(active) ? active : QString());
     }
     const bool drawn = !m_paused && !m_cardOpen && !m_drawnKey.isEmpty();
+    const bool folded = !m_drawnKey.isEmpty() && m_foldedKeys.contains(m_drawnKey);
     // Typing on a note ends when it is no longer up over its window, or when
     // another window's notes are drawn. While the notes step aside for
     // Spread it waits, so a note asked for from Spread is ready on the window.
@@ -169,6 +174,15 @@ void StuckNotes::refresh()
             m_surface = m_makeSurface ? m_makeSurface() : nullptr;
             if (m_surface) {
                 prepareSurface();
+                // Shown, the surface asks for the keys only once it has
+                // drawn: the desktop hands them to a surface the moment it
+                // asks, and to one not yet drawn it may not.
+                connect(m_surface, &QQuickWindow::frameSwapped, this, [this] {
+                    if (m_waitingToDraw) {
+                        m_waitingToDraw = false;
+                        applyKeys();
+                    }
+                });
             }
         }
         follow();
@@ -178,11 +192,21 @@ void StuckNotes::refresh()
         m_shownNotes = shown;
         Q_EMIT shownChanged();
     }
+    const bool foldedChange = folded != m_folded;
+    m_folded = folded;
+    if (foldedChange) {
+        Q_EMIT foldedChanged();
+    }
     if (m_surface && m_surface->isVisible() != drawn) {
         qCDebug(DESKTOP) << (drawn ? "stuck notes drawn over" : "stuck notes step aside from") << m_drawnKey;
+        // Each time it is shown the desktop makes the surface anew, taking
+        // the keys as last asked; it is shown without them.
+        m_waitingToDraw = drawn;
+        applyKeys();
         m_surface->setVisible(drawn);
     }
-    const QVariantList entries = StuckWindows::entries(m_windows, m_store->notes(), m_shownKeys);
+    applyKeys();
+    const QVariantList entries = StuckWindows::entries(m_windows, m_store->notes(), m_shownKeys, m_foldedKeys);
     if (entries != m_entries) {
         m_entries = entries;
         Q_EMIT WindowsChanged(m_entries);
@@ -274,6 +298,56 @@ void StuckNotes::stopWriting()
     }
 }
 
+void StuckNotes::keysLeft()
+{
+    stopWriting();
+    if (!m_folded) {
+        m_foldLater.start();
+    }
+}
+
+void StuckNotes::foldIfLeft()
+{
+    // Stepping aside for Spread or the quick-note card, or the keys back on
+    // the surface, is not Robin going back to the work.
+    if (!m_surface || !m_surface->isVisible() || m_surface->isActive() || m_paused || m_cardOpen
+        || m_drawnKey.isEmpty() || !m_shownKeys.contains(m_drawnKey) || m_foldedKeys.contains(m_drawnKey)) {
+        return;
+    }
+    qCDebug(DESKTOP) << "stuck notes fold into a dot on" << m_drawnKey;
+    m_foldedKeys.insert(m_drawnKey);
+    refresh();
+}
+
+void StuckNotes::unfold()
+{
+    const OpenWindow *window = drawnWindow();
+    if (!window || !m_foldedKeys.contains(window->key())) {
+        return;
+    }
+    m_foldLater.stop();
+    const QString key = window->key();
+    const QList<Note> notes = StuckWindows::notesOn(*window, m_store->notes());
+    qCDebug(DESKTOP) << "stuck notes open again on" << window->caption;
+    m_foldedKeys.remove(key);
+    refresh();
+    // The top note, the one changed last, is ready to type.
+    if (!notes.isEmpty()) {
+        beginWriting(notes.constFirst().id, key);
+    }
+}
+
+void StuckNotes::drawOver(const QString &key)
+{
+    // Open notes hold the keys, and only the notes drawn hold them: notes left
+    // open over a window that goes behind another fold, as they would for a
+    // tap on that other window.
+    if (!m_drawnKey.isEmpty() && m_drawnKey != key && m_shownKeys.contains(m_drawnKey)) {
+        m_foldedKeys.insert(m_drawnKey);
+    }
+    m_drawnKey = key;
+}
+
 bool StuckNotes::Write(const QString &noteId, const QString &windowId, const QString &caption, const QString &app)
 {
     m_windows = m_context->windows();
@@ -316,11 +390,13 @@ void StuckNotes::prepareSurface()
 
 void StuckNotes::setShown(const OpenWindow &window, bool shown)
 {
+    // Brought up or put away, they are open the next time they are up.
+    m_foldedKeys.remove(window.key());
     if (shown) {
         m_shownKeys.insert(window.key());
         // Brought up from a title bar or Spread: drawn over that window now,
         // even before the desktop says it is in front.
-        m_drawnKey = window.key();
+        drawOver(window.key());
         m_activeWhenShown.clear();
         for (const OpenWindow &open : std::as_const(m_windows)) {
             if (open.active && open.key() != window.key()) {
@@ -399,6 +475,7 @@ void StuckNotes::Hide()
         return;
     }
     m_shownKeys.clear();
+    m_foldedKeys.clear();
     refresh();
 }
 
@@ -445,14 +522,26 @@ void StuckNotes::setPressable(const QVariantList &rects)
 
 void StuckNotes::setTakesKeys(bool takes)
 {
-    if (!m_surface || !onWayland()) {
+    m_notesWantKeys = takes;
+    applyKeys();
+}
+
+void StuckNotes::applyKeys()
+{
+    const bool wanted = m_surface && !m_paused && !m_cardOpen && !m_drawnKey.isEmpty() && !m_waitingToDraw
+        && (m_notesWantKeys || !m_folded);
+    if (!m_surface || wanted == m_keysTaken) {
+        return;
+    }
+    m_keysTaken = wanted;
+    if (!onWayland()) {
         return;
     }
     // The desktop hands the keys to a surface over the windows as soon as it
     // asks for them, and back to the window once it stops.
-    qCDebug(DESKTOP) << "stuck notes" << (takes ? "take" : "give back") << "the keys";
-    LayerShellQt::Window::get(m_surface)->setKeyboardInteractivity(takes ? LayerShellQt::Window::KeyboardInteractivityOnDemand
-                                                                         : LayerShellQt::Window::KeyboardInteractivityNone);
+    qCDebug(DESKTOP) << "stuck notes" << (wanted ? "take" : "give back") << "the keys";
+    LayerShellQt::Window::get(m_surface)->setKeyboardInteractivity(wanted ? LayerShellQt::Window::KeyboardInteractivityOnDemand
+                                                                          : LayerShellQt::Window::KeyboardInteractivityNone);
     m_surface->requestUpdate();
 }
 

@@ -39,9 +39,10 @@ question is where the thought is lost.
 A window with stuck notes shows a small dot in its title bar, left of
 minimize, in the top note's colour, with a count when there are several. A tap
 brings the notes up over the window, each where Robin last placed it on that
-window, kept in proportion when the window is resized; a tap on the dot or the
-work puts them away. In Spread, the card shows its window's notes, as the next
-ruling says. Neither moves or resizes the window, and nothing needs closing.
+window, kept in proportion when the window is resized; a tap on the dot puts
+them away, and a tap on the work folds them (§ Notes fold into a dot on their
+window). In Spread, the card shows its window's notes, as the next ruling
+says. Neither moves or resizes the window, and nothing needs closing.
 (The maintainer, 7 October.) This replaces the 3 October ruling that a card's
 notes wait behind it in its Stack.
 
@@ -84,6 +85,28 @@ quick-note card, and that a tap in Spread fans the card's notes out over it.
 Rejected: opening the note on the quick-note card, and fanning the notes out
 over the card in Spread. Each puts a large popup between Robin and a note
 that belongs to the window, when all Robin wants is to type on it.
+
+## Notes fold into a dot on their window
+
+Once Robin goes back to the window, tapping or clicking into the application
+rather than a note, or goes to another window, its notes fold into one small
+dot where the top note stands, in its colour, with the count when there are
+several, drawn as the title bar draws its dot and a 44 px target. A tap on the
+dot opens them where they stood, the top note ready to type with the
+on-screen keys up. Typing ends kept before they fold. Windows with a title-bar
+dot fold the same way; that dot still puts them away. In Spread a card whose
+notes are folded shows the dot in their place. (The maintainer, 15 October.)
+
+It holds because an application that draws its own top bar, as web browsers
+do, has no title-bar dot, so its notes could otherwise come back only from
+Spread, and notes left open cover the work. To see the tap that goes to the
+window, open notes hold the keys and give them up to it, which is engineering's
+choice: the desktop tells Gooseberry nothing else about a tap that misses its
+surface.
+
+Rejected: notes that stay open until put away, which leaves Spread the only way
+back to them where there is no title-bar dot; and a full-size surface that
+sees every tap, which would take taps from the window.
 
 ## Notes are plain files; Search makes them look at home
 

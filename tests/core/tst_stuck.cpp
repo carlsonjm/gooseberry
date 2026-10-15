@@ -123,6 +123,31 @@ private Q_SLOTS:
         QCOMPARE(notes.at(1).toMap().value(QStringLiteral("title")).toString(), QStringLiteral("Note older"));
     }
 
+    // Notes up but folded into a dot are told as both; notes put away are
+    // never folded.
+    void entriesTellFoldedNotes()
+    {
+        const QList<OpenWindow> windows{
+            openWindow(QStringLiteral("{11111111-1111-1111-1111-111111111111}"), QStringLiteral("plan.md — Kate"),
+                       QStringLiteral("org.kde.kate"), QStringLiteral("plan.md")),
+            openWindow(QStringLiteral("{22222222-2222-2222-2222-222222222222}"), QStringLiteral("todo.md — Kate"),
+                       QStringLiteral("org.kde.kate"), QStringLiteral("todo.md")),
+        };
+        const QList<Note> notes{stuckNote(QStringLiteral("a"), QStringLiteral("plan.md"), QStringLiteral("org.kde.kate"), 0),
+                                stuckNote(QStringLiteral("b"), QStringLiteral("todo.md"), QStringLiteral("org.kde.kate"), 0)};
+        const QString plan = windows.at(0).key();
+        const QString todo = windows.at(1).key();
+        const QVariantList entries = StuckWindows::entries(windows, notes, {plan}, {plan, todo});
+        QCOMPARE(entries.size(), 2);
+        QCOMPARE(entries.at(0).toMap().value(QStringLiteral("shown")).toBool(), true);
+        QCOMPARE(entries.at(0).toMap().value(QStringLiteral("folded")).toBool(), true);
+        QCOMPARE(entries.at(1).toMap().value(QStringLiteral("shown")).toBool(), false);
+        QCOMPARE(entries.at(1).toMap().value(QStringLiteral("folded")).toBool(), false);
+        // A caller from before folding passes none.
+        QCOMPARE(StuckWindows::entries(windows, notes, {plan}).constFirst().toMap().value(QStringLiteral("folded")).toBool(),
+                 false);
+    }
+
     void entriesTellWhereEachNoteStands()
     {
         const QList<OpenWindow> windows{

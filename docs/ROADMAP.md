@@ -30,6 +30,8 @@ Also built, each in `INPUT.md`:
   animations are set to Instant.
 - A mouse wheel moving the card's page and the board's places 80 pixels a
   notch.
+- Notes over a window folding into a dot where they stand once Robin goes back
+  to the window, and opening, ready to type, with a tap on it.
 
 Gooseberry is ready for translation; its first translations come after 1.0.
 

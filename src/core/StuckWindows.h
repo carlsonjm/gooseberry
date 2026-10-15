@@ -40,8 +40,10 @@ QList<Note> notesOn(const OpenWindow &window, const QList<Note> &notes);
 QList<Note> keptInOrder(const QList<Note> &notes, const QStringList &ids);
 
 // One entry for each window with notes, as the bus gives it; shownKeys are
-// the keys of the windows whose notes are up.
-QVariantList entries(const QList<OpenWindow> &windows, const QList<Note> &notes, const QSet<QString> &shownKeys);
+// the keys of the windows whose notes are up, and foldedKeys those of the
+// windows whose notes, though up, are folded into a dot.
+QVariantList entries(const QList<OpenWindow> &windows, const QList<Note> &notes, const QSet<QString> &shownKeys,
+                     const QSet<QString> &foldedKeys = {});
 
 // The window a caller means: by one of its ids when it is given and open,
 // otherwise by its caption and application. -1 when none matches. Only
