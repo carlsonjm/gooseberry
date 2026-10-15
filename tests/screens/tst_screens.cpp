@@ -13,6 +13,7 @@
 
 #include <QClipboard>
 #include <QGuiApplication>
+#include <QLocale>
 #include <QPointingDevice>
 #include <QColor>
 #include <QIcon>
@@ -749,11 +750,14 @@ private Q_SLOTS:
         tap(m_view.get(), named(QStringLiteral("dayOn")));
         tap(m_view.get(), named(QStringLiteral("hourOn")));
         tap(m_view.get(), named(QStringLiteral("minutesOn")));
+        // The day shown is the day of the time picked: late in the evening
+        // the hour on carries it past midnight, two days on.
+        const QDateTime picked = start.addDays(1).addSecs(75 * 60);
+        const qint64 daysOn = QDate::currentDate().daysTo(picked.date());
         QCOMPARE(named(QStringLiteral("pickedDay"))->property("text").toString(),
-                 start.date().addDays(1) == QDate::currentDate().addDays(1) ? QStringLiteral("Tomorrow")
-                                                                            : named(QStringLiteral("pickedDay"))->property("text").toString());
+                 daysOn == 1 ? QStringLiteral("Tomorrow") : QLocale().toString(picked.date(), QStringLiteral("dddd")));
         tap(m_view.get(), named(QStringLiteral("setTime")));
-        QCOMPARE(m_capture->remindAt(), start.addDays(1).addSecs(75 * 60));
+        QCOMPARE(m_capture->remindAt(), picked);
         QVERIFY(!named(QStringLiteral("timePicker"))->isVisible());
         // Nothing before now can be picked.
         tap(m_view.get(), named(QStringLiteral("remind")));
