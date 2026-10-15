@@ -538,13 +538,13 @@ Window {
     Item {
         id: dot
 
-        readonly property var top: root.notes.length > 0 ? root.notes[0] : null
-        readonly property color colour: top ? top.colourHex : "#F2D98A"
+        readonly property var topNote: root.notes.length > 0 ? root.notes[0] : null
+        readonly property color colour: topNote ? topNote.colourHex : "#F2D98A"
         // Dark figures on a light note, light on a dark one.
         readonly property bool light: 0.2126 * colour.r + 0.7152 * colour.g + 0.0722 * colour.b > 0.55
 
         objectName: "stuckDot"
-        visible: root.folded && top !== null
+        visible: root.folded && topNote !== null
         x: root.dotAt.x
         y: root.dotAt.y
         width: root.dotTarget
