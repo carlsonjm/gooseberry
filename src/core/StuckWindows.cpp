@@ -78,6 +78,13 @@ QVariantList entries(const QList<OpenWindow> &windows, const QList<Note> &notes,
                 {QStringLiteral("text"), note.text},
                 {QStringLiteral("colour"), note.colour},
                 {QStringLiteral("colourHex"), colourHex(note.colour)},
+                // Where it stands on the window, as the notes over it are
+                // told it (StuckNotes::shownNotes), so Spread can draw it in
+                // the same place on the card.
+                {QStringLiteral("x"), note.hasPlace() ? qBound(0.0, note.place.x(), 1.0) : -1.0},
+                {QStringLiteral("y"), note.hasPlace() ? qBound(0.0, note.place.y(), 1.0) : -1.0},
+                {QStringLiteral("width"), note.hasSize() ? note.size.width() : -1.0},
+                {QStringLiteral("height"), note.hasSize() ? note.size.height() : -1.0},
             });
         }
         list.append(QVariantMap{

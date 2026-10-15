@@ -40,21 +40,34 @@ A window with stuck notes shows a small dot in its title bar, left of
 minimize, in the top note's colour, with a count when there are several. A tap
 brings the notes up over the window, each where Robin last placed it on that
 window, kept in proportion when the window is resized; a tap on the dot or the
-work puts them away. In Spread, each card's notes sit as a small stack at its
-bottom-right corner, the same size on every card, and a tap fans them out over
-that card. Neither moves or resizes the window, and nothing needs closing. (The
-maintainer, 7 October.) This replaces the 3 October ruling that a card's notes
-wait behind it in its Stack.
+work puts them away. In Spread, the card shows its window's notes, as the next
+ruling says. Neither moves or resizes the window, and nothing needs closing.
+(The maintainer, 7 October.) This replaces the 3 October ruling that a card's
+notes wait behind it in its Stack.
 
 The dot needs a title bar the desktop draws, such as Shuffle's. An application
 that draws its own top bar, as web browsers and many web-based applications
-do, has no dot; its notes are on its card's stack in Spread and on the board.
+do, has no dot; its notes are on its card in Spread and on the board.
 
 Rejected: a tab on the window's edge, at the top-right or bottom-right, which
 covers part of what an application draws there, such as a chat list or account
 settings; notes always open on the window, which cover part of the work and
 need moving by hand; and notes only behind the card in its Stack, which hides
 that a window has notes at all.
+
+## In Spread, a note stands where it was placed
+
+In Spread, each note placed on its window stands on that window's card in the
+same place, as big as it is there, both scaled with the card, so the card and
+the window agree. Notes never placed sit as a small stack at the card's
+bottom-right corner, the same size on every card. A tap on a note or on the
+stack does what the dot does, and fans the stack out over the card
+(`DESKTOP.md` § Stuck notes on the bus). (The maintainer, 15 October.) This
+replaces, for placed notes, the 7 October ruling that every card's notes sit
+in its corner stack.
+
+Rejected: every note in the corner stack, which moves a note Robin put
+somewhere on purpose and makes Spread disagree with the window.
 
 ## Notes are plain files; Search makes them look at home
 

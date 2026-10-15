@@ -163,10 +163,13 @@ Shuffle with Kadunce, once Shuffle's title bar with the dot is installed.
 5. In a web browser that draws its own top bar, stick a note: there is no dot.
    Open Spread and tap its stack: the notes fan out there, and stay up over the
    window after Spread closes. Open Spread and tap the stack again: they go.
-6. Open Spread: notes that are up step aside, and each card with notes has a
-   stack at its bottom-right, the same size on every card, with its count. Tap
-   a stack: the notes fan out over the card, and a tap anywhere else leaves
-   them open; tap the stack again to fold them. Hold one and carry it to
-   another card: it is stuck to that window now, on the board too.
+6. Open Spread: notes that are up step aside, each note moved on its window
+   stands on its card in the same place, scaled with the card, faint while its
+   notes are put away, and notes never moved make a stack at the card's
+   bottom-right, the same size on every card, with its count. Tap a note or a
+   stack: the notes come up, those in place in full and the stack fanned out
+   over the card, and a tap anywhere else leaves them up; tap again to put
+   them away. Hold one and
+   carry it to another card: it is stuck to that window now, on the board too.
 7. Tuck a note away on the board, or unstick it: the dot and the stack count
    down, and go when no note is left.

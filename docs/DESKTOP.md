@@ -229,7 +229,7 @@ moment to Kadunce so the window takes the card's place.
 
 From Milestone 3, Gooseberry tells the desktop which open windows have notes
 stuck to them, and answers a tap on them. A title bar draws the dot from it
-(Shuffle), and Spread draws each card's stack (Kadunce). Neither keeps notes:
+(Shuffle), and Spread draws each card's notes (Kadunce). Neither keeps notes:
 what they draw is always what this interface last said.
 
 - **Service:** `io.github.carlsonjm.gooseberry`, as for the quick note. A
@@ -253,7 +253,7 @@ tucked away, a dictionary of strings to variants:
 | `window` | `s` | The document the notes are stuck to, as a note's `window` header names it |
 | `count` | `u` | How many notes are stuck to it |
 | `colour`, `colourHex` | `s`, `s` | The top note's colour, by name and as `#RRGGBB` |
-| `notes` | `av` | Its notes, the top one first (the one changed last), each a dictionary: `id`, `title` (the first words), `text`, `colour`, `colourHex` |
+| `notes` | `av` | Its notes, the top one first (the one changed last), each a dictionary: `id`, `title` (the first words), `text`, `colour`, `colourHex`, and where it stands on the window as `x`, `y`, `width` and `height` (`d`) |
 | `shown` | `b` | Its notes are up: brought up and not yet put away. They stay up while the window is behind another or Spread is open, and are drawn again when it comes back |
 
 | Method | What it does |
@@ -270,6 +270,15 @@ tucked away, a dictionary of strings to variants:
 | Signal | When |
 | --- | --- |
 | `WindowsChanged(av windows)` | Any entry came, went or changed: a note stuck, unstuck, tucked, recoloured or retitled, a window opened, closed or retitled, or notes shown or put away. It carries every entry, as `Windows()` returns them |
+
+**Where a note stands.** `x` and `y` are the note's `place` (`FORMAT.md`):
+its top-left corner as shares of the window's width and height, from 0 to 1,
+negative when it was never placed. `width` and `height` are its `size`, in the
+desktop's pixels, negative when it was never resized there; it is then drawn
+at the size every note starts at. They are in pixels, not shares, so resizing
+a window sends nothing new. Spread draws a placed note on the card in that
+place, scaled with the card, and keeps notes never placed in the corner stack.
+A caller that ignores these keys draws every note in the stack.
 
 **Matching a window.** A caller that knows the compositor's id for a window,
 as Kadunce does, matches on `windowIds`. A title bar that knows only the
@@ -307,7 +316,7 @@ assistant, and offers none of its own.
 ## Needs
 
 Each is for that component to take up in the open, under its own contracts.
-None is assumed. Already taken up: Kadunce draws each card's stack in Spread and
+None is assumed. Already taken up: Kadunce draws each card's notes in Spread and
 carries a note to another card (`StickTo`); Shuffle's title bar draws the dot;
 Tettegouche lists notes among its results (`Find`) and hosts the quick note as
 its Notes mode.

@@ -207,8 +207,11 @@ Where the desktop's title bar draws Gooseberry's dot, as Shuffle's does
 | Tap or type in the window around the notes | The window takes it; the notes stay up. |
 | Tap the dot again | The notes go away, the + with them. |
 
-In Kadunce's Spread, each card's notes are a small stack at its bottom-right;
-a tap fans them out over the card, and a note held there can be carried to
+In Kadunce's Spread, each note stands on its card where it was let go on the
+window, scaled with the card and faint while the notes are put away; notes
+never placed there are a small stack at its bottom-right. A tap on a note or
+the stack brings the notes up over the window, drawing those in place in full
+and fanning the stack out over the card, and a note held there can be carried to
 another card, which sticks it to that window.
 
 ## Move a note over a window
