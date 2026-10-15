@@ -17,7 +17,7 @@ Milestones 0 to 4 are built, each with its checks by hand in `TESTING.md`:
   folder, a day or the trash.
 - **Milestone 3, stuck to windows.** Gooseberry tells the desktop which windows
   have notes (`DESKTOP.md` § Stuck notes on the bus): Shuffle's title bar
-  draws the dot, and Kadunce's Spread draws each card's stack.
+  draws the dot, and Kadunce's Spread draws each card's notes.
 - **Milestone 4, with Search.** Gooseberry answers `Find` and `OpenNote`, and
   Tettegouche lists notes among its results and hosts the quick note.
 

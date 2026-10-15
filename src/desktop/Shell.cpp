@@ -53,14 +53,6 @@ Shell::Shell(NoteStore *store, QQmlEngine *engine, QObject *parent)
         return create(QStringLiteral("StuckWindow"));
     }, this))
 {
-    // A note tapped over its window opens on the card; the notes step aside
-    // while it is open and come back when it closes.
-    connect(m_stuck, &StuckNotes::openRequested, this, [this](const QString &id) {
-        if (m_capture->open(id)) {
-            m_stuck->setCardOpen(true);
-            raiseCard();
-        }
-    });
     // The title bar's + starts a note stuck to its window, on the card.
     connect(m_stuck, &StuckNotes::newRequested, this, [this](const QString &window, const QString &app) {
         m_capture->startNew({window, app, m_context->current().workspace});

@@ -62,6 +62,15 @@ QList<Note> notesOn(const OpenWindow &window, const QList<Note> &notes)
     return on;
 }
 
+QList<Note> keptInOrder(const QList<Note> &notes, const QStringList &ids)
+{
+    QList<Note> ordered = notes;
+    std::stable_sort(ordered.begin(), ordered.end(), [&ids](const Note &a, const Note &b) {
+        return ids.indexOf(a.id) < ids.indexOf(b.id);
+    });
+    return ordered;
+}
+
 QVariantList entries(const QList<OpenWindow> &windows, const QList<Note> &notes, const QSet<QString> &shownKeys)
 {
     QVariantList list;
@@ -78,6 +87,13 @@ QVariantList entries(const QList<OpenWindow> &windows, const QList<Note> &notes,
                 {QStringLiteral("text"), note.text},
                 {QStringLiteral("colour"), note.colour},
                 {QStringLiteral("colourHex"), colourHex(note.colour)},
+                // Where it stands on the window, as the notes over it are
+                // told it (StuckNotes::shownNotes), so Spread can draw it in
+                // the same place on the card.
+                {QStringLiteral("x"), note.hasPlace() ? qBound(0.0, note.place.x(), 1.0) : -1.0},
+                {QStringLiteral("y"), note.hasPlace() ? qBound(0.0, note.place.y(), 1.0) : -1.0},
+                {QStringLiteral("width"), note.hasSize() ? note.size.width() : -1.0},
+                {QStringLiteral("height"), note.hasSize() ? note.size.height() : -1.0},
             });
         }
         list.append(QVariantMap{

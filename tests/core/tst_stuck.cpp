@@ -123,6 +123,75 @@ private Q_SLOTS:
         QCOMPARE(notes.at(1).toMap().value(QStringLiteral("title")).toString(), QStringLiteral("Note older"));
     }
 
+    void entriesTellWhereEachNoteStands()
+    {
+        const QList<OpenWindow> windows{
+            openWindow(QStringLiteral("{11111111-1111-1111-1111-111111111111}"), QStringLiteral("plan.md — Kate"),
+                       QStringLiteral("org.kde.kate"), QStringLiteral("plan.md")),
+        };
+        Note placed = stuckNote(QStringLiteral("placed"), QStringLiteral("plan.md"), QStringLiteral("org.kde.kate"), 9);
+        placed.place = QPointF(0.25, 0.5);
+        placed.size = QSizeF(200, 150);
+        Note placedOnly = stuckNote(QStringLiteral("placedOnly"), QStringLiteral("plan.md"), QStringLiteral("org.kde.kate"), 8);
+        placedOnly.place = QPointF(0.75, 0.1);
+        const Note loose = stuckNote(QStringLiteral("loose"), QStringLiteral("plan.md"), QStringLiteral("org.kde.kate"), 7);
+        Note past = stuckNote(QStringLiteral("past"), QStringLiteral("plan.md"), QStringLiteral("org.kde.kate"), 6);
+        past.place = QPointF(1.5, 0.0);
+
+        const QVariantList notes = StuckWindows::entries(windows, {placed, placedOnly, loose, past}, {})
+                                       .constFirst().toMap().value(QStringLiteral("notes")).toList();
+        QCOMPARE(notes.size(), 4);
+        const auto value = [&](int index, const char *key) {
+            const QVariant found = notes.at(index).toMap().value(QLatin1String(key));
+            return found.isValid() ? found.toDouble() : qQNaN();
+        };
+        // Placed and resized: the place as shares of the window, the size
+        // in the desktop's pixels, as the notes over the window are told it.
+        QCOMPARE(value(0, "x"), 0.25);
+        QCOMPARE(value(0, "y"), 0.5);
+        QCOMPARE(value(0, "width"), 200.0);
+        QCOMPARE(value(0, "height"), 150.0);
+        // Placed, never resized: it is drawn at the size every note starts at.
+        QCOMPARE(value(1, "x"), 0.75);
+        QCOMPARE(value(1, "y"), 0.1);
+        QVERIFY(value(1, "width") < 0 && value(1, "height") < 0);
+        // Never placed: negative, so Spread keeps it in the corner stack.
+        QVERIFY(value(2, "x") < 0 && value(2, "y") < 0);
+        // A place is never past the window's edge.
+        QCOMPARE(value(3, "x"), 1.0);
+        QCOMPARE(value(3, "y"), 0.0);
+    }
+
+    // While a note is typed on where it stands, the notes over the window
+    // keep the order they had, though the one typed on is changed last; a
+    // note that came since goes on top.
+    void notesTypedOnKeepTheirPlaces()
+    {
+        const Note older = stuckNote(QStringLiteral("older"), QStringLiteral("plan.md"), QStringLiteral("org.kde.kate"), 1);
+        const Note typed = stuckNote(QStringLiteral("typed"), QStringLiteral("plan.md"), QStringLiteral("org.kde.kate"), 9);
+        const Note top = stuckNote(QStringLiteral("top"), QStringLiteral("plan.md"), QStringLiteral("org.kde.kate"), 5);
+        const Note fresh = stuckNote(QStringLiteral("fresh"), QStringLiteral("plan.md"), QStringLiteral("org.kde.kate"), 10);
+        const auto ids = [](const QList<Note> &notes) {
+            QStringList list;
+            for (const Note &note : notes) {
+                list.append(note.id);
+            }
+            return list;
+        };
+        // Changed last, the note typed on would come first; kept in order,
+        // it stays where it was.
+        const QStringList before{QStringLiteral("top"), QStringLiteral("typed"), QStringLiteral("older")};
+        QCOMPARE(ids(StuckWindows::keptInOrder({typed, top, older}, before)), before);
+        QCOMPARE(ids(StuckWindows::keptInOrder({fresh, typed, top, older}, before)),
+                 (QStringList{QStringLiteral("fresh"), QStringLiteral("top"), QStringLiteral("typed"), QStringLiteral("older")}));
+        // A note gone is simply gone.
+        QCOMPARE(ids(StuckWindows::keptInOrder({typed, older}, before)),
+                 (QStringList{QStringLiteral("typed"), QStringLiteral("older")}));
+        // With no order to keep, the notes stay as they came.
+        QCOMPARE(ids(StuckWindows::keptInOrder({typed, top, older}, {})),
+                 (QStringList{QStringLiteral("typed"), QStringLiteral("top"), QStringLiteral("older")}));
+    }
+
     void findsByIdThenCaption()
     {
         const QList<OpenWindow> windows{

@@ -203,13 +203,18 @@ Where the desktop's title bar draws Gooseberry's dot, as Shuffle's does
 | Input | What happens |
 | --- | --- |
 | Tap the dot in its title bar | The window's notes come up over it, each where it was last let go there, one never placed at the top-right, the newest on top. They stay up until the dot is tapped again. |
-| Tap a note | It opens on the quick-note card; the notes step aside while the card is up. |
+| Tap a note | The cursor is in it, where it stands, and the on-screen keys come up on a touch screen. What is typed is kept as on the quick note, from the first letter. |
+| Tap the window around the notes, or press `Esc` | The typing ends, kept; the keys go back to the window. |
 | Tap or type in the window around the notes | The window takes it; the notes stay up. |
 | Tap the dot again | The notes go away, the + with them. |
 
-In Kadunce's Spread, each card's notes are a small stack at its bottom-right;
-a tap fans them out over the card, and a note held there can be carried to
-another card, which sticks it to that window.
+In Kadunce's Spread, each note stands on its card where it was let go on the
+window, scaled with the card and moving with it, faint while the notes are put
+away; notes never placed there are a small stack at its bottom-right. A tap on
+a note opens the card, as a tap anywhere on it does, with the notes up over the
+window and that note ready to type; a tap on the stack opens the card with
+the notes up. A note held there can be carried to another card, which sticks
+it to that window.
 
 ## Move a note over a window
 
@@ -229,7 +234,7 @@ stuck over a window alike. On a checklist, Copy does not show.
 | Drag across words with a mouse or touchpad | They are selected, as on any page. A note over a window moves only from its edge or the space under its words. |
 | Tap Copy, or press `Ctrl+C` | The selected words are on the clipboard, to paste anywhere as often as needed. On a note over a window, Copy says Copied for a moment. |
 | Right-click a note over a window | Copy all and Select all show on it. The card's page has the desktop's own right-click menu. |
-| Tap a note over a window with words selected | The words are let go; the next tap opens the note, as before. |
+| Tap a note over a window with words selected | The words are let go; the next tap types on the note, as before. |
 | Tap or click the window under the notes | The words are let go, and the keys go back to the window. |
 
 ## Resize a note over a window
