@@ -166,6 +166,12 @@ private:
 
     NoteStore *m_store;
     Note m_note;
+    // The text as it was last written or read here, to tell typing on the
+    // card from a change made elsewhere.
+    QString m_keptText;
+    // The text on the card came from disk, not from the person: a note left
+    // empty that way is not sent to the trash.
+    bool m_textFromDisk = false;
     CaptureContext m_context;
     bool m_editing = false;
     QString m_problem;

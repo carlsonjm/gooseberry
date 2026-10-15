@@ -84,6 +84,47 @@ private Q_SLOTS:
         QCOMPARE(note.text, QStringLiteral("---\nnot a header, just a rule\n"));
     }
 
+    // Another program's front matter, as Obsidian, Jekyll or Hugo write it,
+    // is the note's text: every line of it survives an edit made here.
+    void otherFrontMatterIsKeptWhole()
+    {
+        const QByteArray file = "---\ntitle: Cabin trip\ntags:\n  - travel\n  - cabin\nsummary: >\n  Two nights,\n  bring the stove\n"
+                                "---\nPack the stove\n";
+        Note note = Note::parse(file, QStringLiteral("trip"), {});
+        QCOMPARE(note.text, QString::fromUtf8(file));
+        QVERIFY(note.extra.isEmpty());
+        QCOMPARE(note.format, NoteFormat);
+
+        note.text += QStringLiteral("and the kettle\n");
+        const Note again = Note::parse(note.serialize(), QStringLiteral("trip"), {});
+        QCOMPARE(again.text, QString::fromUtf8(file) + QStringLiteral("and the kettle\n"));
+        QVERIFY(again.extra.isEmpty());
+    }
+
+    // A note that opens with a rule, closed by another further down, is text.
+    void noteOpeningWithARuleIsText()
+    {
+        const QByteArray file = "---\nIdeas for the launch\nmore coffee\n---\nlater\n";
+        const Note note = Note::parse(file, QStringLiteral("x"), {});
+        QCOMPARE(note.text, QString::fromUtf8(file));
+    }
+
+    // In Gooseberry's own header, a line that is not a key of its own is kept
+    // as written, in its place, and is never read as one of the keys.
+    void headerLinesThatAreNotKeysSurvive()
+    {
+        const QByteArray file = "---\ngooseberry: 2\ncolour: lake\n# kept by a sync tool\naliases:\n  - cabin\n  colour: stone\n"
+                                "tucked: false\n---\nPack the stove\n";
+        Note note = Note::parse(file, QStringLiteral("x"), {});
+        QCOMPARE(note.colour, QStringLiteral("lake"));
+        QCOMPARE(note.text, QStringLiteral("Pack the stove\n"));
+        const QString written = QString::fromUtf8(note.serialize());
+        QVERIFY2(written.contains(QStringLiteral("# kept by a sync tool\naliases: \n  - cabin\n  colour: stone\n")), qPrintable(written));
+        const Note again = Note::parse(note.serialize(), QStringLiteral("x"), {});
+        QCOMPARE(again.extra, note.extra);
+        QCOMPARE(again.colour, QStringLiteral("lake"));
+    }
+
     void windowsLineEndingsAndMarkAreRead()
     {
         const Note note = Note::parse("\xEF\xBB\xBF---\r\ngooseberry: 1\r\nbelongs: project\r\nproject: Home\r\n---\r\nCall about the cabin\r\n",

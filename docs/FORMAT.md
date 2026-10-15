@@ -99,7 +99,12 @@ touching 1400.
 ```
 
 The header sits between two lines of `---` at the very top, the way other
-Markdown programs expect front matter. Each line is one `key: value`. Text
+Markdown programs expect front matter. It is Gooseberry's header only when it
+has the `gooseberry` key: another program's front matter, or a note that opens
+with a rule, is part of the note's text and kept whole, and Gooseberry's own
+header goes above it the first time the note changes. Each line is one
+`key: value`; a line in the header that is not, such as a comment or an
+indented line, is kept as written among the keys this version does not know. Text
 values are in double quotes, with `\"` for a quote and `\\` for a backslash.
 Times are ISO 8601 with their offset from UTC, to the second.
 
@@ -166,7 +171,17 @@ Times are ISO 8601 with their offset from UTC, to the second.
   record of where it came from, so the desktop's trash can put it back. A note
   emptied of text and closed goes the same way. Nothing is deleted outright.
 - **Changes from elsewhere.** A note changed, added or removed by another
-  program or a sync tool is read again within moments.
+  program or a sync tool is read again within moments. A file caught while it
+  is being written is read again once it is still, and one that would empty a
+  note, or cuts its header short, is taken only once it has stayed so for a
+  second; until then the note keeps its words. A note emptied that way is not
+  sent to the trash when its card is closed.
+- **Two versions.** When another program changed a note's words while
+  Gooseberry was writing it, as a sync tool bringing another device's edit
+  during typing here, Gooseberry writes its own and keeps the other version as
+  a new note in the same folder. Neither is lost. Any other change made
+  elsewhere, as a note moved, resized, recoloured or tucked away, is kept when
+  typing waiting on the card is written.
 
 ## Versions
 

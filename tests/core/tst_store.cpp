@@ -711,6 +711,160 @@ private Q_SLOTS:
         QCOMPARE(changed.count(), 1);
     }
 
+    // A sync tool brings another device's version of the note in the moment
+    // before typing here is written, before the folder is read again: that
+    // version is kept as a note of its own, never written over unseen.
+    void anEditFromAnotherDeviceIsNotWrittenOverUnseen()
+    {
+        Capture capture(m_store.get());
+        capture.setWaits(60000, 60000);
+        capture.startNew({});
+        capture.setText(QStringLiteral("Groceries"));
+        const QString id = capture.noteId();
+        const QString path = m_store->pathFor(id);
+        capture.setText(QStringLiteral("Groceries: oats"));
+        QVERIFY(capture.waiting());
+
+        Note phone = *m_store->note(id);
+        phone.text = QStringLiteral("Groceries: lemons, from the phone");
+        writeFile(path, phone.serialize());
+        // Written at once, with no chance for the folder to be read.
+        capture.flush();
+
+        QCOMPARE(Note::parse(readFile(path), id, {}).text, QStringLiteral("Groceries: oats"));
+        QCOMPARE(noteFiles(m_folder).size(), 2);
+        QStringList texts;
+        for (const Note &note : m_store->notes()) {
+            texts.append(note.text);
+        }
+        texts.sort();
+        QCOMPARE(texts, (QStringList{QStringLiteral("Groceries: lemons, from the phone"), QStringLiteral("Groceries: oats")}));
+
+        // Read again, the folder holds just the two.
+        QTest::qWait(400);
+        QCOMPARE(m_store->notes().size(), 2);
+        QCOMPARE(noteFiles(m_folder).size(), 2);
+    }
+
+    // The other device's version is seen while typing here waits: the typing
+    // is written, and the other version is kept beside it.
+    void anEditFromAnotherDeviceWhileTypingWaitsIsKept()
+    {
+        Capture capture(m_store.get());
+        capture.setWaits(60000, 60000);
+        capture.startNew({});
+        capture.setText(QStringLiteral("Groceries"));
+        const QString id = capture.noteId();
+        const QString path = m_store->pathFor(id);
+        capture.setText(QStringLiteral("Groceries: oats"));
+
+        QSignalSpy removed(m_store.get(), &NoteStore::noteRemoved);
+        Note phone = *m_store->note(id);
+        phone.text = QStringLiteral("Groceries: lemons, from the phone");
+        writeFile(path, phone.serialize());
+
+        QTRY_COMPARE(m_store->notes().size(), 2);
+        QVERIFY(!capture.waiting());
+        QCOMPARE(capture.text(), QStringLiteral("Groceries: oats"));
+        QCOMPARE(Note::parse(readFile(path), id, {}).text, QStringLiteral("Groceries: oats"));
+        bool kept = false;
+        for (const Note &note : m_store->notes()) {
+            kept = kept || (note.id != id && note.text == QStringLiteral("Groceries: lemons, from the phone"));
+        }
+        QVERIFY(kept);
+        QTest::qWait(400);
+        QCOMPARE(removed.count(), 0);
+        QCOMPARE(m_store->notes().size(), 2);
+    }
+
+    // A sync tool that empties a file before writing it, or is caught half
+    // way through the header: the open note keeps its words.
+    void aFileReadHalfWrittenDoesNotCostTheNote()
+    {
+        Capture capture(m_store.get());
+        capture.startNew({});
+        capture.setText(QStringLiteral("Pack the stove and the kettle"));
+        const QString id = capture.noteId();
+        const QString path = m_store->pathFor(id);
+        QVERIFY(!capture.waiting());
+        const QByteArray whole = m_store->note(id)->serialize();
+
+        writeFile(path, QByteArray());
+        QTest::qWait(500);
+        QCOMPARE(capture.text(), QStringLiteral("Pack the stove and the kettle"));
+        QCOMPARE(m_store->note(id)->text, QStringLiteral("Pack the stove and the kettle"));
+
+        writeFile(path, whole.left(30));
+        QTest::qWait(500);
+        QCOMPARE(capture.text(), QStringLiteral("Pack the stove and the kettle"));
+
+        // The write completes: what it brought is taken.
+        Note edited = *m_store->note(id);
+        edited.text = QStringLiteral("Pack the stove, the kettle and matches");
+        writeFile(path, edited.serialize());
+        QTRY_COMPARE(capture.text(), QStringLiteral("Pack the stove, the kettle and matches"));
+
+        // Typing over a file caught empty writes the whole note.
+        writeFile(path, QByteArray());
+        QTest::qWait(300);
+        capture.setText(QStringLiteral("Pack the stove, the kettle and matches!"));
+        capture.flush();
+        QCOMPARE(Note::parse(readFile(path), id, {}).text, QStringLiteral("Pack the stove, the kettle and matches!"));
+        QCOMPARE(noteFiles(m_folder).size(), 1);
+    }
+
+    // Emptied by another program and left so, the note is shown empty; it
+    // was not the person who emptied it, so closing the card keeps it.
+    void aNoteEmptiedElsewhereIsNotTrashed()
+    {
+        m_store->setSettleMs(200);
+        Capture capture(m_store.get());
+        capture.startNew({});
+        capture.setText(QStringLiteral("Pack the stove"));
+        const QString path = m_store->pathFor(capture.noteId());
+
+        Note emptied = *m_store->note(capture.noteId());
+        emptied.text.clear();
+        writeFile(path, emptied.serialize());
+        QTRY_COMPARE(capture.text(), QString());
+        capture.finish();
+        QVERIFY(QFile::exists(path));
+    }
+
+    // A note moved or resized on its window, recoloured or tucked from the
+    // board while typing on the card waits keeps that change when the typing
+    // is written.
+    void typingDoesNotUndoChangesMadeElsewhere()
+    {
+        Capture capture(m_store.get());
+        capture.setWaits(60000, 60000);
+        capture.startNew(kate());
+        capture.setText(QStringLiteral("Flick"));
+        const QString id = capture.noteId();
+        capture.setText(QStringLiteral("Flick threshold"));
+        QVERIFY(capture.waiting());
+
+        Note placed = *m_store->note(id);
+        placed.place = QPointF(0.25, 0.5);
+        placed.size = QSizeF(320, 240);
+        QVERIFY(m_store->save(placed, NoteStore::Touch::Kept));
+        Note tucked = *m_store->note(id);
+        tucked.tucked = true;
+        tucked.colour = QStringLiteral("lake");
+        QVERIFY(m_store->save(tucked));
+        capture.setText(QStringLiteral("Flick threshold feels short"));
+        capture.flush();
+
+        const Note onDisk = Note::parse(readFile(m_store->pathFor(id)), id, {});
+        QCOMPARE(onDisk.text, QStringLiteral("Flick threshold feels short"));
+        QCOMPARE(onDisk.place, QPointF(0.25, 0.5));
+        QCOMPARE(onDisk.size, QSizeF(320, 240));
+        QVERIFY(onDisk.tucked);
+        QCOMPARE(onDisk.colour, QStringLiteral("lake"));
+        QCOMPARE(capture.colour(), QStringLiteral("lake"));
+        QCOMPARE(m_store->notes().size(), 1);
+    }
+
     void missingFolderIsMadeAgain()
     {
         Capture capture(m_store.get());

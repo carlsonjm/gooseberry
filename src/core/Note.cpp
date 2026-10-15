@@ -5,6 +5,8 @@
 #include <QRegularExpression>
 #include <QStringList>
 
+#include <algorithm>
+
 namespace Gooseberry {
 
 namespace {
@@ -162,7 +164,9 @@ QByteArray Note::serialize() const
         out += QStringLiteral("done: %1\n").arg(timeText(done));
     }
     for (const auto &[key, value] : extra) {
-        out += key + QLatin1String(": ") + value + QLatin1Char('\n');
+        // A line kept as written has no key of its own.
+        out += key.isEmpty() ? value : key + QLatin1String(": ") + value;
+        out += QLatin1Char('\n');
     }
     out += QLatin1String("---\n");
     out += text;
@@ -196,16 +200,32 @@ Note Note::parse(const QByteArray &bytes, const QString &id, const QDateTime &fa
     }
 
     const QString header = content.mid(4, end - 4 + 1);
+    const auto headerLines = QStringView(header).split(QLatin1Char('\n'));
+    // Only a block that names Gooseberry's format is Gooseberry's header.
+    // Another program's front matter, or a note that opens with a rule, is
+    // the note's text, kept whole; Gooseberry's own header goes above it the
+    // first time the note changes.
+    const bool ours = std::any_of(headerLines.cbegin(), headerLines.cend(), [](QStringView line) {
+        return line.startsWith(QLatin1String("gooseberry:"));
+    });
+    if (!ours) {
+        note.text = content;
+        return note;
+    }
     note.text = content.mid(qMin(content.size(), end + 5));
 
     QString belongs;
-    for (const auto &rawLine : QStringView(header).split(QLatin1Char('\n'))) {
+    for (const auto &rawLine : headerLines) {
         const QString line = rawLine.toString();
-        if (line.trimmed().isEmpty() || line.trimmed().startsWith(QLatin1Char('#'))) {
+        if (line.trimmed().isEmpty()) {
             continue;
         }
         const qsizetype colon = line.indexOf(QLatin1Char(':'));
-        if (colon <= 0) {
+        if (colon <= 0 || line.front().isSpace() || line.startsWith(QLatin1Char('#'))) {
+            // A comment, an indented line or anything else that is not a
+            // key of its own is kept as it was written, in its place among
+            // the keys this version does not know.
+            note.extra.append({QString(), line});
             continue;
         }
         const QString key = line.left(colon).trimmed();

@@ -34,7 +34,18 @@ bool sameNote(const Note &a, const Note &b)
         && a.window == b.window && a.app == b.app && a.workspace == b.workspace && a.tucked == b.tucked
         && a.format == b.format && a.extra == b.extra && a.created == b.created && a.changed == b.changed
         && a.remind == b.remind && a.remindOnOpen == b.remindOnOpen && a.reminded == b.reminded && a.done == b.done
-        && a.formerProject == b.formerProject;
+        && a.formerProject == b.formerProject && a.place == b.place && a.size == b.size;
+}
+
+// A read that may have caught another program's write half done: one that
+// would leave a note with words empty, or that has Gooseberry's header opened
+// and never closed.
+bool doubtful(const Note &known, const Note &read)
+{
+    if (known.text.trimmed().isEmpty()) {
+        return false;
+    }
+    return read.text.trimmed().isEmpty() || read.text.startsWith(QLatin1String("---\ngooseberry:"));
 }
 
 // A first-format project's name made fit to be a folder's, or empty when it
@@ -72,6 +83,10 @@ NoteStore::NoteStore(const QString &folder, QObject *parent)
     connect(&m_rescan, &QTimer::timeout, this, &NoteStore::rescan);
     connect(&m_watcher, &QFileSystemWatcher::directoryChanged, this, [this] { m_rescan.start(); });
     connect(&m_watcher, &QFileSystemWatcher::fileChanged, this, [this] { m_rescan.start(); });
+    m_settle.setSingleShot(true);
+    m_settle.setTimerType(Qt::PreciseTimer);
+    m_settle.setInterval(SettleMs);
+    connect(&m_settle, &QTimer::timeout, this, &NoteStore::rescan);
 }
 
 QString NoteStore::defaultFolder()
@@ -540,6 +555,19 @@ bool NoteStore::write(const Note &note)
         m_watcher.addPath(dir);
     }
     const QString path = dir + QLatin1Char('/') + note.id + NoteSuffix;
+    if (!keepChangedElsewhere(note, path) || !writeFile(path, note.serialize())) {
+        return false;
+    }
+    m_seen.insert(note.id, seen(path));
+    m_held.remove(note.id);
+    if (!m_watcher.files().contains(path)) {
+        m_watcher.addPath(path);
+    }
+    return true;
+}
+
+bool NoteStore::writeFile(const QString &path, const QByteArray &bytes)
+{
     // A note is replaced whole: the old file stays until the new one is
     // complete on disk, so a crash mid-write never leaves half a note.
     QSaveFile file(path);
@@ -548,16 +576,69 @@ bool NoteStore::write(const Note &note)
         m_lastError = file.errorString();
         return false;
     }
-    const QByteArray bytes = note.serialize();
     if (file.write(bytes) != bytes.size() || !file.commit()) {
         m_lastError = file.errorString();
         return false;
     }
-    m_seen.insert(note.id, seen(path));
-    if (!m_watcher.files().contains(path)) {
-        m_watcher.addPath(path);
-    }
     return true;
+}
+
+bool NoteStore::keepChangedElsewhere(const Note &note, const QString &path)
+{
+    const auto known = m_seen.constFind(note.id);
+    const auto before = m_notes.constFind(note.id);
+    if (known == m_seen.constEnd() || before == m_notes.constEnd()) {
+        return true;
+    }
+    const Seen now = seen(path);
+    if (now.size < 0 || now == *known) {
+        return true;
+    }
+    // A sync tool can bring another device's version between two reads of
+    // the folder; writing over it unread would lose it without a trace.
+    QFile file(path);
+    if (!file.open(QIODevice::ReadOnly)) {
+        return true;
+    }
+    Note other = Note::parse(file.readAll(), note.id, QFileInfo(path).lastModified());
+    other.folder = note.folder;
+    // A version with no words of its own, or one caught half written, has
+    // nothing to keep.
+    if (sameNote(other, *before) || other.text == note.text || doubtful(*before, other)) {
+        return true;
+    }
+    // When it cannot be kept, nothing is written over it.
+    return !keepCopy(other).isEmpty();
+}
+
+QString NoteStore::keepCopy(Note other)
+{
+    if (m_readOnly) {
+        m_lastError = i18n("This folder was kept by a newer %1, so nothing in it is changed here.", productName());
+        return {};
+    }
+    if (!other.folder.isEmpty() && !hasFolder(other.folder)) {
+        other.folder.clear();
+    }
+    if (!other.created.isValid()) {
+        other.created = nowToTheSecond();
+    }
+    if (!other.changed.isValid()) {
+        other.changed = other.created;
+    }
+    other.formerProject.clear();
+    other.id = newId(nowToTheSecond());
+    // The copy keeps the version's format and every key it had, so a newer
+    // program's version is kept as that program wrote it.
+    const QString path = dirFor(other.folder) + QLatin1Char('/') + other.id + NoteSuffix;
+    if (!writeFile(path, other.serialize())) {
+        return {};
+    }
+    m_seen.insert(other.id, seen(path));
+    m_watcher.addPath(path);
+    m_notes.insert(other.id, other);
+    Q_EMIT noteAdded(other.id);
+    return other.id;
 }
 
 QString NoteStore::create(Note note)
@@ -628,6 +709,7 @@ std::optional<QString> NoteStore::trash(const QString &id)
     }
     m_watcher.removePath(path);
     m_seen.remove(id);
+    m_held.remove(id);
     m_trashedFrom.insert(id, folder);
     if (m_notes.remove(id) > 0) {
         Q_EMIT noteRemoved(id);
@@ -665,6 +747,10 @@ void NoteStore::rescan()
     });
     const bool foldersMoved = folders != m_folders;
     m_folders = folders;
+    // A note kept while the folder is read, as a version kept beside the one
+    // being typed, is not among the files listed; only notes known before are
+    // looked for.
+    const auto knownIds = m_notes.keys();
 
     QSet<QString> present;
     QStringList watched;
@@ -697,8 +783,33 @@ void NoteStore::rescan()
             if (!file.open(QIODevice::ReadOnly)) {
                 continue;
             }
-            Note read = Note::parse(file.readAll(), id, info.lastModified());
+            const QByteArray bytes = file.readAll();
+            if (seen(info.absoluteFilePath()) != now || bytes.size() != now.size) {
+                // Changed while it was read: another program is writing it.
+                // It is read again once it is still.
+                m_settle.start();
+                continue;
+            }
+            Note read = Note::parse(bytes, id, info.lastModified());
             read.folder = folder;
+            if (existing != m_notes.constEnd() && doubtful(*existing, read)) {
+                // Empty or cut short: perhaps a sync tool that empties a file
+                // before it writes it. It is taken only once it has stayed so
+                // for a while; until then the note keeps its words.
+                const auto held = m_held.constFind(id);
+                if (held == m_held.constEnd() || held->seen != now) {
+                    m_held.insert(id, {now, QDateTime::currentMSecsSinceEpoch()});
+                    m_settle.start();
+                    continue;
+                }
+                if (QDateTime::currentMSecsSinceEpoch() - held->since < m_settle.interval()) {
+                    if (!m_settle.isActive()) {
+                        m_settle.start();
+                    }
+                    continue;
+                }
+            }
+            m_held.remove(id);
             m_seen.insert(id, now);
             if (existing == m_notes.constEnd()) {
                 m_notes.insert(id, read);
@@ -710,11 +821,11 @@ void NoteStore::rescan()
         }
     }
 
-    const auto ids = m_notes.keys();
-    for (const QString &id : ids) {
-        if (!present.contains(id)) {
+    for (const QString &id : knownIds) {
+        if (!present.contains(id) && m_notes.contains(id)) {
             m_notes.remove(id);
             m_seen.remove(id);
+            m_held.remove(id);
             Q_EMIT noteRemoved(id);
         }
     }
