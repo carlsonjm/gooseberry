@@ -576,7 +576,7 @@ private Q_SLOTS:
         QCOMPARE(stuck.written.size(), 1);
 
         words->setProperty("cursorPosition", text.size());
-        QTest::keyClicks(window, QStringLiteral(" ok"));
+        type(window, QStringLiteral(" ok"));
         QTRY_COMPARE(stuck.typed.constLast(), text + QStringLiteral(" ok"));
         QCOMPARE(words->property("text").toString(), text + QStringLiteral(" ok"));
 
