@@ -71,7 +71,8 @@ QList<Note> keptInOrder(const QList<Note> &notes, const QStringList &ids)
     return ordered;
 }
 
-QVariantList entries(const QList<OpenWindow> &windows, const QList<Note> &notes, const QSet<QString> &shownKeys)
+QVariantList entries(const QList<OpenWindow> &windows, const QList<Note> &notes, const QSet<QString> &shownKeys,
+                     const QSet<QString> &foldedKeys)
 {
     QVariantList list;
     for (const OpenWindow &window : windows) {
@@ -106,6 +107,7 @@ QVariantList entries(const QList<OpenWindow> &windows, const QList<Note> &notes,
             {QStringLiteral("colourHex"), colourHex(on.constFirst().colour)},
             {QStringLiteral("notes"), noteList},
             {QStringLiteral("shown"), shownKeys.contains(window.key())},
+            {QStringLiteral("folded"), shownKeys.contains(window.key()) && foldedKeys.contains(window.key())},
         });
     }
     return list;

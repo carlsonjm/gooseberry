@@ -107,6 +107,7 @@ class FakeStuck : public QObject
     Q_PROPERTY(QVariantList shownNotes MEMBER m_notes CONSTANT)
     Q_PROPERTY(QString writingId MEMBER m_writingId NOTIFY writingChanged)
     Q_PROPERTY(QString writingText MEMBER m_writingText NOTIFY writingTextChanged)
+    Q_PROPERTY(bool folded MEMBER m_folded NOTIFY foldedChanged)
 
 public:
     FakeStuck()
@@ -128,6 +129,17 @@ public:
     int stopped = 0;
     QList<bool> keys;
     QList<QSizeF> sizes;
+    // Where the surface last took presses, how often it lost the keys and
+    // how often its dot was tapped.
+    QList<QRectF> pressable;
+    int left = 0;
+    int unfolded = 0;
+
+    void setFolded(bool folded)
+    {
+        m_folded = folded;
+        Q_EMIT foldedChanged();
+    }
 
     // Words changed elsewhere while the note is typed on.
     void changeElsewhere(const QString &text)
@@ -139,6 +151,7 @@ public:
 Q_SIGNALS:
     void writingChanged();
     void writingTextChanged();
+    void foldedChanged();
 
 public Q_SLOTS:
     void write(const QString &id)
@@ -162,7 +175,23 @@ public Q_SLOTS:
             Q_EMIT writingChanged();
         }
     }
-    void setPressable(const QVariantList &) { }
+    void setPressable(const QVariantList &rects)
+    {
+        pressable.clear();
+        for (const QVariant &rect : rects) {
+            pressable.append(rect.toRectF());
+        }
+    }
+    void keysLeft()
+    {
+        ++left;
+        stopWriting();
+    }
+    void unfold()
+    {
+        ++unfolded;
+        setFolded(false);
+    }
     void place(const QString &, qreal, qreal) { }
     void setTakesKeys(bool takes) { keys.append(takes); }
     void resize(const QString &, qreal width, qreal height) { sizes.append(QSizeF(width, height)); }
@@ -171,6 +200,7 @@ private:
     QVariantList m_notes;
     QString m_writingId;
     QString m_writingText;
+    bool m_folded = false;
 };
 
 class FakeStuckShell : public QObject
@@ -591,6 +621,46 @@ private Q_SLOTS:
         QTRY_VERIFY(stuck.stopped >= 1);
         QTRY_COMPARE(stuck.keys, (QList<bool>{true, false}));
         QTRY_VERIFY(words->property("readOnly").toBool());
+    }
+
+    // Folded, the notes are one dot at the top note's top-right corner, a
+    // 44 px target and the only place the surface takes presses; a tap on it
+    // opens them again.
+    void stuckNotesFoldToADot()
+    {
+        FakeStuck stuck;
+        FakeStuckShell shell(&stuck);
+        QQmlComponent component(m_view->engine(), QStringLiteral("io.github.carlsonjm.gooseberry"), QStringLiteral("StuckWindow"));
+        std::unique_ptr<QQuickWindow> surface(qobject_cast<QQuickWindow *>(
+            component.createWithInitialProperties({{QStringLiteral("shell"), QVariant::fromValue<QObject *>(&shell)}})));
+        QVERIFY2(surface, qPrintable(component.errorString()));
+        surface->resize(800, 600);
+        surface->setVisible(true);
+        QVERIFY(QTest::qWaitForWindowExposed(surface.get()));
+        QQuickWindow *window = surface.get();
+        QQuickItem *stuckNote = itemNamed(window->contentItem(), QStringLiteral("stuck-n1"));
+        QQuickItem *dot = itemNamed(window->contentItem(), QStringLiteral("stuckDot"));
+        QVERIFY(stuckNote);
+        QVERIFY(dot);
+        QVERIFY(stuckNote->isVisible());
+        QVERIFY(!dot->isVisible());
+        QTRY_COMPARE(stuck.pressable.size(), 1);
+        const QRectF note(stuckNote->position(), stuckNote->size());
+
+        stuck.setFolded(true);
+        QTRY_VERIFY(dot->isVisible());
+        QVERIFY(!stuckNote->isVisible());
+        QCOMPARE(dot->size(), QSizeF(44, 44));
+        QCOMPARE(dot->position(), QPointF(note.right() - 44, note.top()));
+        QTRY_COMPARE(stuck.pressable, QList<QRectF>{QRectF(dot->position(), dot->size())});
+
+        QTest::qWait(50);
+        tap(window, dot);
+        QCOMPARE(stuck.unfolded, 1);
+        QTRY_VERIFY(stuckNote->isVisible());
+        QVERIFY(!dot->isVisible());
+        QTRY_COMPARE(stuck.pressable.size(), 1);
+        QCOMPARE(stuck.pressable.constFirst().topLeft(), note.topLeft());
     }
 
     void cursorIsReadyAndTypingKeeps()

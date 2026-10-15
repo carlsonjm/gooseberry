@@ -10,7 +10,8 @@ import QtQuick.Window
 // where it stands, never in a popup, and its words can be selected and
 // copied there. The notes stay up until Robin taps the dot again; a press
 // anywhere else reaches the window underneath, as if the notes were not
-// there, and ends the typing.
+// there, ends the typing and folds the notes into a small dot where the top
+// one stands. A tap on that dot opens them again, the top note ready to type.
 Window {
     id: root
 
@@ -25,6 +26,11 @@ Window {
     readonly property real noteWidth: Math.min(220, Math.max(140, width * 0.3))
     // Clear of the title bar, where an unplaced note starts.
     readonly property real topClear: 44
+    // Folded, the notes are one dot at the top note's top-right corner: a
+    // 44 px target, drawn as the title bar draws its dot.
+    readonly property bool folded: stuck !== null && stuck.folded === true
+    readonly property real dotTarget: 44
+    property point dotAt: Qt.point(0, 0)
 
     objectName: "stuckNotesWindow"
     title: Qt.application.displayName
@@ -39,6 +45,13 @@ Window {
             return;
         }
         const rects = [];
+        if (root.folded) {
+            if (dot.visible) {
+                rects.push(Qt.rect(dot.x, dot.y, dot.width, dot.height));
+            }
+            root.stuck.setPressable(rects);
+            return;
+        }
         for (let i = 0; i < notesRepeater.count; ++i) {
             const item = notesRepeater.itemAt(i);
             if (item) {
@@ -101,12 +114,15 @@ Window {
         } else {
             letGoAll();
             // A press on the window underneath, or the keys going to it,
-            // ends the typing; what was typed is kept.
-            if (root.writingId !== "" && root.stuck) {
-                root.stuck.stopWriting();
+            // ends the typing, kept, and folds the notes.
+            if (root.visible && root.stuck) {
+                root.stuck.keysLeft();
             }
         }
     }
+
+    onFoldedChanged: pressableLater.restart()
+    onDotAtChanged: pressableLater.restart()
 
     Timer {
         id: pressableLater
@@ -252,6 +268,7 @@ Window {
             }
 
             objectName: "stuck-" + modelData.id
+            visible: !root.folded
             width: Math.min(root.width, liveWidth > 0 ? liveWidth : sized ? modelData.width : root.noteWidth)
             height: Math.min(root.height, liveHeight > 0 ? liveHeight : sized ? modelData.height : fitHeight)
             radius: 10
@@ -267,6 +284,16 @@ Window {
             onHeightChanged: pressableLater.restart()
             onSelectingChanged: Qt.callLater(root.tellKeys)
             onOfferCopyChanged: Qt.callLater(root.tellKeys)
+
+            // The top note's top-right corner is where the notes fold to.
+            Binding {
+                target: root
+                property: "dotAt"
+                when: note.index === 0
+                value: Qt.point(Math.max(0, Math.min(root.width - root.dotTarget, note.x + note.width - root.dotTarget)),
+                                Math.max(0, Math.min(root.height - root.dotTarget, note.y)))
+                restoreMode: Binding.RestoreNone
+            }
 
             Rectangle {
                 anchors.fill: parent
@@ -502,6 +529,60 @@ Window {
                 interval: 1500
                 onTriggered: note.copied = false
             }
+        }
+    }
+
+    // The notes folded: a dot in the top note's colour with the count in it
+    // when there are several, as in the title bar, and the notes' own shadow,
+    // so it reads over light and dark windows alike. A tap opens the notes.
+    Item {
+        id: dot
+
+        readonly property var top: root.notes.length > 0 ? root.notes[0] : null
+        readonly property color colour: top ? top.colourHex : "#F2D98A"
+        // Dark figures on a light note, light on a dark one.
+        readonly property bool light: 0.2126 * colour.r + 0.7152 * colour.g + 0.0722 * colour.b > 0.55
+
+        objectName: "stuckDot"
+        visible: root.folded && top !== null
+        x: root.dotAt.x
+        y: root.dotAt.y
+        width: root.dotTarget
+        height: root.dotTarget
+        Accessible.role: Accessible.Button
+        Accessible.name: i18np("Show the note", "Show the %1 notes", root.notes.length)
+        onVisibleChanged: pressableLater.restart()
+
+        Rectangle {
+            anchors.centerIn: parent
+            anchors.verticalCenterOffset: 2
+            width: 18
+            height: 18
+            radius: 9
+            color: "#33000000"
+        }
+
+        Rectangle {
+            anchors.centerIn: parent
+            width: 18
+            height: 18
+            radius: 9
+            color: dot.colour
+            border.width: 1
+            border.color: Qt.rgba(0, 0, 0, 0.27)
+
+            Text {
+                anchors.centerIn: parent
+                visible: root.notes.length > 1
+                text: root.notes.length > 9 ? i18nc("more than nine notes", "9+") : root.notes.length
+                color: dot.light ? "#1A1A1A" : "#FFFFFF"
+                font.pixelSize: 11
+                font.weight: Font.DemiBold
+            }
+        }
+
+        TapHandler {
+            onTapped: root.stuck.unfold()
         }
     }
 }

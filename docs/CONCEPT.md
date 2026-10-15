@@ -32,7 +32,8 @@ Four places, one set of notes.
    Going back to the work puts the card away.
 2. **Notes on the work.** A window with notes shows a dot in its title bar,
    with a count when there are several. A tap brings them up where Robin left
-   them; another tap puts them away.
+   them; another tap puts them away. Going back to the window folds them into
+   a small dot where they stand, and a tap on it opens them, ready to type.
 3. **The board.** Every note in one place: Today, Inbox and each folder, the
    windows that have notes, and Tucked away. A held note drops on a folder.
 4. **The planner.** A note with a time goes on the planner, day by day, and
@@ -83,7 +84,8 @@ Four places, one set of notes.
   document leaves its notes waiting under the old name, on the board and in
   their folder (`DECISIONS.md`).
 - **The dot needs a title bar the desktop draws.** An application that draws
-  its own top bar has no dot; its notes are on the board and, with Kadunce, in
-  Spread (`DESKTOP.md`).
+  its own top bar has no dot there; its notes are on the board and, with
+  Kadunce, in Spread, and once brought up they fold to their dot on the window
+  (`DESKTOP.md`).
 - **Habit.** A notes app that loses one thought, or asks one question too many,
   is abandoned. Speed to the cursor is the product, not polish.

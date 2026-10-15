@@ -198,19 +198,24 @@ today again.
 ## Bring up a window's notes
 
 Where the desktop's title bar draws Gooseberry's dot, as Shuffle's does
-(`DESKTOP.md` § Stuck notes on the bus).
+(`DESKTOP.md` § Stuck notes on the bus). On a window whose application draws
+its own top bar, as web browsers do, the notes come up from Spread, and fold
+and open on the window the same way.
 
 | Input | What happens |
 | --- | --- |
-| Tap the dot in its title bar | The window's notes come up over it, each where it was last let go there, one never placed at the top-right, the newest on top. They stay up until the dot is tapped again. |
+| Tap the dot in its title bar | The window's notes come up over it, each where it was last let go there, one never placed at the top-right, the newest on top. They stay up until the dot is tapped again; while they are open they hold the keys, so the next tap or key on the window folds them. |
 | Tap a note | The cursor is in it, where it stands, and the on-screen keys come up on a touch screen. What is typed is kept as on the quick note, from the first letter. |
-| Tap the window around the notes, or press `Esc` | The typing ends, kept; the keys go back to the window. |
-| Tap or type in the window around the notes | The window takes it; the notes stay up. |
-| Tap the dot again | The notes go away, the + with them. |
+| Press `Esc` | The typing ends, kept; the notes stay open. |
+| Tap or click the window around the notes, or go to another window | The window takes it. The typing ends, kept, and the notes fold into a small dot where the top note stands, in its colour, with the count when there are several. |
+| Tap the dot on the window | The notes open where they stood, the top note ready to type, with the on-screen keys up on a touch screen. |
+| Tap the dot in the title bar again | The notes go away, the + with them, whether open or folded. |
 
 In Kadunce's Spread, each note stands on its card where it was let go on the
 window, scaled with the card and moving with it, faint while the notes are put
-away; notes never placed there are a small stack at its bottom-right. A tap on
+away; notes never placed there are a small stack at its bottom-right. Notes
+folded on the window show as their dot, and a tap on it opens the card with
+the top note ready to type. A tap on
 a note opens the card, as a tap anywhere on it does, with the notes up over the
 window and that note ready to type; a tap on the stack opens the card with
 the notes up. A note held there can be carried to another card, which sticks

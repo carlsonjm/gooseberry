@@ -46,8 +46,11 @@ int main(int argc, char *argv[])
         QQuickStyle::setStyle(QStringLiteral("org.kde.desktop"));
     }
 
-    // A second start hands its arguments to the running Gooseberry and ends.
-    KDBusService service(KDBusService::Unique | KDBusService::NoExitOnFailure);
+    // A second start hands its arguments to the running Gooseberry and ends,
+    // and so does one that can neither take Gooseberry's name on the bus nor
+    // reach the Gooseberry holding it: two running at once would each keep
+    // the same notes, and each undo the other's typing.
+    KDBusService service(KDBusService::Unique);
 
     // The session starts Gooseberry again from its autostart entry. Typing
     // still waiting for a pause is written when the session asks (Shell).
