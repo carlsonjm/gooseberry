@@ -333,6 +333,19 @@ bytes, and a crash now loses at most the last moment of typing, never the note.
 Rejected: writing on every letter, for the disk and battery it costs; and
 writing only on Done, which a crash would cost the whole note.
 
+## Another version of a note is kept beside it
+
+When another program or a sync tool changes a note's words while Gooseberry is
+writing its own, Gooseberry writes what was typed here and keeps the other version
+as a new note in the same folder (`FORMAT.md` § How notes are kept). Any other
+change made elsewhere is taken onto the card, and only the typing waiting there
+is written over it. This is engineering's choice: the folder is shared with
+other devices and programs, and either version may hold words someone wants.
+
+Rejected: what is typed here winning outright, which lost the other device's
+edit without a trace; and asking which version to keep, a question in the
+middle of writing.
+
 ## Removing a note uses the desktop's trash directly
 
 Gooseberry moves a removed note into the person's trash itself, as the

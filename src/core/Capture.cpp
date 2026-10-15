@@ -87,9 +87,10 @@ bool Capture::readOnly() const
 
 void Capture::leaveEmpty()
 {
-    // A note left with no text is not kept: it goes to the trash, however the
-    // card was left.
-    if (kept() && !readOnly() && m_note.text.trimmed().isEmpty()) {
+    // A note the person left with no text is not kept: it goes to the trash,
+    // however the card was left. One that came empty from disk, as another
+    // program left it, stays.
+    if (kept() && !readOnly() && !m_textFromDisk && m_note.text.trimmed().isEmpty()) {
         stopWaiting();
         m_store->trash(m_note.id);
         m_note.id.clear();
@@ -102,6 +103,8 @@ void Capture::reset(const Note &note, bool editing)
     flush();
     leaveEmpty();
     m_note = note;
+    m_keptText = note.text;
+    m_textFromDisk = editing;
     m_editing = editing;
     setProblem({});
     Q_EMIT noteChanged();
@@ -193,6 +196,7 @@ void Capture::keep()
             return;
         }
         m_note = *m_store->note(id);
+        m_keptText = m_note.text;
         setProblem({});
         Q_EMIT noteChanged();
         return;
@@ -202,6 +206,7 @@ void Capture::keep()
         return;
     }
     m_note.changed = m_store->note(m_note.id)->changed;
+    m_keptText = m_note.text;
     setProblem({});
 }
 
@@ -211,6 +216,7 @@ void Capture::setText(const QString &text)
         return;
     }
     m_note.text = text;
+    m_textFromDisk = false;
     Q_EMIT textChanged();
     if (!kept()) {
         // The first letter makes the note, at once.
@@ -454,20 +460,36 @@ void Capture::storeChanged(const QString &id)
         return;
     }
     if (m_waiting) {
-        // Another program changed the note while typing here waited for a
-        // pause: what is being typed wins, and is written now. What
-        // Gooseberry recorded about it meanwhile, a reminder shown or the
-        // note marked done, is kept.
+        // The note changed elsewhere while typing here waited for a pause.
+        // Only the typing is waiting, since every other change on the card
+        // is written at once: the card takes the rest from disk, so a move,
+        // a resize, a tuck or a reminder shown is not undone, and its words
+        // are written now.
         if (const auto onDisk = m_store->note(id)) {
-            m_note.reminded = onDisk->reminded;
-            m_note.done = onDisk->done;
-            if (onDisk->folder != m_note.folder) {
-                m_note.folder = onDisk->folder;
+            if (onDisk->text != m_keptText && onDisk->text != m_note.text && !onDisk->text.trimmed().isEmpty()) {
+                // The words were changed elsewhere too, as on another
+                // device: that version is kept as a note of its own.
+                if (m_store->keepCopy(*onDisk).isEmpty()) {
+                    setProblem(m_store->lastError());
+                }
+            }
+            Note merged = *onDisk;
+            merged.text = m_note.text;
+            const bool recoloured = merged.colour != m_note.colour;
+            const bool belonging = merged.folder != m_note.folder || merged.stuck != m_note.stuck;
+            const bool context = merged.window != m_note.window || merged.app != m_note.app;
+            const bool reminder = merged.remind != m_note.remind || merged.remindOnOpen != m_note.remindOnOpen;
+            m_note = merged;
+            if (recoloured) {
+                Q_EMIT colourChanged();
+            }
+            if (belonging) {
                 Q_EMIT belongingChanged();
             }
-            if (onDisk->remind != m_note.remind || onDisk->remindOnOpen != m_note.remindOnOpen) {
-                m_note.remind = onDisk->remind;
-                m_note.remindOnOpen = onDisk->remindOnOpen;
+            if (context) {
+                Q_EMIT contextChanged();
+            }
+            if (reminder) {
                 Q_EMIT reminderChanged();
             }
         }
@@ -482,6 +504,7 @@ void Capture::storeChanged(const QString &id)
     // another program is taken onto the card.
     if (onDisk->text != m_note.text) {
         m_note.text = onDisk->text;
+        m_textFromDisk = true;
         Q_EMIT textChanged();
     }
     if (onDisk->colour != m_note.colour) {
@@ -492,6 +515,7 @@ void Capture::storeChanged(const QString &id)
     const bool context = onDisk->window != m_note.window || onDisk->app != m_note.app;
     const bool reminder = onDisk->remind != m_note.remind || onDisk->remindOnOpen != m_note.remindOnOpen;
     m_note = *onDisk;
+    m_keptText = m_note.text;
     if (belonging) {
         Q_EMIT belongingChanged();
     }

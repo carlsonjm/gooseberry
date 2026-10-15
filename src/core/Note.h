@@ -58,7 +58,9 @@ struct Note {
     // folder it is moved into. Never written.
     QString formerProject;
     // Header keys this version does not know, kept in order so a newer
-    // program's fields survive an edit made here.
+    // program's fields survive an edit made here. A header line that is not
+    // a key of its own, such as a comment or an indented line, has an empty
+    // key and the whole line as its value.
     QList<QPair<QString, QString>> extra;
 
     // True when the note was written by a newer format: shown, never changed.
