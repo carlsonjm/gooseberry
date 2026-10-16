@@ -650,8 +650,11 @@ private Q_SLOTS:
         QVERIFY(dot);
         QVERIFY(stuckNote->isVisible());
         QVERIFY(!dot->isVisible());
-        QTRY_COMPARE(stuck.pressable.size(), 1);
+        // The note, and its resize corner, which reaches past the paper.
+        QTRY_COMPARE(stuck.pressable.size(), 2);
         const QRectF note(stuckNote->position(), stuckNote->size());
+        QCOMPARE(stuck.pressable.constLast().size(), QSizeF(44, 44));
+        QVERIFY(stuck.pressable.constLast().bottom() > note.bottom());
 
         stuck.setFolded(true);
         QTRY_VERIFY(dot->isVisible());
@@ -665,7 +668,7 @@ private Q_SLOTS:
         QCOMPARE(stuck.unfolded, 1);
         QTRY_VERIFY(stuckNote->isVisible());
         QVERIFY(!dot->isVisible());
-        QTRY_COMPARE(stuck.pressable.size(), 1);
+        QTRY_COMPARE(stuck.pressable.size(), 2);
         QCOMPARE(stuck.pressable.constFirst().topLeft(), note.topLeft());
     }
 
