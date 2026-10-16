@@ -56,6 +56,8 @@ Window {
             const item = notesRepeater.itemAt(i);
             if (item) {
                 rects.push(Qt.rect(item.x, item.y, item.width, item.height + 3));
+                // Its corner, which reaches past the paper.
+                rects.push(item.gripRect);
             }
         }
         root.stuck.setPressable(rects);
@@ -171,6 +173,29 @@ Window {
             property bool resizing: false
             property real liveWidth: -1
             property real liveHeight: -1
+            // Where the note stood as its corner was taken, held there while
+            // it grows, so it grows toward the hand and nowhere else.
+            property real liveX: -1
+            property real liveY: -1
+            // A note on the right of its window is resized by its left
+            // corner, toward the middle, where there is room to grow.
+            readonly property bool gripLeft: x + width / 2 > root.width / 2
+            readonly property rect gripRect: Qt.rect(x + grip.x, y + grip.y, grip.width, grip.height)
+            // Once the place comes back kept, or the window changes size, the
+            // note stands where its kept place says, in proportion again.
+            readonly property point kept: Qt.point(modelData.x, modelData.y)
+            onKeptChanged: releasePlace()
+            function releasePlace() {
+                if (!resizing) {
+                    liveX = -1;
+                    liveY = -1;
+                }
+            }
+            Connections {
+                target: root
+                function onWidthChanged() { note.releasePlace(); }
+                function onHeightChanged() { note.releasePlace(); }
+            }
             // When the corner was last let go: the lift that ends a resize is
             // not a tap on the note.
             property real resizedAt: 0
@@ -245,9 +270,21 @@ Window {
                 }
             }
 
-            function resizeBy(fromWidth, fromHeight, dx, dy) {
-                liveWidth = Math.max(120, Math.min(root.width - x, fromWidth + dx));
-                liveHeight = Math.max(80, Math.min(root.height - y, fromHeight + dy));
+            function startResize() {
+                liveX = x;
+                liveY = y;
+                resizing = true;
+            }
+
+            function resizeBy(fromX, fromWidth, fromHeight, dx, dy) {
+                if (gripLeft) {
+                    const right = fromX + fromWidth;
+                    liveWidth = Math.max(120, Math.min(right, fromWidth - dx));
+                    liveX = right - liveWidth;
+                } else {
+                    liveWidth = Math.max(120, Math.min(root.width - fromX, fromWidth + dx));
+                }
+                liveHeight = Math.max(80, Math.min(root.height - liveY, fromHeight + dy));
             }
 
             function resized() {
@@ -259,6 +296,7 @@ Window {
                 if (liveWidth > 0 && liveHeight > 0) {
                     root.stuck.resize(modelData.id, liveWidth, liveHeight);
                 }
+                placeIf(false);
             }
 
             function letGo() {
@@ -275,13 +313,17 @@ Window {
             color: modelData.colourHex
             // The newest note is first in the list and lies on top.
             z: root.notes.length - index
-            x: placed ? Math.min(freeX, modelData.x * root.width) : Math.max(0, root.width - width - 24 - index * 14)
-            y: placed ? Math.min(freeY, modelData.y * root.height) : Math.min(freeY, root.topClear + index * 30)
+            x: liveX >= 0 ? liveX
+                : placed ? Math.min(freeX, modelData.x * root.width) : Math.max(0, root.width - width - 24 - index * 14)
+            y: liveY >= 0 ? liveY
+                : placed ? Math.min(freeY, modelData.y * root.height) : Math.min(freeY, root.topClear + index * 30)
             Accessible.role: Accessible.Button
             Accessible.name: modelData.title
             onXChanged: pressableLater.restart()
             onYChanged: pressableLater.restart()
+            onWidthChanged: pressableLater.restart()
             onHeightChanged: pressableLater.restart()
+            onGripLeftChanged: pressableLater.restart()
             onSelectingChanged: Qt.callLater(root.tellKeys)
             onOfferCopyChanged: Qt.callLater(root.tellKeys)
 
@@ -305,74 +347,121 @@ Window {
 
             // The words, selectable as on any page: dragged across with a
             // mouse, or held with a finger and slid along. Selected, Copy
-            // shows on the note; Ctrl+C works too.
-            TextEdit {
-                id: body
-                objectName: "stuckWords-" + note.modelData.id
+            // shows on the note; Ctrl+C works too. More words than the note
+            // holds scroll: a finger slides them, a wheel turns them.
+            Flickable {
+                id: words
+                objectName: "stuckScroll-" + note.modelData.id
                 x: 14
                 y: 14
                 width: parent.width - 28
                 height: note.sized || note.liveHeight > 0 ? Math.max(0, note.height - 28 - note.toolsRoom)
-                                                          : Math.min(implicitHeight, root.noteWidth - 28)
-                color: "#1A1A1A"
-                selectionColor: Qt.rgba(0, 0, 0, 0.2)
-                selectedTextColor: "#1A1A1A"
-                font.pixelSize: 14
-                font.weight: Font.Medium
-                wrapMode: TextEdit.Wrap
-                textFormat: TextEdit.PlainText
-                // Typed on only while it is the note written on; otherwise
-                // its words are read and copied where it stands.
-                readOnly: !note.writing
-                selectByMouse: true
-                persistentSelection: true
+                                                          : Math.min(body.implicitHeight, root.noteWidth - 28)
+                contentWidth: width
+                contentHeight: body.height
                 clip: true
-                Accessible.ignored: true
+                boundsBehavior: Flickable.StopAtBounds
+                flickableDirection: Flickable.VerticalFlick
+                readonly property bool overflows: body.implicitHeight > height + 1
+                // Scrolled only by the handlers below, so a finger's hold
+                // still selects: a finger slides the words, a mouse keeps its
+                // drag to select them and turns the wheel to scroll.
+                interactive: false
 
-                // Its words come from the bus while it is not typed on; while
-                // it is, from the person, each change kept as the quick note
-                // keeps it.
-                Binding {
-                    target: body
-                    property: "text"
-                    value: note.modelData.text
-                    when: !note.writing
-                    restoreMode: Binding.RestoreNone
+                function scrollTo(y) {
+                    contentY = Math.max(0, Math.min(contentHeight - height, y));
                 }
-                onTextChanged: {
-                    if (note.writing && root.stuck && text !== root.stuck.writingText) {
-                        root.stuck.setWritingText(text);
+
+                // The cursor stays in sight as words are typed below the fold.
+                function keepInSight(r) {
+                    if (r.y < contentY) {
+                        contentY = r.y;
+                    } else if (r.y + r.height > contentY + height) {
+                        contentY = Math.min(contentHeight - height, r.y + r.height - height);
                     }
                 }
-                onCursorPositionChanged: {
-                    if (note.writing && activeFocus) {
-                        root.writingCursor = cursorPosition;
+
+                WheelHandler {
+                    acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+                    enabled: words.overflows
+                    target: null
+                    // A notch scrolls 80 pixels, as on the note card.
+                    onWheel: event => {
+                        const step = event.pixelDelta.y !== 0 ? event.pixelDelta.y : event.angleDelta.y / 120 * 80;
+                        words.scrollTo(words.contentY - step);
                     }
                 }
-                Keys.onEscapePressed: root.stuck.stopWriting()
 
-                Connections {
-                    target: note.writing ? root.stuck : null
-                    // Words changed elsewhere while typed on, kept by the
-                    // same rules as on the quick note.
-                    function onWritingTextChanged() {
-                        if (body.text !== root.stuck.writingText) {
-                            body.text = root.stuck.writingText;
+                TextEdit {
+                    id: body
+                    objectName: "stuckWords-" + note.modelData.id
+                    width: words.width
+                    height: Math.max(implicitHeight, words.height)
+                    color: "#1A1A1A"
+                    selectionColor: Qt.rgba(0, 0, 0, 0.2)
+                    selectedTextColor: "#1A1A1A"
+                    font.pixelSize: 14
+                    font.weight: Font.Medium
+                    wrapMode: TextEdit.Wrap
+                    textFormat: TextEdit.PlainText
+                    // Typed on only while it is the note written on; otherwise
+                    // its words are read and copied where it stands.
+                    readOnly: !note.writing
+                    selectByMouse: true
+                    persistentSelection: true
+                    clip: true
+                    Accessible.ignored: true
+
+                    // Its words come from the bus while it is not typed on; while
+                    // it is, from the person, each change kept as the quick note
+                    // keeps it.
+                    Binding {
+                        target: body
+                        property: "text"
+                        value: note.modelData.text
+                        when: !note.writing
+                        restoreMode: Binding.RestoreNone
+                    }
+                    onTextChanged: {
+                        if (note.writing && root.stuck && text !== root.stuck.writingText) {
+                            root.stuck.setWritingText(text);
                         }
                     }
-                }
+                    onCursorPositionChanged: {
+                        if (note.writing && activeFocus) {
+                            root.writingCursor = cursorPosition;
+                        }
+                    }
+                    onCursorRectangleChanged: {
+                        if (note.writing && activeFocus) {
+                            words.keepInSight(cursorRectangle);
+                        }
+                    }
+                    Keys.onEscapePressed: root.stuck.stopWriting()
 
-                // The words keep a press on them, a mouse's to select; a tap
-                // on them types on the note, or lets go of what is selected.
-                TapHandler {
-                    onPressedChanged: note.pressedWith(pressed)
-                    onTapped: note.tapped()
-                }
+                    Connections {
+                        target: note.writing ? root.stuck : null
+                        // Words changed elsewhere while typed on, kept by the
+                        // same rules as on the quick note.
+                        function onWritingTextChanged() {
+                            if (body.text !== root.stuck.writingText) {
+                                body.text = root.stuck.writingText;
+                            }
+                        }
+                    }
 
-                TapHandler {
-                    acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
-                    acceptedButtons: Qt.RightButton
-                    onTapped: note.offerCopy = true
+                    // The words keep a press on them, a mouse's to select; a tap
+                    // on them types on the note, or lets go of what is selected.
+                    TapHandler {
+                        onPressedChanged: note.pressedWith(pressed)
+                        onTapped: note.tapped()
+                    }
+
+                    TapHandler {
+                        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+                        acceptedButtons: Qt.RightButton
+                        onTapped: note.offerCopy = true
+                    }
                 }
             }
 
@@ -391,22 +480,46 @@ Window {
                 onTapped: note.offerCopy = true
             }
 
+            // Moved, the note stands where the hand leaves it, and in
+            // proportion again once that place comes back kept. Dragged on
+            // words that overflow, a finger slides the words instead; the
+            // note moves from its edges then.
             DragHandler {
-                target: note
+                id: noteDrag
+                target: null
                 enabled: !touchSelect.selecting && !note.resizing
-                xAxis.minimum: 0
-                xAxis.maximum: note.freeX
-                yAxis.minimum: 0
-                yAxis.maximum: note.freeY
-                onActiveChanged: note.placeIf(active)
+                property point from
+                property bool sliding: false
+                onActiveChanged: {
+                    if (noteDrag.active) {
+                        const at = noteDrag.centroid.pressPosition;
+                        noteDrag.sliding = words.overflows && at.x >= words.x && at.x < words.x + words.width
+                            && at.y >= words.y && at.y < words.y + words.height;
+                        noteDrag.from = noteDrag.sliding ? Qt.point(0, words.contentY) : Qt.point(note.x, note.y);
+                    }
+                    if (!noteDrag.sliding) {
+                        note.placeIf(noteDrag.active);
+                    }
+                }
+                onActiveTranslationChanged: {
+                    if (!noteDrag.active) {
+                        return;
+                    }
+                    if (noteDrag.sliding) {
+                        words.scrollTo(noteDrag.from.y - noteDrag.activeTranslation.y);
+                    } else {
+                        note.liveX = Math.max(0, Math.min(note.freeX, noteDrag.from.x + noteDrag.activeTranslation.x));
+                        note.liveY = Math.max(0, Math.min(note.freeY, noteDrag.from.y + noteDrag.activeTranslation.y));
+                    }
+                }
             }
 
             TouchSelect {
                 id: touchSelect
-                x: body.x
-                y: body.y
-                width: body.width
-                height: body.height
+                x: words.x
+                y: words.y
+                width: words.width
+                height: words.height
                 target: body
                 onSelected: body.forceActiveFocus()
             }
@@ -468,25 +581,32 @@ Window {
 
             // The corner that resizes the note, by finger or pointer; the note
             // keeps the size it is let go at, on this window and any other.
+            // Half of it reaches past the paper, so it is big enough for a
+            // finger without covering the words: a hold on the last line
+            // selects, whichever corner the grip is on.
             Item {
                 id: grip
                 objectName: "stuckResize-" + note.modelData.id
-                anchors.right: parent.right
-                anchors.bottom: parent.bottom
+                readonly property real hang: 22
+                x: note.gripLeft ? -hang : parent.width - width + hang
+                y: parent.height - height + hang
                 width: 44
                 height: 44
                 Accessible.role: Accessible.Grip
                 Accessible.name: i18n("Resize")
 
+                property real fromX: 0
                 property real fromWidth: 0
                 property real fromHeight: 0
 
                 Canvas {
-                    anchors.right: parent.right
-                    anchors.bottom: parent.bottom
-                    anchors.margins: 6
+                    x: note.gripLeft ? grip.hang + 6 : parent.width - grip.hang - width - 6
+                    y: parent.height - grip.hang - height - 6
                     width: 12
                     height: 12
+                    // Drawn again when the corner changes sides.
+                    readonly property bool fromLeft: note.gripLeft
+                    onFromLeftChanged: requestPaint()
                     onPaint: {
                         const ctx = getContext("2d");
                         ctx.reset();
@@ -494,10 +614,17 @@ Window {
                         ctx.lineWidth = 1.5;
                         ctx.lineCap = "round";
                         ctx.beginPath();
-                        ctx.moveTo(width - 1, 1);
-                        ctx.lineTo(1, height - 1);
-                        ctx.moveTo(width - 1, height / 2);
-                        ctx.lineTo(width / 2, height - 1);
+                        if (fromLeft) {
+                            ctx.moveTo(1, 1);
+                            ctx.lineTo(width - 1, height - 1);
+                            ctx.moveTo(1, height / 2);
+                            ctx.lineTo(width / 2, height - 1);
+                        } else {
+                            ctx.moveTo(width - 1, 1);
+                            ctx.lineTo(1, height - 1);
+                            ctx.moveTo(width - 1, height / 2);
+                            ctx.lineTo(width / 2, height - 1);
+                        }
                         ctx.stroke();
                     }
                 }
@@ -507,17 +634,20 @@ Window {
                     anchors.fill: parent
                     acceptedButtons: Qt.LeftButton
                     preventStealing: true
-                    cursorShape: Qt.SizeFDiagCursor
+                    cursorShape: note.gripLeft ? Qt.SizeBDiagCursor : Qt.SizeFDiagCursor
                     property point from
                     onPressed: mouse => {
-                        from = mapToItem(note, mouse.x, mouse.y);
+                        // Measured against the window, which stays put
+                        // while the note grows under the hand.
+                        from = mapToItem(root.contentItem, mouse.x, mouse.y);
+                        grip.fromX = note.x;
                         grip.fromWidth = note.width;
                         grip.fromHeight = note.height;
-                        note.resizing = true;
+                        note.startResize();
                     }
                     onPositionChanged: mouse => {
-                        const at = mapToItem(note, mouse.x, mouse.y);
-                        note.resizeBy(grip.fromWidth, grip.fromHeight, at.x - from.x, at.y - from.y);
+                        const at = mapToItem(root.contentItem, mouse.x, mouse.y);
+                        note.resizeBy(grip.fromX, grip.fromWidth, grip.fromHeight, at.x - from.x, at.y - from.y);
                     }
                     onReleased: note.resized()
                     onCanceled: note.resized()
@@ -545,8 +675,13 @@ Window {
 
         objectName: "stuckDot"
         visible: root.folded && topNote !== null
-        x: root.dotAt.x
-        y: root.dotAt.y
+        // Dragged, the dot takes the notes with it: where it is let go, the
+        // notes stand, in the same order, its corner on their top one's.
+        readonly property point moved: dotDrag.active ? dotDrag.activeTranslation : Qt.point(0, 0)
+        x: Math.max(0, Math.min(root.width - width, root.dotAt.x + moved.x))
+        y: Math.max(0, Math.min(root.height - height, root.dotAt.y + moved.y))
+        onXChanged: pressableLater.restart()
+        onYChanged: pressableLater.restart()
         width: root.dotTarget
         height: root.dotTarget
         Accessible.role: Accessible.Button
@@ -583,6 +718,46 @@ Window {
 
         TapHandler {
             onTapped: root.stuck.unfold()
+        }
+
+        DragHandler {
+            id: dotDrag
+            target: null
+            // How far it went, kept for the moment it is let go.
+            property point last: Qt.point(0, 0)
+            onActiveTranslationChanged: {
+                if (active) {
+                    last = activeTranslation;
+                }
+            }
+            onActiveChanged: {
+                if (active) {
+                    last = Qt.point(0, 0);
+                    return;
+                }
+                const x = Math.max(0, Math.min(root.width - dot.width, root.dotAt.x + last.x));
+                const y = Math.max(0, Math.min(root.height - dot.height, root.dotAt.y + last.y));
+                root.moveNotesBy(x - root.dotAt.x, y - root.dotAt.y);
+            }
+        }
+    }
+
+    // Every note over the window moved by the same amount, each kept in it,
+    // and each place kept as a note dragged by hand keeps its own.
+    function moveNotesBy(dx, dy) {
+        if (!root.stuck || root.width <= 0 || root.height <= 0 || (dx === 0 && dy === 0)) {
+            return;
+        }
+        for (let i = 0; i < notesRepeater.count; ++i) {
+            const item = notesRepeater.itemAt(i);
+            if (!item) {
+                continue;
+            }
+            const x = Math.max(0, Math.min(item.freeX, item.x + dx));
+            const y = Math.max(0, Math.min(item.freeY, item.y + dy));
+            item.liveX = x;
+            item.liveY = y;
+            root.stuck.place(item.modelData.id, x / root.width, y / root.height);
         }
     }
 }

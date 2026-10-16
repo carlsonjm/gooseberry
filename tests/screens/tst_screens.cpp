@@ -546,11 +546,16 @@ private Q_SLOTS:
         QQuickItem *grip = itemNamed(window->contentItem(), QStringLiteral("stuckResize-n1"));
         QVERIFY(grip);
         const QSizeF fit = stuckNote->size();
+        // The corner is the one on the side the note has room to grow
+        // toward, half past the paper; pulled away from the note, it grows.
+        const auto outward = [stuckNote] {
+            return stuckNote->property("gripLeft").toBool() ? -1 : 1;
+        };
         const auto corner = [grip] {
-            return grip->mapToScene(QPointF(grip->width() - 10, grip->height() - 10)).toPoint();
+            return grip->mapToScene(QPointF(grip->width() / 2, grip->height() / 2)).toPoint();
         };
         const int written = stuck.written.size();
-        sweep(window, corner(), corner() + QPoint(80, 60));
+        sweep(window, corner(), corner() + QPoint(80 * outward(), 60));
         QVERIFY(stuckNote->width() > fit.width());
         QVERIFY(stuckNote->height() > fit.height());
         QCOMPARE(stuck.sizes.size(), 1);
@@ -559,12 +564,13 @@ private Q_SLOTS:
         QVERIFY(words->height() > fit.height() - 28);
         QTest::qWait(400);
         const QPoint held = corner();
+        const int inward = -outward();
         QTest::touchEvent(window, finger).press(0, held, window);
         for (int step = 1; step <= 10; ++step) {
             QTest::qWait(10);
-            QTest::touchEvent(window, finger).move(0, held + QPoint(-4 * step, -3 * step), window);
+            QTest::touchEvent(window, finger).move(0, held + QPoint(4 * step * inward, -3 * step), window);
         }
-        QTest::touchEvent(window, finger).release(0, held + QPoint(-40, -30), window);
+        QTest::touchEvent(window, finger).release(0, held + QPoint(40 * inward, -30), window);
         QTRY_COMPARE(stuck.sizes.size(), 2);
         QCOMPARE(stuck.sizes.constLast(), stuckNote->size());
         QVERIFY(stuck.sizes.constLast().width() < stuck.sizes.constFirst().width());
@@ -644,8 +650,11 @@ private Q_SLOTS:
         QVERIFY(dot);
         QVERIFY(stuckNote->isVisible());
         QVERIFY(!dot->isVisible());
-        QTRY_COMPARE(stuck.pressable.size(), 1);
+        // The note, and its resize corner, which reaches past the paper.
+        QTRY_COMPARE(stuck.pressable.size(), 2);
         const QRectF note(stuckNote->position(), stuckNote->size());
+        QCOMPARE(stuck.pressable.constLast().size(), QSizeF(44, 44));
+        QVERIFY(stuck.pressable.constLast().bottom() > note.bottom());
 
         stuck.setFolded(true);
         QTRY_VERIFY(dot->isVisible());
@@ -659,7 +668,7 @@ private Q_SLOTS:
         QCOMPARE(stuck.unfolded, 1);
         QTRY_VERIFY(stuckNote->isVisible());
         QVERIFY(!dot->isVisible());
-        QTRY_COMPARE(stuck.pressable.size(), 1);
+        QTRY_COMPARE(stuck.pressable.size(), 2);
         QCOMPARE(stuck.pressable.constFirst().topLeft(), note.topLeft());
     }
 

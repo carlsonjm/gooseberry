@@ -4,6 +4,7 @@
 #include "StuckWindows.h"
 
 #include <QDBusContext>
+#include <QElapsedTimer>
 #include <QObject>
 #include <QPointer>
 #include <QSet>
@@ -141,6 +142,8 @@ private:
     // left over another window fold.
     void drawOver(const QString &key);
     const OpenWindow *drawnWindow() const;
+    // Whether the windows with these keys stand on different displays.
+    bool onOtherDisplays(const QString &key, const QString &other) const;
     QVariantList currentShownNotes() const;
 
     NoteStore *m_store;
@@ -179,6 +182,12 @@ private:
     bool m_notesWantKeys = false;
     bool m_keysTaken = false;
     bool m_waitingToDraw = false;
+    // When the surface was last shown again on another display, following
+    // its window there: the keys leaving it then are not Robin leaving.
+    QElapsedTimer m_movedDisplay;
+    // When notes last folded because the keys left them, and on which window.
+    QElapsedTimer m_foldedAt;
+    QString m_foldedOn;
 };
 
 } // namespace Gooseberry
