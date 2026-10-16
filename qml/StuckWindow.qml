@@ -56,6 +56,8 @@ Window {
             const item = notesRepeater.itemAt(i);
             if (item) {
                 rects.push(Qt.rect(item.x, item.y, item.width, item.height + 3));
+                // Its corner, which reaches past the paper.
+                rects.push(item.gripRect);
             }
         }
         root.stuck.setPressable(rects);
@@ -178,6 +180,7 @@ Window {
             // A note on the right of its window is resized by its left
             // corner, toward the middle, where there is room to grow.
             readonly property bool gripLeft: x + width / 2 > root.width / 2
+            readonly property rect gripRect: Qt.rect(x + grip.x, y + grip.y, grip.width, grip.height)
             // Once the place comes back kept, or the window changes size, the
             // note stands where its kept place says, in proportion again.
             readonly property point kept: Qt.point(modelData.x, modelData.y)
@@ -318,7 +321,9 @@ Window {
             Accessible.name: modelData.title
             onXChanged: pressableLater.restart()
             onYChanged: pressableLater.restart()
+            onWidthChanged: pressableLater.restart()
             onHeightChanged: pressableLater.restart()
+            onGripLeftChanged: pressableLater.restart()
             onSelectingChanged: Qt.callLater(root.tellKeys)
             onOfferCopyChanged: Qt.callLater(root.tellKeys)
 
@@ -358,9 +363,14 @@ Window {
                 boundsBehavior: Flickable.StopAtBounds
                 flickableDirection: Flickable.VerticalFlick
                 readonly property bool overflows: body.implicitHeight > height + 1
-                // A finger slides the words; a mouse keeps its drag to select
-                // them, and turns the wheel to scroll.
-                interactive: overflows && !pointerOver.hovered && !touchSelect.selecting
+                // Scrolled only by the handlers below, so a finger's hold
+                // still selects: a finger slides the words, a mouse keeps its
+                // drag to select them and turns the wheel to scroll.
+                interactive: false
+
+                function scrollTo(y) {
+                    contentY = Math.max(0, Math.min(contentHeight - height, y));
+                }
 
                 // The cursor stays in sight as words are typed below the fold.
                 function keepInSight(r) {
@@ -371,11 +381,6 @@ Window {
                     }
                 }
 
-                HoverHandler {
-                    id: pointerOver
-                    acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
-                }
-
                 WheelHandler {
                     acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
                     enabled: words.overflows
@@ -383,7 +388,7 @@ Window {
                     // A notch scrolls 80 pixels, as on the note card.
                     onWheel: event => {
                         const step = event.pixelDelta.y !== 0 ? event.pixelDelta.y : event.angleDelta.y / 120 * 80;
-                        words.contentY = Math.max(0, Math.min(words.contentHeight - words.height, words.contentY - step));
+                        words.scrollTo(words.contentY - step);
                     }
                 }
 
@@ -475,23 +480,37 @@ Window {
                 onTapped: note.offerCopy = true
             }
 
+            // Moved, the note stands where the hand leaves it, and in
+            // proportion again once that place comes back kept. Dragged on
+            // words that overflow, a finger slides the words instead; the
+            // note moves from its edges then.
             DragHandler {
-                target: note
+                id: noteDrag
+                target: null
                 enabled: !touchSelect.selecting && !note.resizing
-                // Words that slide keep the finger that slides them; the note
-                // moves from its edges then.
-                grabPermissions: PointerHandler.CanTakeOverFromHandlersOfDifferentType
-                    | PointerHandler.ApprovesTakeOverByAnything
-                xAxis.minimum: 0
-                xAxis.maximum: note.freeX
-                yAxis.minimum: 0
-                yAxis.maximum: note.freeY
+                property point from
+                property bool sliding: false
                 onActiveChanged: {
-                    if (active) {
-                        note.liveX = -1;
-                        note.liveY = -1;
+                    if (noteDrag.active) {
+                        const at = noteDrag.centroid.pressPosition;
+                        noteDrag.sliding = words.overflows && at.x >= words.x && at.x < words.x + words.width
+                            && at.y >= words.y && at.y < words.y + words.height;
+                        noteDrag.from = noteDrag.sliding ? Qt.point(0, words.contentY) : Qt.point(note.x, note.y);
                     }
-                    note.placeIf(active);
+                    if (!noteDrag.sliding) {
+                        note.placeIf(noteDrag.active);
+                    }
+                }
+                onActiveTranslationChanged: {
+                    if (!noteDrag.active) {
+                        return;
+                    }
+                    if (noteDrag.sliding) {
+                        words.scrollTo(noteDrag.from.y - noteDrag.activeTranslation.y);
+                    } else {
+                        note.liveX = Math.max(0, Math.min(note.freeX, noteDrag.from.x + noteDrag.activeTranslation.x));
+                        note.liveY = Math.max(0, Math.min(note.freeY, noteDrag.from.y + noteDrag.activeTranslation.y));
+                    }
                 }
             }
 
@@ -562,11 +581,15 @@ Window {
 
             // The corner that resizes the note, by finger or pointer; the note
             // keeps the size it is let go at, on this window and any other.
+            // Half of it reaches past the paper, so it is big enough for a
+            // finger without covering the words: a hold on the last line
+            // selects, whichever corner the grip is on.
             Item {
                 id: grip
                 objectName: "stuckResize-" + note.modelData.id
-                x: note.gripLeft ? 0 : parent.width - width
-                anchors.bottom: parent.bottom
+                readonly property real hang: 22
+                x: note.gripLeft ? -hang : parent.width - width + hang
+                y: parent.height - height + hang
                 width: 44
                 height: 44
                 Accessible.role: Accessible.Grip
@@ -577,9 +600,8 @@ Window {
                 property real fromHeight: 0
 
                 Canvas {
-                    x: note.gripLeft ? 6 : parent.width - width - 6
-                    anchors.bottom: parent.bottom
-                    anchors.bottomMargin: 6
+                    x: note.gripLeft ? grip.hang + 6 : parent.width - grip.hang - width - 6
+                    y: parent.height - grip.hang - height - 6
                     width: 12
                     height: 12
                     // Drawn again when the corner changes sides.
