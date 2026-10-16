@@ -156,7 +156,15 @@ void StuckNotes::refresh()
     }
     const bool behind = !active.isEmpty() && active == m_activeWhenShown;
     if ((!active.isEmpty() && !behind) || !m_shownKeys.contains(m_drawnKey)) {
-        drawOver(m_shownKeys.contains(active) ? active : QString());
+        QString over = m_shownKeys.contains(active) ? active : QString();
+        // A window brought to the front on another display does not cover
+        // these notes: they stay over their own window, folded once the keys
+        // have gone to it, as for a tap on any other window.
+        if (over.isEmpty() && !active.isEmpty() && m_shownKeys.contains(m_drawnKey)
+            && onOtherDisplays(active, m_drawnKey)) {
+            over = m_drawnKey;
+        }
+        drawOver(over);
     }
     const bool drawn = !m_paused && !m_cardOpen && !m_drawnKey.isEmpty();
     const bool folded = !m_drawnKey.isEmpty() && m_foldedKeys.contains(m_drawnKey);
@@ -303,6 +311,11 @@ void StuckNotes::stopWriting()
 
 void StuckNotes::keysLeft()
 {
+    // Shown again on another display with its window, the surface lets go
+    // of the keys and takes them back; the notes stay as they were.
+    if (m_movedDisplay.isValid() && m_movedDisplay.elapsed() < 1000) {
+        return;
+    }
     stopWriting();
     if (!m_folded) {
         m_foldLater.start();
@@ -314,10 +327,13 @@ void StuckNotes::foldIfLeft()
     // Stepping aside for Spread or the quick-note card, or the keys back on
     // the surface, is not Robin going back to the work.
     if (!m_surface || !m_surface->isVisible() || m_surface->isActive() || m_paused || m_cardOpen
+        || (m_movedDisplay.isValid() && m_movedDisplay.elapsed() < 1000)
         || m_drawnKey.isEmpty() || !m_shownKeys.contains(m_drawnKey) || m_foldedKeys.contains(m_drawnKey)) {
         return;
     }
     qCDebug(DESKTOP) << "stuck notes fold into a dot on" << m_drawnKey;
+    m_foldedAt.start();
+    m_foldedOn = m_drawnKey;
     m_foldedKeys.insert(m_drawnKey);
     refresh();
 }
@@ -475,8 +491,26 @@ void StuckNotes::follow()
         QMargins(qMax(0, geometry.x() - area.x()), qMax(0, geometry.y() - area.y()), 0, 0));
     m_surface->resize(size);
     if (moving && visible) {
+        m_movedDisplay.start();
+        // Shown anew, it asks for the keys again once it has drawn.
+        m_waitingToDraw = true;
+        applyKeys();
         m_surface->show();
     }
+}
+
+bool StuckNotes::onOtherDisplays(const QString &key, const QString &other) const
+{
+    QScreen *first = nullptr;
+    QScreen *second = nullptr;
+    for (const OpenWindow &window : m_windows) {
+        if (window.key() == key) {
+            first = QGuiApplication::screenAt(window.geometry.center());
+        } else if (window.key() == other) {
+            second = QGuiApplication::screenAt(window.geometry.center());
+        }
+    }
+    return first && second && first != second;
 }
 
 void StuckNotes::Hide()
@@ -495,6 +529,13 @@ void StuckNotes::Pause(bool paused)
         // Spread opening ends any typing, and keeps it; a note asked for
         // while it is open waits for it to close.
         const bool ended = paused && endWriting();
+        // A pause that follows a fold at once is their window being picked
+        // up to be carried, by the press that folded them: they come back
+        // open where it lands.
+        if (paused && m_foldedAt.isValid() && m_foldedAt.elapsed() < 1500) {
+            m_foldedKeys.remove(m_foldedOn);
+            m_foldedAt.invalidate();
+        }
         m_paused = paused;
         refresh();
         if (ended) {
