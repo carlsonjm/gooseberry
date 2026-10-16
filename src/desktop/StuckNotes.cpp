@@ -197,13 +197,16 @@ void StuckNotes::refresh()
     if (foldedChange) {
         Q_EMIT foldedChanged();
     }
-    if (m_surface && m_surface->isVisible() != drawn) {
-        qCDebug(DESKTOP) << (drawn ? "stuck notes drawn over" : "stuck notes step aside from") << m_drawnKey;
+    // Shown only once it has a size: a surface the desktop has never been
+    // given one for waits, rather than being shown at none.
+    const bool up = drawn && m_surface && m_surface->width() > 0 && m_surface->height() > 0;
+    if (m_surface && m_surface->isVisible() != up) {
+        qCDebug(DESKTOP) << (up ? "stuck notes drawn over" : "stuck notes step aside from") << m_drawnKey;
         // Each time it is shown the desktop makes the surface anew, taking
         // the keys as last asked; it is shown without them.
-        m_waitingToDraw = drawn;
+        m_waitingToDraw = up;
         applyKeys();
-        m_surface->setVisible(drawn);
+        m_surface->setVisible(up);
     }
     applyKeys();
     const QVariantList entries = StuckWindows::entries(m_windows, m_store->notes(), m_shownKeys, m_foldedKeys);
@@ -453,20 +456,27 @@ void StuckNotes::follow()
     if (!screen) {
         return;
     }
-    if (m_surface->screen() != screen) {
-        // A layer surface stays on the display it was first shown on; on
-        // another, it is shown again there.
-        const bool visible = m_surface->isVisible();
+    // A surface of no width or height is one the desktop refuses, and it
+    // closes Gooseberry's connection for asking: such a size is not laid.
+    const QRect area = screen->geometry();
+    const QSize size = geometry.size().boundedTo(area.size());
+    if (size.isEmpty()) {
+        return;
+    }
+    // A layer surface stays on the display it was first shown on; on
+    // another, it is shown again there, laid before it is shown.
+    const bool moving = m_surface->screen() != screen;
+    const bool visible = m_surface->isVisible();
+    if (moving) {
         m_surface->hide();
         m_surface->setScreen(screen);
-        if (visible) {
-            m_surface->show();
-        }
     }
-    const QRect area = screen->geometry();
     LayerShellQt::Window::get(m_surface)->setMargins(
         QMargins(qMax(0, geometry.x() - area.x()), qMax(0, geometry.y() - area.y()), 0, 0));
-    m_surface->resize(geometry.size().boundedTo(area.size()));
+    m_surface->resize(size);
+    if (moving && visible) {
+        m_surface->show();
+    }
 }
 
 void StuckNotes::Hide()

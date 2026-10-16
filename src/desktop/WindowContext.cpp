@@ -11,6 +11,8 @@
 
 #include <QTimer>
 
+#include <algorithm>
+
 namespace Gooseberry {
 
 using TaskManager::AbstractTasksModel;
@@ -34,7 +36,19 @@ WindowContext::WindowContext(const QString &ownAppId, QObject *parent)
                 if (roles.isEmpty() || roles.contains(Qt::DisplayRole) || roles.contains(AbstractTasksModel::AppId)) {
                     noticeDocuments();
                 }
-                Q_EMIT windowsChanged();
+                // Only what a window's notes are found and laid by; Plasma
+                // says much more, and more often, than that.
+                static const QList<int> read{Qt::DisplayRole,
+                                             AbstractTasksModel::AppId,
+                                             AbstractTasksModel::AppName,
+                                             AbstractTasksModel::WinIdList,
+                                             AbstractTasksModel::Geometry,
+                                             AbstractTasksModel::IsActive};
+                if (roles.isEmpty() || std::any_of(roles.cbegin(), roles.cend(), [](int role) {
+                        return read.contains(role);
+                    })) {
+                    Q_EMIT windowsChanged();
+                }
             });
     for (auto signal : {&QAbstractItemModel::rowsInserted, &QAbstractItemModel::rowsRemoved}) {
         connect(m_windows.get(), signal, this, &WindowContext::windowsChanged);
