@@ -1136,6 +1136,16 @@ private Q_SLOTS:
 
         // Tuck away from the note, and undo it from the message that follows.
         QQuickItem *tuck = itemNamed(find(QStringLiteral("note-") + onWindow), QStringLiteral("tuck"));
+        // New note floats over the list's end; the room under the last row
+        // lets it scroll clear, as a finger would.
+        for (QQuickItem *up = tuck; up; up = up->parentItem()) {
+            if (up->inherits("QQuickFlickable")) {
+                const qreal end = up->property("contentHeight").toReal() - up->height();
+                up->setProperty("contentY", qMax<qreal>(0, end));
+                break;
+            }
+        }
+        QVERIFY(tuck->mapToScene({0, tuck->height()}).y() <= find(QStringLiteral("newNote"))->mapToScene({}).y());
         tap(board, tuck);
         QVERIFY2(m_store->note(onWindow)->tucked,
                  qPrintable(QStringLiteral("tuck at %1,%2 %3x%4 enabled %5; new note at %6,%7; board %8x%9; new in %10")
