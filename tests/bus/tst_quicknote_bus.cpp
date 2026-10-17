@@ -9,6 +9,7 @@
 #include <QDBusInterface>
 #include <QDBusMetaType>
 #include <QDBusReply>
+#include <QDateTime>
 #include <QDir>
 #include <QFile>
 #include <QProcess>
@@ -462,7 +463,24 @@ private Q_SLOTS:
         QVERIFY(tucked);
 
         QCOMPARE(find(QStringLiteral("no note has these words"), 0).size(), 0);
-        QCOMPARE(find(QStringLiteral("   "), 0).size(), 0);
+        // No words is every note, the most recently changed first.
+        const QVariantList every = find(QStringLiteral("   "), 0);
+        QVERIFY(every.size() > 1);
+        // Notes changed in the same second may come in either order.
+        QVariantMap latest;
+        QString newer = asMap(every.first()).value(QStringLiteral("changed")).toString();
+        for (const QVariant &each : every) {
+            const QVariantMap map = asMap(each);
+            const QString changed = map.value(QStringLiteral("changed")).toString();
+            QVERIFY(QDateTime::fromString(changed, Qt::ISODate) <= QDateTime::fromString(newer, Qt::ISODate));
+            newer = changed;
+            if (map.value(QStringLiteral("id")).toString() == id) {
+                latest = map;
+            }
+        }
+        QCOMPARE(latest.value(QStringLiteral("changed")), asMap(every.first()).value(QStringLiteral("changed")));
+        QCOMPARE(latest.value(QStringLiteral("remind")).toString(), QString());
+        QVERIFY(!latest.value(QStringLiteral("done")).toBool());
         QVERIFY(find(QStringLiteral("e"), 0).size() > 1);
         QCOMPARE(find(QStringLiteral("e"), 1).size(), 1);
 
@@ -472,6 +490,70 @@ private Q_SLOTS:
         const QDBusReply<bool> opened = m_note->call(QStringLiteral("OpenNote"), id);
         QVERIFY(opened.isValid());
         QVERIFY(opened.value());
+    }
+
+    // From Notes 1.1: Edit makes a kept note the open one, for the search
+    // to write on, and finishes the one open before.
+    void editOpensAKeptNote()
+    {
+        call(QStringLiteral("Start"));
+        const QString first = call(QStringLiteral("SetText"), {QStringLiteral("Bins out")}).value(QStringLiteral("id")).toString();
+        call(QStringLiteral("Done"));
+        call(QStringLiteral("Start"));
+        const QString second = call(QStringLiteral("SetText"), {QStringLiteral("Call the vet")}).value(QStringLiteral("id")).toString();
+
+        QVariantMap state = call(QStringLiteral("Edit"), {first});
+        QCOMPARE(state.value(QStringLiteral("id")).toString(), first);
+        QCOMPARE(state.value(QStringLiteral("text")).toString(), QStringLiteral("Bins out"));
+        QVERIFY(QFile::exists(pathOf(second)));
+        state = call(QStringLiteral("SetText"), {QStringLiteral("Bins out, recycling too")});
+        QCOMPARE(readNote(pathOf(first)).text, QStringLiteral("Bins out, recycling too"));
+        QCOMPARE(m_note->call(QStringLiteral("Edit"), QStringLiteral("no-such-note")).type(), QDBusMessage::ErrorMessage);
+        call(QStringLiteral("Done"));
+    }
+
+    // From Notes 1.1: one note is pinned at a time, a panel is told when it
+    // changes, and tucking it away unpins it.
+    void pinKeepsOneNoteInSight()
+    {
+        QSignalSpy told(m_note.get(), SIGNAL(PinnedChanged(QVariantMap)));
+        call(QStringLiteral("Start"));
+        QCOMPARE(m_note->call(QStringLiteral("SetPinned"), true).type(), QDBusMessage::ErrorMessage);
+        const QString first = call(QStringLiteral("SetText"), {QStringLiteral("Dentist Tuesday")}).value(QStringLiteral("id")).toString();
+        QVariantMap state = call(QStringLiteral("SetPinned"), {true});
+        QVERIFY(state.value(QStringLiteral("pinned")).toBool());
+        QCOMPARE(readNote(pathOf(first)).header.value(QStringLiteral("pinned")), QStringLiteral("true"));
+        QTRY_VERIFY_WITH_TIMEOUT(!told.isEmpty(), 5000);
+        QCOMPARE(asMap(told.last().value(0)).value(QStringLiteral("id")).toString(), first);
+        QCOMPARE(call(QStringLiteral("Pinned")).value(QStringLiteral("title")).toString(), QStringLiteral("Dentist Tuesday"));
+
+        // Its words, as they change, are told.
+        told.clear();
+        call(QStringLiteral("SetText"), {QStringLiteral("Dentist Wednesday")});
+        QTRY_VERIFY_WITH_TIMEOUT(!told.isEmpty(), 5000);
+        QCOMPARE(asMap(told.last().value(0)).value(QStringLiteral("title")).toString(), QStringLiteral("Dentist Wednesday"));
+        call(QStringLiteral("Done"));
+
+        // Pinning another unpins the first, told once as the second.
+        call(QStringLiteral("Start"));
+        const QString second = call(QStringLiteral("SetText"), {QStringLiteral("Pick up parcel")}).value(QStringLiteral("id")).toString();
+        told.clear();
+        call(QStringLiteral("SetPinned"), {true});
+        QTRY_VERIFY_WITH_TIMEOUT(!told.isEmpty(), 5000);
+        QTest::qWait(100);
+        QCOMPARE(told.count(), 1);
+        QCOMPARE(asMap(told.last().value(0)).value(QStringLiteral("id")).toString(), second);
+        QVERIFY(!readNote(pathOf(first)).header.contains(QStringLiteral("pinned")));
+        QVERIFY(!call(QStringLiteral("Edit"), {first}).value(QStringLiteral("pinned")).toBool());
+        call(QStringLiteral("Edit"), {second});
+
+        // Tucked away, nothing is pinned.
+        told.clear();
+        call(QStringLiteral("TuckAway"));
+        QTRY_VERIFY_WITH_TIMEOUT(!told.isEmpty(), 5000);
+        QVERIFY(asMap(told.last().value(0)).isEmpty());
+        QVERIFY(call(QStringLiteral("Pinned")).isEmpty());
+        QVERIFY(!readNote(pathOf(second)).header.contains(QStringLiteral("pinned")));
     }
 
     // Gooseberry still running and well after all of it.

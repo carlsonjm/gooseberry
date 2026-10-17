@@ -902,8 +902,8 @@ private Q_SLOTS:
         QVERIFY(!pad->isVisible());
     }
 
-    // More holds what a kept note rarely needs: Copy all, Tuck away and
-    // Remove. Before the first letter there is nothing to act on.
+    // More holds what a kept note rarely needs: Copy all, Pin, Tuck away
+    // and Remove. Before the first letter there is nothing to act on.
     void moreOnlyForAKeptNote()
     {
         QVERIFY(!named(QStringLiteral("more"))->isVisible());
@@ -917,6 +917,16 @@ private Q_SLOTS:
         tap(m_view.get(), named(QStringLiteral("copyAll")));
         QCOMPARE(QGuiApplication::clipboard()->text(), QStringLiteral("x"));
         QVERIFY(!named(QStringLiteral("moreMenu"))->isVisible());
+        tap(m_view.get(), named(QStringLiteral("more")));
+        auto *pin = named(QStringLiteral("pin"));
+        QCOMPARE(pin->property("text").toString(), QStringLiteral("Pin"));
+        tap(m_view.get(), pin);
+        QVERIFY(m_capture->pinned());
+        QCOMPARE(m_store->pinnedNote()->id, m_capture->noteId());
+        tap(m_view.get(), named(QStringLiteral("more")));
+        QCOMPARE(pin->property("text").toString(), QStringLiteral("Unpin"));
+        tap(m_view.get(), pin);
+        QVERIFY(!m_store->pinnedNote());
         tap(m_view.get(), named(QStringLiteral("more")));
         tap(m_view.get(), named(QStringLiteral("remove")));
         QVERIFY(m_store->notes().isEmpty());

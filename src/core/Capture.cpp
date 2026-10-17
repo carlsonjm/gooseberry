@@ -113,6 +113,7 @@ void Capture::reset(const Note &note, bool editing)
     Q_EMIT belongingChanged();
     Q_EMIT contextChanged();
     Q_EMIT reminderChanged();
+    Q_EMIT pinnedChanged();
 }
 
 void Capture::startNew(const CaptureContext &context)
@@ -410,8 +411,33 @@ void Capture::tuckAway()
         return;
     }
     m_note.tucked = true;
+    // Tucked away, it is no longer kept in sight.
+    const bool wasPinned = m_note.pinned;
+    m_note.pinned = false;
     keep();
+    if (wasPinned) {
+        Q_EMIT pinnedChanged();
+    }
     Q_EMIT finished();
+}
+
+bool Capture::setPinned(bool on)
+{
+    if (readOnly()) {
+        return false;
+    }
+    flush();
+    if (!kept()) {
+        keep();
+    }
+    if (!kept()) {
+        return false;
+    }
+    if (!m_store->pin(m_note.id, on)) {
+        setProblem(m_store->lastError());
+        return false;
+    }
+    return true;
 }
 
 void Capture::remove()
@@ -479,7 +505,11 @@ void Capture::storeChanged(const QString &id)
             const bool belonging = merged.folder != m_note.folder || merged.stuck != m_note.stuck;
             const bool context = merged.window != m_note.window || merged.app != m_note.app;
             const bool reminder = merged.remind != m_note.remind || merged.remindOnOpen != m_note.remindOnOpen;
+            const bool pin = merged.pinned != m_note.pinned;
             m_note = merged;
+            if (pin) {
+                Q_EMIT pinnedChanged();
+            }
             if (recoloured) {
                 Q_EMIT colourChanged();
             }
@@ -514,8 +544,12 @@ void Capture::storeChanged(const QString &id)
     const bool belonging = onDisk->folder != m_note.folder || onDisk->stuck != m_note.stuck;
     const bool context = onDisk->window != m_note.window || onDisk->app != m_note.app;
     const bool reminder = onDisk->remind != m_note.remind || onDisk->remindOnOpen != m_note.remindOnOpen;
+    const bool pin = onDisk->pinned != m_note.pinned;
     m_note = *onDisk;
     m_keptText = m_note.text;
+    if (pin) {
+        Q_EMIT pinnedChanged();
+    }
     if (belonging) {
         Q_EMIT belongingChanged();
     }

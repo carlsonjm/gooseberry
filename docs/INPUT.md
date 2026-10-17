@@ -66,7 +66,7 @@ of its text and closed goes to the desktop's trash.
 | Tap the dot in the page's corner | The five colours lie out beside it; a tap on one colours the note and puts them away. |
 | Tap the checklist glyph | The lines become a checklist; again, plain text. |
 | Tap the bell | Remind's quick times come up above the line. Once set, the bell says when, with a cross to take it away. |
-| Tap ⋯ (More) | Copy all, Tuck away and Remove, over the note. Shown once the note is kept. |
+| Tap ⋯ (More) | Copy all, Pin, Tuck away and Remove, over the note. Shown once the note is kept. Pin keeps the note in sight on the desktop's panel, where it offers that, unpinning the note pinned before; Unpin, on the pinned note, takes it off. |
 | Tap the grid | All notes: the card grows into the board. |
 
 ## Keep a note in a folder

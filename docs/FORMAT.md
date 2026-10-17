@@ -121,6 +121,7 @@ Times are ISO 8601 with their offset from UTC, to the second.
 | `place` | no | Where the note sits on its window when the window's notes are shown: its top-left corner as two fractions, of the window's width and of its height, each from 0 to 1, to three places. Left out when the note has never been placed there. From Milestone 3 |
 | `size` | no | How big the note is drawn over its window, as it was last resized there: width and height in the desktop's pixels, whole numbers from 80 to 4000. Left out when it never was |
 | `tucked` | yes | `true` when tucked away, otherwise `false` |
+| `pinned` | no | `true` for the one note a panel keeps in sight; left out otherwise. From Notes 1.1 |
 | `remind` | no | The reminder: a time, which also puts the note on the planner on that day, or `opens` for the next time a window opens on the note's `window` in its `app` |
 | `reminded` | no | When the reminder was shown |
 | `done` | no | When the note was marked done on the planner |

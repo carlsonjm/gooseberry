@@ -641,6 +641,17 @@ Item {
                 }
             }
             MenuRow {
+                objectName: "pin"
+                visible: !quick.capture.readOnly && quick.capture.text.trim().length > 0
+                glyph: "lucide/pin.svg"
+                text: quick.capture.pinned ? i18n("Unpin") : i18n("Pin")
+                onClicked: {
+                    quick.showingMore = false;
+                    quick.capture.setPinned(!quick.capture.pinned);
+                    quick.focusText();
+                }
+            }
+            MenuRow {
                 objectName: "tuckAway"
                 glyph: "tuck.svg"
                 text: i18n("Tuck away")

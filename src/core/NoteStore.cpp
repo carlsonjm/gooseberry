@@ -687,6 +687,51 @@ bool NoteStore::save(Note note, Touch touch)
     return true;
 }
 
+bool NoteStore::pin(const QString &id, bool on)
+{
+    if (refuseWhenReadOnly()) {
+        return false;
+    }
+    if (!m_notes.contains(id)) {
+        m_lastError = i18n("That note is no longer in the folder.");
+        return false;
+    }
+    if (on) {
+        // One note is pinned at a time; another program may have left more.
+        const QList<Note> all = m_notes.values();
+        for (Note other : all) {
+            if (other.pinned && other.id != id && !other.newerFormat()) {
+                other.pinned = false;
+                if (!save(other, Touch::Kept)) {
+                    return false;
+                }
+            }
+        }
+    }
+    Note note = m_notes.value(id);
+    if (note.newerFormat()) {
+        m_lastError = i18n("This note was kept by a newer %1, so it is not changed here.", productName());
+        return false;
+    }
+    if (note.pinned == on) {
+        return true;
+    }
+    note.pinned = on;
+    return save(note, Touch::Kept);
+}
+
+std::optional<Note> NoteStore::pinnedNote() const
+{
+    std::optional<Note> pinned;
+    for (const Note &note : m_notes) {
+        // Should another program have left more than one, the latest wins.
+        if (note.pinned && !note.tucked && !note.newerFormat() && (!pinned || note.changed > pinned->changed)) {
+            pinned = note;
+        }
+    }
+    return pinned;
+}
+
 std::optional<QString> NoteStore::trash(const QString &id)
 {
     if (refuseWhenReadOnly()) {

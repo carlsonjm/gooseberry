@@ -29,7 +29,7 @@ const QStringList KnownKeys = {
     QStringLiteral("gooseberry"), QStringLiteral("created"), QStringLiteral("changed"),
     QStringLiteral("colour"), QStringLiteral("stuck"), QStringLiteral("window"),
     QStringLiteral("app"), QStringLiteral("workspace"), QStringLiteral("place"), QStringLiteral("size"),
-    QStringLiteral("tucked"), QStringLiteral("remind"), QStringLiteral("reminded"), QStringLiteral("done"),
+    QStringLiteral("tucked"), QStringLiteral("pinned"), QStringLiteral("remind"), QStringLiteral("reminded"), QStringLiteral("done"),
 };
 
 const QString OnOpen = QStringLiteral("opens");
@@ -152,6 +152,9 @@ QByteArray Note::serialize() const
         out += QStringLiteral("size: %1 %2\n").arg(qRound(size.width())).arg(qRound(size.height()));
     }
     out += QStringLiteral("tucked: %1\n").arg(tucked ? QStringLiteral("true") : QStringLiteral("false"));
+    if (pinned) {
+        out += QStringLiteral("pinned: true\n");
+    }
     if (remind.isValid()) {
         out += QStringLiteral("remind: %1\n").arg(timeText(remind));
     } else if (remindOnOpen) {
@@ -290,6 +293,8 @@ Note Note::parse(const QByteArray &bytes, const QString &id, const QDateTime &fa
             }
         } else if (key == QLatin1String("tucked")) {
             note.tucked = value == QLatin1String("true");
+        } else if (key == QLatin1String("pinned")) {
+            note.pinned = value == QLatin1String("true");
         } else if (key == QLatin1String("remind")) {
             if (value == OnOpen) {
                 note.remindOnOpen = true;

@@ -38,6 +38,7 @@ class Capture : public QObject
     Q_PROPERTY(QString folderLabel READ folderLabel NOTIFY belongingChanged)
     // Stuck to the window named by window and app.
     Q_PROPERTY(bool stuck READ stuck NOTIFY belongingChanged)
+    Q_PROPERTY(bool pinned READ pinned NOTIFY pinnedChanged)
     Q_PROPERTY(QString window READ window NOTIFY contextChanged)
     Q_PROPERTY(QString app READ app NOTIFY contextChanged)
     // What Folder offers, in order: the workspace's folder, Inbox, then the
@@ -78,6 +79,7 @@ public:
     QString folderLabel() const { return m_note.placeLabel(); }
     QVariantList folderChoices() const;
     bool stuck() const { return m_note.isStuck(); }
+    bool pinned() const { return m_note.pinned; }
     // The window the note was written on or stuck to, and the workspace it
     // was written on.
     QString window() const { return m_note.window; }
@@ -134,6 +136,9 @@ public:
     // The card goes away. A note left with no text goes to the trash.
     Q_INVOKABLE void finish();
     Q_INVOKABLE void tuckAway();
+    // Pins the note, unpinning any other, or unpins it. A note not kept yet
+    // is kept first when it has words; with none it cannot be pinned.
+    Q_INVOKABLE bool setPinned(bool on);
     Q_INVOKABLE void remove();
     // Brings back the note remove() sent to the trash.
     Q_INVOKABLE bool undoRemove();
@@ -150,6 +155,7 @@ Q_SIGNALS:
     void foldersChanged();
     void contextChanged();
     void reminderChanged();
+    void pinnedChanged();
     void problemChanged();
     void finished();
     void removed();

@@ -44,6 +44,8 @@ struct Note {
     QDateTime created;
     QDateTime changed;
     bool tucked = false;
+    // The one note a panel keeps in sight. At most one note is pinned.
+    bool pinned = false;
     // A reminder: at a time, which also puts the note on the planner, or the
     // next time its window or document opens. At most one of them is set.
     QDateTime remind;

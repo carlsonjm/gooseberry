@@ -249,8 +249,9 @@ is a dot in its top-right corner: a tap lays the five colours out beside it.
 Under the page is one 44 px line: where the note is kept and what it is stuck
 to, as quiet words that open their choices, a tick for kept as written, then
 Checklist, Remind, More and All notes as glyphs. Remind says when once a
-reminder is set. More holds what a kept note rarely needs: Copy all, Tuck away
-and Remove. There is no Done: going back to the work, or `Esc`, puts the card
+reminder is set. More holds what a kept note rarely needs: Copy all, Pin, Tuck
+away and Remove. One note is pinned at a time, and the desktop's panel keeps it
+in sight beside a dot that starts a quick note. There is no Done: going back to the work, or `Esc`, puts the card
 away, and `Esc` first closes whatever is open on the note. (The maintainer,
 17 October, choosing "Just paper" of three directions.) This replaces the
 card's layout of 4 October: the header with the application's tile and name,
