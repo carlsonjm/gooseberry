@@ -292,7 +292,7 @@ planner on Today. On a wide board a row shows more, the note's next words
 under its first line and its place and when it changed at its end, so the
 width tells rather than stands empty. New note floats in the board's corner
 in the highlight colour, a large button in reach of a finger while the list
-scrolls. Sizes and spacing come from the suite's visual language (Kadunce's
+scrolls; under a pointer it lights, with a soft ring of its colour. Sizes and spacing come from the suite's visual language (Kadunce's
 `docs/ITASCA-VISUAL-LANGUAGE.md`). (The maintainer, 17 October, choosing wide
 rows and a floating New note.) A desktop's search that hosts the notes draws the same
 board in its Notes mode, so Gooseberry's own window and the search read as one

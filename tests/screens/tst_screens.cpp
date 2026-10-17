@@ -1149,6 +1149,12 @@ private Q_SLOTS:
         const QPointF corner = newNote->mapToScene({newNote->width(), newNote->height()});
         QCOMPARE(corner.x(), board->width() - 24);
         QCOMPARE(corner.y(), board->height() - 24);
+        // Under the pointer it lights, with a ring round it.
+        QQuickItem *ring = itemNamed(newNote, QStringLiteral("ring"));
+        QVERIFY(ring);
+        QCOMPARE(ring->opacity(), 0.0);
+        QTest::mouseMove(board, newNote->mapToScene({newNote->width() / 2, newNote->height() / 2}).toPoint());
+        QTRY_COMPARE(ring->opacity(), 1.0);
         tap(board, newNote);
         QCOMPARE(shell.newIn, QStringLiteral("window:SpreadGesture.qml"));
 

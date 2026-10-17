@@ -24,15 +24,34 @@ QQC2.AbstractButton {
     focusPolicy: Qt.NoFocus
     Accessible.name: text
 
+    // The accent lights under the pointer, with a soft ring of its colour
+    // 4 out, as the sheet's rhythm steps.
+    hoverEnabled: true
+
     background: Item {
         Rectangle {
+            objectName: "ring"
+            visible: pill.accent
+            anchors.fill: face
+            anchors.margins: -4
+            radius: height / 2
+            color: "transparent"
+            border.width: 4
+            border.color: Qt.alpha(Kirigami.Theme.highlightColor, 0.35)
+            opacity: pill.hovered && !pill.down ? 1 : 0
+            Behavior on opacity { NumberAnimation { duration: 90 } }
+        }
+        Rectangle {
+            id: face
             objectName: "face"
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
             height: pill.compact ? 30 : parent.height
             radius: height / 2
-            color: pill.accent ? (pill.down ? Qt.darker(Kirigami.Theme.highlightColor, 1.15) : Kirigami.Theme.highlightColor)
+            color: pill.accent ? (pill.down ? Qt.darker(Kirigami.Theme.highlightColor, 1.15)
+                                : pill.hovered ? Qt.lighter(Kirigami.Theme.highlightColor, 1.15)
+                                : Kirigami.Theme.highlightColor)
                  : pill.filled ? Kirigami.Theme.textColor
                  : Qt.alpha(Kirigami.Theme.textColor, pill.down ? 0.16 : 0.07)
             border.width: pill.filled ? 0 : 1
