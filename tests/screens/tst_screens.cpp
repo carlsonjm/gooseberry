@@ -1135,8 +1135,15 @@ private Q_SLOTS:
         QCOMPARE(shell.opened, loose);
 
         // Tuck away from the note, and undo it from the message that follows.
-        tap(board, itemNamed(find(QStringLiteral("note-") + onWindow), QStringLiteral("tuck")));
-        QVERIFY(m_store->note(onWindow)->tucked);
+        QQuickItem *tuck = itemNamed(find(QStringLiteral("note-") + onWindow), QStringLiteral("tuck"));
+        tap(board, tuck);
+        QVERIFY2(m_store->note(onWindow)->tucked,
+                 qPrintable(QStringLiteral("tuck at %1,%2 %3x%4 enabled %5; new note at %6,%7; board %8x%9; new in %10")
+                                .arg(tuck->mapToScene({}).x()).arg(tuck->mapToScene({}).y())
+                                .arg(tuck->width()).arg(tuck->height()).arg(tuck->isEnabled())
+                                .arg(find(QStringLiteral("newNote"))->mapToScene({}).x())
+                                .arg(find(QStringLiteral("newNote"))->mapToScene({}).y())
+                                .arg(board->width()).arg(board->height()).arg(shell.newIn)));
         QTRY_VERIFY(find(QStringLiteral("noticeAction"))->isVisible());
         tap(board, find(QStringLiteral("noticeAction")));
         QVERIFY(!m_store->note(onWindow)->tucked);

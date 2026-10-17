@@ -26,7 +26,7 @@ QQC2.AbstractButton {
 
     // The accent lights under the pointer, with a soft ring of its colour
     // 4 out, as the sheet's rhythm steps.
-    hoverEnabled: true
+    hoverEnabled: accent
 
     background: Item {
         Rectangle {
