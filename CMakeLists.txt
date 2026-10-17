@@ -55,7 +55,6 @@ qt_add_qml_module(gooseberry-screens
         qml/ChecklistPad.qml
         qml/DayStrip.qml
         qml/IconButton.qml
-        qml/Masonry.qml
         qml/NoteCard.qml
         qml/Notice.qml
         qml/Pill.qml

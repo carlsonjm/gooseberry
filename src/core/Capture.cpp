@@ -3,6 +3,7 @@
 
 #include "Checklist.h"
 #include "NoteStore.h"
+#include "Product.h"
 
 #include <QCoreApplication>
 
@@ -78,6 +79,11 @@ QVariantList Capture::folderChoices() const
         }
     }
     return list;
+}
+
+bool Capture::insideShuffle() const
+{
+    return Gooseberry::insideShuffle();
 }
 
 bool Capture::readOnly() const

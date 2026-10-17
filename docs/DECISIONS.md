@@ -272,15 +272,19 @@ The board opens as a search of every note: Find or start a note along its top,
 and the places in one row under it, Today, the folders with Inbox first and
 New folder last, the windows with notes stuck to them, and Tucked away, quieter,
 last, each a place to drop a carried note. Enter with words no note has starts
-a note with them. The notes of the place chosen fill the rest as before, with
-the planner on Today. A desktop's search that hosts the notes draws the same
+a note with them. The notes of the place chosen fill the rest one a row, as a
+search lists what it finds: a bead in the note's colour, its first line, and
+its folder and window under it, each still held to be carried, with the
+planner on Today. New note stays a large button for a finger. A desktop's search that hosts the notes draws the same
 board in its Notes mode, so Gooseberry's own window and the search read as one
 (`DESKTOP.md` § The quick note in Search). (The maintainer, 17 October,
 choosing the board as a search of three directions.) This replaces the places
 running down the board's side.
 
 It holds because the side list took a quarter of the board for what is chosen
-once, and the search is how a note is most often found.
+once, the search is how a note is most often found, and coloured cards of
+different heights read as a different program from the search that opens
+them. This replaces the board's notes as cards in columns.
 
 Rejected: one list from today's notes down to the folders, with the note open
 beside it, and a desk of folder stacks and windows with their notes.

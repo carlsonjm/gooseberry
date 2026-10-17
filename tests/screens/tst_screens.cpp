@@ -919,12 +919,12 @@ private Q_SLOTS:
         QVERIFY(!named(QStringLiteral("moreMenu"))->isVisible());
         tap(m_view.get(), named(QStringLiteral("more")));
         auto *pin = named(QStringLiteral("pin"));
-        QCOMPARE(pin->property("text").toString(), QStringLiteral("Pin"));
+        QCOMPARE(pin->property("text").toString(), QStringLiteral("Pin to the panel"));
         tap(m_view.get(), pin);
         QVERIFY(m_capture->pinned());
         QCOMPARE(m_store->pinnedNote()->id, m_capture->noteId());
         tap(m_view.get(), named(QStringLiteral("more")));
-        QCOMPARE(pin->property("text").toString(), QStringLiteral("Unpin"));
+        QCOMPARE(pin->property("text").toString(), QStringLiteral("Unpin from the panel"));
         tap(m_view.get(), pin);
         QVERIFY(!m_store->pinnedNote());
         tap(m_view.get(), named(QStringLiteral("more")));

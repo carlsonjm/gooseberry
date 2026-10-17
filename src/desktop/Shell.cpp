@@ -381,9 +381,17 @@ void Shell::raiseCard()
 
 void Shell::showCapture()
 {
+    showCaptureWith(QString());
+}
+
+void Shell::showCaptureWith(const QString &text)
+{
     const CaptureContext context = m_context->current();
     qCDebug(DESKTOP) << "capture: window" << context.window << "app" << context.app << "workspace" << context.workspace;
     m_capture->startNew(context);
+    if (!text.isEmpty()) {
+        m_capture->setText(text);
+    }
     raiseCard();
 }
 

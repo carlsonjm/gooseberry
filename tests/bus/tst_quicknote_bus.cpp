@@ -512,6 +512,23 @@ private Q_SLOTS:
         call(QStringLiteral("Done"));
     }
 
+    // From Notes 1.1: OpenNew hands a new note with the words typed to the
+    // card, finishing the one a search had open.
+    void openNewHandsTheWordsToTheCard()
+    {
+        call(QStringLiteral("Start"));
+        const QString drafted = call(QStringLiteral("SetText"), {QStringLiteral("Seed order")}).value(QStringLiteral("id")).toString();
+        const QDBusReply<bool> opened = m_note->call(QStringLiteral("OpenNew"), QStringLiteral("Water the ferns"));
+        QVERIFY(opened.isValid());
+        QVERIFY(opened.value());
+        QVERIFY(!call(QStringLiteral("State")).value(QStringLiteral("open")).toBool());
+        QCOMPARE(readNote(pathOf(drafted)).text, QStringLiteral("Seed order"));
+        // The first letter keeps a note, so the words are found at once.
+        const QVariantList found = asList(m_note->call(QStringLiteral("Find"), QStringLiteral("ferns"), uint(0)).arguments().value(0));
+        QCOMPARE(found.size(), 1);
+        QCOMPARE(asMap(found.first()).value(QStringLiteral("title")).toString(), QStringLiteral("Water the ferns"));
+    }
+
     // From Notes 1.1: one note is pinned at a time, a panel is told when it
     // changes, and tucking it away unpins it.
     void pinKeepsOneNoteInSight()

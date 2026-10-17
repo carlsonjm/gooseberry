@@ -536,20 +536,25 @@ Item {
                                 when: board.carrying !== null
                             }
 
-                            Masonry {
+                            // One note a row, as Search's Notes lists them.
+                            Column {
                                 id: grid
                                 width: scroller.availableWidth - 28
-                                height: contentHeight + 28
-                                model: board.notes
-                                delegate: NoteCard {
-                                    id: noteCard
-                                    showPlace: board.searching || !board.notes.place.startsWith("folder:") && board.notes.place !== "inbox"
-                                    opacity: board.carrying && board.carrying.id === noteId ? 0.35 : 1
-                                    onTapped: tucked ? board.bringBack(noteId, placeLabel) : board.shell.openNote(noteId)
-                                    onTuckRequested: board.tuckAway(noteId)
-                                    onLifted: at => board.lift(noteCard, at)
-                                    onCarried: at => board.follow(at)
-                                    onLetGo: at => board.letGo(at)
+                                bottomPadding: 28
+                                spacing: 2
+                                Repeater {
+                                    model: board.notes
+                                    delegate: NoteCard {
+                                        id: noteCard
+                                        width: grid.width
+                                        showPlace: board.searching || !board.notes.place.startsWith("folder:") && board.notes.place !== "inbox"
+                                        opacity: board.carrying && board.carrying.id === noteId ? 0.35 : 1
+                                        onTapped: tucked ? board.bringBack(noteId, placeLabel) : board.shell.openNote(noteId)
+                                        onTuckRequested: board.tuckAway(noteId)
+                                        onLifted: at => board.lift(noteCard, at)
+                                        onCarried: at => board.follow(at)
+                                        onLetGo: at => board.letGo(at)
+                                    }
                                 }
                             }
                         }

@@ -66,6 +66,9 @@ public Q_SLOTS:
     Q_SCRIPTABLE QVariantList Find(const QString &words, uint limit);
     // Opens the note on Gooseberry's own card, as a tap on the board does.
     Q_SCRIPTABLE bool OpenNote(const QString &noteId);
+    // Added in version 1, from Notes 1.1. Opens Gooseberry's own card on a new
+    // note holding those words, as its Capture action does with none.
+    Q_SCRIPTABLE bool OpenNew(const QString &text);
     // Added in version 1, from Notes 1.1. Makes that note the open one, for
     // the search to write on, finishing the one open before.
     Q_SCRIPTABLE QVariantMap Edit(const QString &noteId);

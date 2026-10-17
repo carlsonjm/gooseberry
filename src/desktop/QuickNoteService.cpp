@@ -369,7 +369,22 @@ bool QuickNoteService::OpenNote(const QString &noteId)
     if (!m_store->note(noteId)) {
         return false;
     }
+    // The card takes the note; what a search had open here is finished.
+    if (m_open) {
+        m_capture->finish();
+        m_open = false;
+    }
     m_shell->openNote(noteId);
+    return true;
+}
+
+bool QuickNoteService::OpenNew(const QString &text)
+{
+    if (m_open) {
+        m_capture->finish();
+        m_open = false;
+    }
+    m_shell->showCaptureWith(text);
     return true;
 }
 

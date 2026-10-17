@@ -58,6 +58,8 @@ public:
     void handle(const QStringList &arguments);
 
     Q_INVOKABLE void showCapture();
+    // The card on a new note holding those words.
+    void showCaptureWith(const QString &text);
     Q_INVOKABLE void showBoard();
     // The board as a window, on the place the note sits in, or on Today.
     void showBoardOn(const QString &noteId);
