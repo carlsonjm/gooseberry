@@ -401,10 +401,10 @@ private Q_SLOTS:
         m_store.reset();
     }
 
-    // The note is the page: it fills the card inside 12 px margins, with
-    // the colour a dot in its corner, and one 44 px line under it holding
-    // where the note is kept, what it is stuck to, its controls and All
-    // notes, which ends 12 px from the right edge.
+    // The note's words fill the card inside 12 px margins, with the colour
+    // a dot beside them, and, past a hairline, one 44 px line under them
+    // holding where the note is kept, what it is stuck to, its controls and
+    // All notes, which ends 12 px from the right edge.
     void pageFillsTheCard()
     {
         QQuickItem *page = named(QStringLiteral("page"));
@@ -417,7 +417,7 @@ private Q_SLOTS:
         QQuickItem *tray = named(QStringLiteral("tray"));
         QCOMPARE(tray->height(), 44.0);
         const QPointF trayAt = tray->mapToItem(note(), QPointF());
-        QCOMPARE(trayAt.y(), pageAt.y() + page->height() + 8);
+        QCOMPARE(trayAt.y(), pageAt.y() + page->height() + 8 + 1 + 8);
         QCOMPARE(trayAt.y() + tray->height(), note()->height() - 12);
         QQuickItem *allNotes = named(QStringLiteral("allNotes"));
         QCOMPARE(allNotes->mapToItem(note(), QPointF()).x() + allNotes->width(), note()->width() - 12);
@@ -824,6 +824,33 @@ private Q_SLOTS:
         QVERIFY(!m_store->note(m_capture->noteId())->hasReminder());
         QCOMPARE(named(QStringLiteral("remind"))->property("text").toString(), QStringLiteral("Remind"));
         QVERIFY(!named(QStringLiteral("noReminder"))->isVisible());
+    }
+
+    // The note listens: a day offers a reminder, lines begun with "- " a
+    // checklist and a #word a folder, each taken with a tap, after which it
+    // is offered no more.
+    void wordsOffer()
+    {
+        m_capture->setText(QStringLiteral("Call Sam tomorrow\n- parking\n- deposit\n#cabin"));
+        QTRY_VERIFY(named(QStringLiteral("offers"))->isVisible());
+        QVERIFY(!named(QStringLiteral("listensHint"))->isVisible());
+        QQuickItem *remind = named(QStringLiteral("offer-remind"));
+        const QDateTime tomorrow(QDate::currentDate().addDays(1), QTime(9, 0));
+        QCOMPARE(remind->property("text").toString(), QStringLiteral("Remind %1").arg(ReminderWords::label(tomorrow, false)));
+        picture(m_view.get(), QStringLiteral("note-offers"));
+        tap(m_view.get(), remind);
+        QCOMPARE(m_capture->remindAt(), tomorrow);
+        QTRY_VERIFY(!named(QStringLiteral("offer-remind")));
+
+        tap(m_view.get(), named(QStringLiteral("offer-folder")));
+        QCOMPARE(m_capture->folder(), QStringLiteral("Cabin"));
+        QTRY_VERIFY(!named(QStringLiteral("offer-folder")));
+
+        tap(m_view.get(), named(QStringLiteral("offer-checklist")));
+        QVERIFY(m_capture->checklist());
+        QVERIFY(!m_capture->text().contains(QStringLiteral("- - ")));
+        QVERIFY(m_capture->text().contains(QStringLiteral("- [ ] parking")));
+        QTRY_VERIFY(!named(QStringLiteral("offers"))->isVisible());
     }
 
     // Pick a time: a day on and an hour and a quarter later than the next

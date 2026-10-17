@@ -4,11 +4,14 @@ import QtQuick.Controls as QQC2
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 
-// The quick note, inside its card: the page with the cursor in it, and one
-// quiet line under it saying where the note is kept and what it is stuck to,
-// with Checklist, Remind, More and All notes. The colour is a dot on the
-// page; what is rarely needed waits under More. What is written is kept from
-// its first letter. The page takes the room the card has; when the keys
+// The quick note, inside its card, listening: the words with the cursor in
+// them and the note's colour as a dot beside them. Words that ask for
+// something offer it under the note: a day offers a reminder, lines begun
+// with "- " a checklist, a #word a folder, each taken with a tap and then
+// shown kept on the line below. One quiet line at the bottom says where the
+// note is kept and what it is stuck to, with Checklist, Remind, More and All
+// notes; what is rarely needed waits under More. What is written is kept from
+// its first letter. The words take the room the card has; when the keys
 // shorten the card past what all of it needs, the rest scrolls.
 Item {
     id: quick
@@ -138,6 +141,72 @@ Item {
         focusText();
     }
 
+    // What the words ask for and the note does not have yet, each with its
+    // words and what a tap does.
+    readonly property var offers: {
+        const text = capture.text;
+        const found = [];
+        if (capture.readOnly) {
+            return found;
+        }
+        const day = text.match(/\b(tonight|tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/i);
+        if (day && !capture.hasReminder) {
+            const at = quick.dayFor(day[1].toLowerCase());
+            const label = words && words.reminderLabel ? words.reminderLabel(at, false)
+                                                       : Qt.locale().toString(at, Locale.ShortFormat);
+            found.push({ kind: "remind", label: i18nc("offer to remind at a time", "Remind %1", label), at: at });
+        }
+        if (!capture.checklist && /^\s*[-*] /m.test(text)) {
+            found.push({ kind: "checklist", label: i18n("Make the lines a checklist") });
+        }
+        const tag = text.match(/(?:^|\s)#([^\s#]+)/);
+        if (tag) {
+            const name = tag[1].charAt(0).toUpperCase() + tag[1].slice(1);
+            if (capture.folder !== name) {
+                found.push({ kind: "folder", label: i18n("Keep in %1", name), name: name });
+            }
+        }
+        return found;
+    }
+
+    // The time a day's word means: this evening at six, else nine in the
+    // morning of the day named, the next one when it is today.
+    function dayFor(word) {
+        const at = new Date();
+        at.setSeconds(0, 0);
+        if (word === "tonight") {
+            at.setHours(18, 0);
+            return at;
+        }
+        at.setHours(9, 0);
+        if (word === "tomorrow") {
+            at.setDate(at.getDate() + 1);
+            return at;
+        }
+        const names = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+        const ahead = (names.indexOf(word) - at.getDay() + 7) % 7;
+        at.setDate(at.getDate() + (ahead === 0 ? 7 : ahead));
+        return at;
+    }
+
+    function take(offer) {
+        if (offer.kind === "remind") {
+            capture.setRemindAt(offer.at);
+        } else if (offer.kind === "checklist") {
+            // The lines' own "- " gives way to the checklist's boxes.
+            capture.text = capture.text.replace(/^(\s*)[-*] (?!\[)/gm, "$1");
+            capture.makeChecklist();
+        } else if (offer.kind === "folder") {
+            const problem = capture.makeFolder(offer.name);
+            if (problem.length > 0) {
+                folderProblem.text = problem;
+                choosingFolder = true;
+                return;
+            }
+        }
+        Qt.callLater(focusText);
+    }
+
     function stickTo(entry) {
         capture.setStuck(entry ? entry.window : "", entry ? entry.app : "");
         focusText();
@@ -211,14 +280,14 @@ Item {
                 // The page takes whatever room the rest leaves it.
                 implicitHeight: 96
                 radius: 8
-                color: quick.capture.hexFor(quick.capture.colour)
+                color: "transparent"
                 clip: true
 
                 ChecklistPad {
                     id: checklistPad
                     objectName: "checklistPad"
                     anchors.fill: parent
-                    anchors.rightMargin: 44
+                    anchors.leftMargin: 56
                     visible: quick.capture.checklist
                     capture: quick.capture
                 }
@@ -226,6 +295,7 @@ Item {
                 QQC2.ScrollView {
                     id: pageScroll
                     anchors.fill: parent
+                    anchors.leftMargin: 52
                     visible: !quick.capture.checklist
                     QQC2.TextArea {
                         id: area
@@ -237,19 +307,18 @@ Item {
                         }
                         readOnly: quick.capture.readOnly
                         placeholderText: i18n("Write it down…")
-                        placeholderTextColor: Qt.rgba(0.1, 0.1, 0.1, 0.45)
-                        color: "#1A1A1A"
-                        selectionColor: Qt.rgba(0, 0, 0, 0.2)
-                        selectedTextColor: "#1A1A1A"
+                        placeholderTextColor: Qt.alpha(Kirigami.Theme.textColor, 0.45)
+                        color: Kirigami.Theme.textColor
                         wrapMode: TextEdit.Wrap
                         textFormat: TextEdit.PlainText
                         font.pixelSize: 20
                         font.weight: Font.Medium
-                        leftPadding: 24
-                        // Clear of the colour's dot.
-                        rightPadding: 60
-                        topPadding: 24
-                        bottomPadding: 24
+                        // Beside the colour's dot, its first line on the dot's
+                        // middle.
+                        leftPadding: 0
+                        rightPadding: 12
+                        topPadding: 16
+                        bottomPadding: 16
                         background: null
                         // Selecting with a mouse or a touchpad stays on in
                         // tablet mode, where the desktop's style turns it off
@@ -272,14 +341,14 @@ Item {
                     when: touchSelect.selecting
                 }
 
-                // The note's colour, a dot in the page's corner; a tap lays
-                // the five colours out beside it.
+                // The note's colour, a dot beside the words; a tap lays the
+                // five colours out beside it.
                 QQC2.AbstractButton {
                     id: colourDot
                     objectName: "colourDot"
-                    anchors.right: parent.right
+                    anchors.left: parent.left
                     anchors.top: parent.top
-                    anchors.margins: 8
+                    anchors.topMargin: 4
                     implicitWidth: 44
                     implicitHeight: 44
                     focusPolicy: Qt.NoFocus
@@ -292,12 +361,10 @@ Item {
                     contentItem: Item {
                         Rectangle {
                             anchors.centerIn: parent
-                            width: 20
-                            height: 20
-                            radius: 10
-                            color: page.color
-                            border.width: 2
-                            border.color: Qt.rgba(0.1, 0.1, 0.1, 0.55)
+                            width: 22
+                            height: 22
+                            radius: 11
+                            color: quick.capture.hexFor(quick.capture.colour)
                         }
                     }
                 }
@@ -306,7 +373,7 @@ Item {
                     id: colours
                     objectName: "colours"
                     visible: quick.choosingColour
-                    anchors.right: colourDot.left
+                    anchors.left: colourDot.right
                     anchors.verticalCenter: colourDot.verticalCenter
                     width: swatches.implicitWidth + 12
                     height: 48
@@ -356,6 +423,29 @@ Item {
                         }
                     }
                 }
+            }
+
+            // What the words offer, each taken with a tap.
+            Flow {
+                objectName: "offers"
+                Layout.fillWidth: true
+                visible: quick.offers.length > 0
+                spacing: 8
+                Repeater {
+                    model: quick.offers
+                    delegate: Pill {
+                        required property var modelData
+                        objectName: "offer-" + modelData.kind
+                        text: modelData.label
+                        onClicked: quick.take(modelData)
+                    }
+                }
+            }
+
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 1
+                color: Qt.alpha(Kirigami.Theme.textColor, 0.15)
             }
 
             // What Remind offers, opened from its glyph.
@@ -533,6 +623,16 @@ Item {
 
                 Item {
                     Layout.fillWidth: true
+                }
+
+                // What the note listens for, while nothing is offered.
+                QQC2.Label {
+                    objectName: "listensHint"
+                    visible: quick.offers.length === 0 && tray.width > 620 && !quick.capture.readOnly
+                    Layout.rightMargin: 8
+                    text: i18n("Words that ask for something offer it")
+                    font.pixelSize: 12
+                    color: Qt.alpha(Kirigami.Theme.textColor, 0.45)
                 }
 
                 // Words selected on the page, to copy with a tap as well as
