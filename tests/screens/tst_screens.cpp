@@ -1168,6 +1168,12 @@ private Q_SLOTS:
             QVERIFY(tuck);
             QVERIFY(tuck->mapToScene({0, tuck->height()}).y() <= find(QStringLiteral("newNote"))->mapToScene({}).y());
             const QPointF at = tuck->mapToScene({tuck->width() / 2, tuck->height() / 2});
+            // A row's tooltip, opened under a resting pointer, would take the
+            // press to close itself: rest the pointer off the list until no
+            // popup is up, so the tap reaches Tuck whatever the desktop.
+            QTest::mouseMove(board, QPoint(2, 2));
+            QTRY_VERIFY(!QString::fromLatin1(topItemAt(board->contentItem(), at)->metaObject()->className())
+                             .startsWith(QStringLiteral("QQuickOverlay")));
             lastTuck = QStringLiteral("tuck at %1,%2 enabled %3 opacity %4; under it: %5")
                            .arg(at.x()).arg(at.y()).arg(tuck->isEnabled()).arg(tuck->opacity())
                            .arg(describe(topItemAt(board->contentItem(), at)));
