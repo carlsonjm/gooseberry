@@ -1153,23 +1153,35 @@ private Q_SLOTS:
 
         // Tuck away from the note, and undo it from the message that follows.
         // Opening or tucking a note lays the rows out again, so a row is
-        // found afresh each time. New note floats over the list's end; the
-        // room under the last row lets it scroll clear, as a finger would.
+        // found afresh each time.
         QString lastTuck;
         auto tuckRow = [&](const QString &id) {
             QTest::qWait(200);
             QQuickItem *tuck = itemNamed(find(QStringLiteral("note-") + id), QStringLiteral("tuck"));
             QVERIFY(tuck);
-            for (QQuickItem *up = tuck; up; up = up->parentItem()) {
-                if (up->inherits("QQuickFlickable")) {
-                    up->setProperty("contentY", qMax<qreal>(0, up->property("contentHeight").toReal() - up->height()));
-                    break;
-                }
+            // Scroll the row to the middle of what the list shows, clear of
+            // the header above it and New note over its end, at any size.
+            QQuickItem *list = nullptr;
+            for (QQuickItem *up = tuck; up && !list; up = up->parentItem()) {
+                if (up->inherits("QQuickFlickable"))
+                    list = up;
             }
+            QVERIFY(list);
+            auto *content = list->property("contentItem").value<QQuickItem *>();
+            QVERIFY(content);
+            const qreal rowY = tuck->mapToItem(content, QPointF(0, tuck->height() / 2)).y();
+            const qreal most = qMax<qreal>(0, list->property("contentHeight").toReal() - list->height());
+            list->setProperty("contentY", qBound<qreal>(0, rowY - list->height() / 2, most));
             QTest::qWait(50);
             tuck = itemNamed(find(QStringLiteral("note-") + id), QStringLiteral("tuck"));
             QVERIFY(tuck);
-            QVERIFY(tuck->mapToScene({0, tuck->height()}).y() <= find(QStringLiteral("newNote"))->mapToScene({}).y());
+            const QRectF shown = list->mapRectToScene(QRectF(0, 0, list->width(), list->height()));
+            const QRectF button = tuck->mapRectToScene(QRectF(0, 0, tuck->width(), tuck->height()));
+            QVERIFY2(shown.contains(button), qPrintable(QStringLiteral("tuck %1,%2 outside the list %3,%4 to %5,%6")
+                                                            .arg(button.x()).arg(button.y()).arg(shown.left()).arg(shown.top())
+                                                            .arg(shown.right()).arg(shown.bottom())));
+            QQuickItem *newNote = find(QStringLiteral("newNote"));
+            QVERIFY(!newNote->mapRectToScene(QRectF(0, 0, newNote->width(), newNote->height())).intersects(button));
             const QPointF at = tuck->mapToScene({tuck->width() / 2, tuck->height() / 2});
             // Rest the pointer off the list, so nothing under it is hovered.
             QTest::mouseMove(board, QPoint(2, 2));
