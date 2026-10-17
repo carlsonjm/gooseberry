@@ -12,6 +12,7 @@
 #include <KLocalizedString>
 
 #include <QClipboard>
+#include <algorithm>
 #include <QGuiApplication>
 #include <QLocale>
 #include <QPointingDevice>
@@ -332,6 +333,28 @@ void sweep(QQuickWindow *window, QPoint from, QPoint to)
     }
     QTest::mouseRelease(window, Qt::LeftButton, {}, to);
     QTest::qWait(30);
+}
+
+// The topmost visible item under a scene point, for saying what a missed tap hit.
+QQuickItem *topItemAt(QQuickItem *root, const QPointF &scenePos)
+{
+    if (!root->isVisible() || root->opacity() <= 0)
+        return nullptr;
+    QList<QQuickItem *> kids = root->childItems();
+    std::stable_sort(kids.begin(), kids.end(), [](QQuickItem *a, QQuickItem *b) { return a->z() < b->z(); });
+    for (auto it = kids.crbegin(); it != kids.crend(); ++it) {
+        if (QQuickItem *hit = topItemAt(*it, scenePos))
+            return hit;
+    }
+    return root->contains(root->mapFromScene(scenePos)) ? root : nullptr;
+}
+
+QString describe(QQuickItem *item)
+{
+    QStringList chain;
+    for (QQuickItem *up = item; up && chain.size() < 4; up = up->parentItem())
+        chain << QStringLiteral("%1(%2)").arg(QString::fromLatin1(up->metaObject()->className()), up->objectName());
+    return chain.join(QStringLiteral(" < "));
 }
 
 void tap(QQuickWindow *window, QQuickItem *item)
@@ -1129,6 +1152,7 @@ private Q_SLOTS:
         // Opening or tucking a note lays the rows out again, so a row is
         // found afresh each time. New note floats over the list's end; the
         // room under the last row lets it scroll clear, as a finger would.
+        QString lastTuck;
         auto tuckRow = [&](const QString &id) {
             QTest::qWait(200);
             QQuickItem *tuck = itemNamed(find(QStringLiteral("note-") + id), QStringLiteral("tuck"));
@@ -1143,10 +1167,14 @@ private Q_SLOTS:
             tuck = itemNamed(find(QStringLiteral("note-") + id), QStringLiteral("tuck"));
             QVERIFY(tuck);
             QVERIFY(tuck->mapToScene({0, tuck->height()}).y() <= find(QStringLiteral("newNote"))->mapToScene({}).y());
+            const QPointF at = tuck->mapToScene({tuck->width() / 2, tuck->height() / 2});
+            lastTuck = QStringLiteral("tuck at %1,%2 enabled %3 opacity %4; under it: %5")
+                           .arg(at.x()).arg(at.y()).arg(tuck->isEnabled()).arg(tuck->opacity())
+                           .arg(describe(topItemAt(board->contentItem(), at)));
             tap(board, tuck);
         };
         tuckRow(onWindow);
-        QVERIFY(m_store->note(onWindow)->tucked);
+        QVERIFY2(m_store->note(onWindow)->tucked, qPrintable(lastTuck));
         QTRY_VERIFY(find(QStringLiteral("noticeAction"))->isVisible());
         tap(board, find(QStringLiteral("noticeAction")));
         QVERIFY(!m_store->note(onWindow)->tucked);
@@ -1154,7 +1182,7 @@ private Q_SLOTS:
         // Tuck it away again, then bring it back from Tucked away.
         QTRY_VERIFY(find(QStringLiteral("note-") + onWindow));
         tuckRow(onWindow);
-        QVERIFY(m_store->note(onWindow)->tucked);
+        QVERIFY2(m_store->note(onWindow)->tucked, qPrintable(lastTuck));
         tap(board, find(QStringLiteral("place-tucked")));
         QCOMPARE(notes.place(), QStringLiteral("tucked"));
         QTRY_VERIFY(find(QStringLiteral("note-") + onWindow));
