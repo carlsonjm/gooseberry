@@ -10,6 +10,7 @@
 
 #include <QDBusConnection>
 #include <QDBusError>
+#include <QDBusMessage>
 #include <QDBusServiceWatcher>
 #include <QGuiApplication>
 #include <QQuickWindow>
