@@ -39,7 +39,7 @@ class Capture : public QObject
     // Stuck to the window named by window and app.
     Q_PROPERTY(bool stuck READ stuck NOTIFY belongingChanged)
     Q_PROPERTY(bool pinned READ pinned NOTIFY pinnedChanged)
-    // Where a pinned note is kept in sight: Shuffle's Actions Bar, or the
+    // Where a pinned note is kept in sight: Shuffle's Actions Panel, or the
     // panel elsewhere.
     Q_PROPERTY(bool insideShuffle READ insideShuffle CONSTANT)
     Q_PROPERTY(QString window READ window NOTIFY contextChanged)

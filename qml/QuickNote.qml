@@ -645,8 +645,8 @@ Item {
                 visible: !quick.capture.readOnly && quick.capture.text.trim().length > 0
                 glyph: "lucide/pin.svg"
                 text: quick.capture.pinned
-                    ? (quick.capture.insideShuffle ? i18n("Unpin from the Actions Bar") : i18n("Unpin from the panel"))
-                    : (quick.capture.insideShuffle ? i18n("Pin to the Actions Bar") : i18n("Pin to the panel"))
+                    ? (quick.capture.insideShuffle ? i18n("Unpin from the Actions Panel") : i18n("Unpin from the panel"))
+                    : (quick.capture.insideShuffle ? i18n("Pin to the Actions Panel") : i18n("Pin to the panel"))
                 onClicked: {
                     quick.showingMore = false;
                     quick.capture.setPinned(!quick.capture.pinned);
