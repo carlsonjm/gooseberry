@@ -1382,7 +1382,7 @@ private Q_SLOTS:
         // Ideas beside it: no note with a time among them; the checklist as
         // its heading and items.
         QVERIFY(find(QStringLiteral("ideasHeading"))->isVisible());
-        QCOMPARE(find(QStringLiteral("ideasHeading"))->property("text").toString(), QStringLiteral("IDEAS · NO DATE NEEDED"));
+        QCOMPARE(find(QStringLiteral("ideasHeading"))->property("text").toString(), QStringLiteral("Ideas · no date needed"));
         QVERIFY(find(QStringLiteral("note-") + groceries));
         QVERIFY(!find(QStringLiteral("note-") + next));
         QQuickItem *groceriesCard = find(QStringLiteral("note-") + groceries);
