@@ -1,8 +1,8 @@
 # Concept
 
-What Gooseberry is for, who it is for, and the rules it keeps. The plan and the
-decisions still open are in `ROADMAP.md`; settled rulings and what they rejected
-are in `DECISIONS.md`. What the card workspace and Search add is in
+What Gooseberry is for, who it is for, and the rules it keeps. What it does not
+do yet, and will not do, is in `LIMITATIONS.md`; settled rulings and what they
+rejected are in `DECISIONS.md`. What the card workspace and Search add is in
 `DESKTOP.md`.
 
 ## The person
