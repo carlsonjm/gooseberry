@@ -11,7 +11,7 @@ Paths are from the repository root.
 | `docs/CONCEPT.md` | Who Gooseberry is for, what it does, its rules, and what it relies on |
 | `docs/DESKTOP.md` | What Kadunce's cards and Tettegouche's Search add, what Gooseberry reads from them, and what it would need |
 | `docs/mockup/` | The approved mock-up: six screens as design source, and which milestone each applies to |
-| `docs/DECISIONS.md` | Every settled ruling and what it rejected |
+| `docs/DECISIONS.md` | Each settled decision and what it turned down |
 | `docs/FORMAT.md` | The note format: where the folder is, what is in it, each note's header, and its version |
 | `docs/TESTING.md` | What the automated checks prove, and the checks by hand against each milestone's proof |
 | `docs/LIMITATIONS.md` | What Gooseberry does not do yet, and what it will not do |

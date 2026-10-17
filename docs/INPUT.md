@@ -34,8 +34,9 @@ below is built.
 | Tap New note on the board | The same, for a note kept in the folder the board is showing, or stuck to the window it is showing. |
 | Tap + beside a window's dot, while its notes are up | The same, for a note stuck to that window; closed, it is up over the window with the others (`DESKTOP.md` § Stuck notes on the bus). |
 
-Gooseberry is its entry in the launcher or a search, or its button pinned to
-the panel or the dock; holding it opens its menu, with New note and All notes.
+Gooseberry here means its entry in the launcher or a search, or its button
+pinned to the panel or the dock. Holding it opens its menu, with New note and
+All notes.
 A desktop's search can host the quick note itself, drawn in its own window and
 kept by Gooseberry (`DESKTOP.md`).
 
@@ -54,8 +55,8 @@ down.
 
 The card moves at Plasma's animation speed: rising over the keys, growing into
 the board, and following its place in Spread. With Plasma's animations set to
-Instant, which Plasma also reports as reduced motion, it is where it goes at
-once.
+Instant, which Plasma also reports as reduced motion, it jumps straight to its
+place.
 
 A quick note closed with nothing written on it leaves nothing behind. A note emptied
 of its text and closed goes to the desktop's trash.
@@ -113,9 +114,9 @@ Checklist and Remind sit under the note on the card.
 | Tap Remind on a note that has one | The times come up again; a new choice replaces the old reminder. |
 
 A reminder is the desktop's own notification, shown once: the note's first
-words, when it was for, and the window it is stuck to, or its folder. It stays as long as the desktop
-keeps its notifications, then waits in the desktop's history; nothing has to
-be closed.
+words, when it was for, and the window it is stuck to, or its folder. It stays
+as long as the desktop keeps its notifications, then waits in the desktop's
+history. Nothing has to be closed.
 
 | Input | What happens |
 | --- | --- |
@@ -197,7 +198,7 @@ today again.
 
 ## Bring up a window's notes
 
-Where the desktop's title bar draws Gooseberry's dot, as Shuffle's does
+This needs a title bar that draws Gooseberry's dot, as Shuffle's does
 (`DESKTOP.md` § Stuck notes on the bus). On a window whose application draws
 its own top bar, as web browsers do, the notes come up from Spread, and fold
 and open on the window the same way.
@@ -213,13 +214,12 @@ and open on the window the same way.
 
 In Kadunce's Spread, each note stands on its card where it was let go on the
 window, scaled with the card and moving with it, faint while the notes are put
-away; notes never placed there are a small stack at its bottom-right. Notes
+away. Notes never placed there make a small stack at its bottom-right. Notes
 folded on the window show as their dot, and a tap on it opens the card with
-the top note ready to type. A tap on
-a note opens the card, as a tap anywhere on it does, with the notes up over the
-window and that note ready to type; a tap on the stack opens the card with
-the notes up. A note held there can be carried to another card, which sticks
-it to that window.
+the top note ready to type. A tap on a note opens the card, as a tap anywhere
+on it does, with the notes up over the window and that note ready to type. A
+tap on the stack opens the card with the notes up. A note held there can be
+carried to another card, which sticks it to that window.
 
 ## Move a note over a window
 
@@ -229,8 +229,8 @@ it to that window.
 
 ## Copy words from a note
 
-On the quick-note card's page, for a note of plain text, and on the notes
-stuck over a window alike. On a checklist, Copy does not show.
+This works on the quick-note card's page, for a note of plain text, and on
+notes stuck over a window. On a checklist, Copy does not show.
 
 | Input | What happens |
 | --- | --- |
