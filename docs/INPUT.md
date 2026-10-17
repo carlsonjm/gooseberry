@@ -7,8 +7,8 @@ below is built.
 | --- | --- | --- |
 | Capture a note | Hold Gooseberry, then tap New note | None yet |
 | Finish a note | Tap the work around the card | `Esc` |
-| Keep a note in a folder | Tap Folder | None yet |
-| Stick a note to a window | Tap Stuck to | None yet |
+| Keep a note in a folder | Tap the folder's name | None yet |
+| Stick a note to a window | Tap the window's name, or Not stuck | None yet |
 | Start a folder | Tap New folder on the board | None yet |
 | Move a note | Hold a note on the board | None yet |
 | Set a reminder | Tap Remind | None yet |
@@ -44,9 +44,8 @@ kept by Gooseberry (`DESKTOP.md`).
 | Input | What happens |
 | --- | --- |
 | Tap the work around the card | The card goes away. The note is already kept; there is nothing to confirm. |
-| Tap Done | The same. |
 | Go to another window | The same. |
-| Press `Esc` | The same; with the card grown into the board, the first `Esc` brings the note back. |
+| Press `Esc` | The same; with the card grown into the board, the first `Esc` brings the note back, and with colours, choices or More open on the note, the first `Esc` closes them. |
 
 With the on-screen keys up, the card rises only as far as it must to stay
 above them, then shortens; what does not fit scrolls. It returns as the keys go
@@ -60,15 +59,25 @@ once.
 A quick note closed with nothing written on it leaves nothing behind. A note emptied
 of its text and closed goes to the desktop's trash.
 
+## On the note
+
+| Input | What happens |
+| --- | --- |
+| Tap the dot in the page's corner | The five colours lie out beside it; a tap on one colours the note and puts them away. |
+| Tap the checklist glyph | The lines become a checklist; again, plain text. |
+| Tap the bell | Remind's quick times come up above the line. Once set, the bell says when, with a cross to take it away. |
+| Tap ⋯ (More) | Copy all, Tuck away and Remove, over the note. Shown once the note is kept. |
+| Tap the grid | All notes: the card grows into the board. |
+
 ## Keep a note in a folder
 
-Two chips sit under the note, both already filled in: Folder, the folder the
-note is kept in, and Stuck to, the window it is stuck to. A new note is kept
+One line sits under the note, already filled in: the folder the note is kept
+in, then the window it is stuck to, each as quiet words with its glyph. A new note is kept
 in the workspace's folder, or Inbox, and stuck to the window in front.
 
 | Input | What happens |
 | --- | --- |
-| Tap Folder | The folders come up under it: the workspace's own first, then Inbox, then the rest, and a field for a new one. |
+| Tap the folder's name | The folders come up above the line: the workspace's own first, then Inbox, then the rest, and a field for a new one. |
 | Tap a folder | The note is kept there, at once, and the cursor goes back to the note. |
 | Type a name in New folder, then press Enter | The folder is made and the note is kept in it. A name that cannot be a folder's says why. |
 
@@ -76,7 +85,7 @@ in the workspace's folder, or Inbox, and stuck to the window in front.
 
 | Input | What happens |
 | --- | --- |
-| Tap Stuck to | The open windows come up under it, the one in front first, and Don't stick to a window. |
+| Tap the window's name, or Not stuck | The open windows come up above the line, the one in front first, and Don't stick to a window. |
 | Tap a window | The note is stuck to it, and comes back with it when it opens again. Its folder stays. |
 | Tap Don't stick to a window | The note is stuck to nothing; it stays in its folder. |
 
@@ -174,7 +183,7 @@ today again.
 | Input | What happens |
 | --- | --- |
 | Tap Tuck away on the note | The note leaves view and waits under Tucked away on the board. Bring back, in the message that follows, undoes it. |
-| Tap Tuck away on the card | The same, for the note on the card. |
+| Tap More on the card, then Tuck away | The same, for the note on the card. |
 
 ## Bring a note back
 

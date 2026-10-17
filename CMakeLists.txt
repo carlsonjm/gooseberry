@@ -54,6 +54,7 @@ qt_add_qml_module(gooseberry-screens
         qml/CaptureWindow.qml
         qml/ChecklistPad.qml
         qml/DayStrip.qml
+        qml/IconButton.qml
         qml/Masonry.qml
         qml/NoteCard.qml
         qml/Notice.qml
@@ -66,6 +67,17 @@ qt_add_qml_module(gooseberry-screens
     RESOURCES
         qml/icons/note.svg
         qml/icons/tuck.svg
+        qml/icons/lucide/bell.svg
+        qml/icons/lucide/check.svg
+        qml/icons/lucide/copy.svg
+        qml/icons/lucide/ellipsis.svg
+        qml/icons/lucide/folder.svg
+        qml/icons/lucide/layout-grid.svg
+        qml/icons/lucide/list-checks.svg
+        qml/icons/lucide/pin.svg
+        qml/icons/lucide/trash-2.svg
+        qml/icons/lucide/triangle-alert.svg
+        qml/icons/lucide/x.svg
 )
 
 # What the desktop adds around the core: the window in front, the sheet's

@@ -99,10 +99,13 @@ Window {
         fadeTimer.restart();
     }
 
-    // Esc steps back as the search does: the board to the note, then away.
+    // Esc steps back as the search does: the board to the note, anything
+    // open on the note, then away.
     function back() {
         if (expanded) {
             collapse();
+        } else if (note.closeOpen()) {
+            return;
         } else {
             shell.capture.finish();
         }

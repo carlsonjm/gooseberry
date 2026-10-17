@@ -70,7 +70,7 @@ The card asks with `beginCompanionGuest(its unique bus name, "/CompanionGuest",
 | `dismissGuest()` | Another guest took the centre: the card closes, the note kept. Nothing is asked back |
 | `completeGuestLaunch(s requestToken)` | The board's window has taken the card's place: the card fades out over 190 ms where it stood |
 
-A card that closes on its own, by Done, a tap outside or Esc, calls
+A card that closes on its own, by a tap outside or Esc, calls
 `endLauncherGuest()` once.
 
 **All notes in Spread.** The card calls `setLauncherGuestExpanded(true)` from

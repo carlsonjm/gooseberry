@@ -203,8 +203,8 @@ back on it when that document opens again. Moving a note to another folder
 keeps it stuck. A folder can be made on the board before any workspace or
 window exists, lasts until it is removed, even empty, and removing it sends its
 notes to Inbox. A workspace can be given a folder, and notes written there go
-into it. The quick note shows both answers as chips, already filled in: the
-folder, and the window in front, with a list of the open windows a tap away.
+into it. The quick note shows both answers, already filled in: the folder,
+and the window in front, with a list of the open windows a tap away.
 (The maintainer, 7 October.) This replaces "A project is named once" of
 4 October.
 
@@ -232,21 +232,38 @@ an application of its own, not part of the search. (The maintainer, 4 October.)
 This supersedes the bottom sheet in `mockup/Capture.dc.html`; what the card
 holds, the size of its controls and the note colours still follow the mock-up.
 
-The card's layout, approved on the tablet (the maintainer, 4 October): the
-search's 8 px corners with a 1 px outline and a 22 px inner margin; a 44 px
-header with a 32 px tile in the note's yellow carrying the notes glyph and the
-application's name at the left, the five colours centred, and All notes at the
-right as a 30 px pill 14 px from the edge; the note pad 14 px under the header,
-across the width, with 14 px corners in the note's colour; then the Folder and
-Stuck to chips, and Saved as you go, Tuck away, Remove and Done at the bottom.
-All notes grows the card to the whole work area less a 10 px gutter in 220 ms
-at Plasma's usual animation speed, easing out, with no
-Back button at that size: a note opened or started on the board, or `Esc`,
-brings the card back.
+The card's layout follows § The note is the page. All notes grows the card
+to the whole work area less a 10 px gutter in 220 ms at Plasma's usual
+animation speed, easing out, with no Back button at that size: a note opened
+or started on the board, or `Esc`, brings the card back.
 
 Rejected: a sheet from the bottom of the screen, where the on-screen keys come
 up over it; and the card growing into a larger page for one note, which leaves
 nothing to browse where Apps and Files have their lists.
+
+## The note is the page
+
+The quick note is the page and little else. The page fills the card inside
+12 px margins, in the note's colour with 8 px corners, and the note's colour
+is a dot in its top-right corner: a tap lays the five colours out beside it.
+Under the page is one 44 px line: where the note is kept and what it is stuck
+to, as quiet words that open their choices, a tick for kept as written, then
+Checklist, Remind, More and All notes as glyphs. Remind says when once a
+reminder is set. More holds what a kept note rarely needs: Copy all, Tuck away
+and Remove. There is no Done: going back to the work, or `Esc`, puts the card
+away, and `Esc` first closes whatever is open on the note. (The maintainer,
+17 October, choosing "Just paper" of three directions.) This replaces the
+card's layout of 4 October: the header with the application's tile and name,
+the five colours and the All notes pill, the Checklist and Remind pills, the
+Folder and Stuck to chips, and Saved as you go, Tuck away, Remove and Done.
+
+It holds because that layout gave the rarely used actions the same size as
+writing, and the card was mostly controls around a small page.
+
+Rejected: the note on its own over the work with the folders as paper stacks
+to drop it on, and a note shaped as the search that offers a reminder, a
+checklist or a folder from the words typed. The latter may come later on top
+of this one.
 
 ## The quick-note card is a surface of the desktop's own
 
@@ -313,14 +330,13 @@ October):
   Enter starts the next. A ticked item is struck through where it stands, as
   on a paper list. Checklist again turns it back into text.
 - **A planned note is marked done by a tick on its planner row.** Done then
-  stands where its time was, and its words are struck through. The card's own
-  Done keeps meaning "put the card away".
+  stands where its time was, and its words are struck through. The card has
+  no Done of its own (§ The note is the page).
 - **A reminder offers Done and In 10 minutes,** and tapping it opens the note.
   In 10 minutes is a new reminder, shown once like any other.
 
-Checklist and Remind sit in a row under the note, above the Folder and Stuck
-to chips; the note
-pad gives up the room for them.
+Checklist and Remind are glyphs on the line under the note (§ The note is the
+page); what Remind offers opens between the page and that line.
 
 Rejected: a day and time picker every time, which costs two or three taps even
 for tomorrow morning; ticked items sinking to the bottom, which makes items
