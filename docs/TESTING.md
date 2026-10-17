@@ -7,6 +7,7 @@ What the automated checks prove, and what only a person on the tablet can.
 `./verify.sh` runs them all: the public text check, the check that every word
 shown asks the `gooseberry` catalog (`tools/messages.py`), the build, then
 every test.
+
 Each test makes a home of its own in a temporary folder, with its own notes
 folder, settings and trash, and no connection to the desktop session
 (`tests/TestHome.h`). No test reads or changes a person's notes, settings or
@@ -31,8 +32,8 @@ each screen there, to compare with the mock-up by eye.
 ## By hand: Milestone 0
 
 Milestone 0's proof is a week of daily use on the tablet without a lost note,
-with capture fast enough that nothing is written elsewhere instead. These
-checks come first, once, after installing; then the week of use.
+with capture fast enough that nothing is written elsewhere instead. Run these
+checks once, after installing; then the week of use.
 
 1. Over a document, hold Gooseberry and tap New note. The card opens in the
    middle of the screen with the cursor in the note and the on-screen keys up,
@@ -81,8 +82,8 @@ installed and set up:
 ## By hand: Milestone 1
 
 Milestone 1's proof is a week of the maintainer's days planned in Gooseberry,
-every reminder on time and none shown twice. These checks come
-first, once, after installing; then the week of use.
+every reminder on time and none shown twice. Run these checks once, after
+installing; then the week of use.
 
 1. Write a note and tap Remind. The times offered fit the hour of the day; tap
    one. Remind says when, and the note is on the board's Today planner, or on
@@ -112,8 +113,8 @@ first, once, after installing; then the week of use.
 ## By hand: Milestone 2
 
 Milestone 2's proof is a project started on the board before its work, and a
-week of notes sorted without opening a menu. These checks come
-first, once, after installing over Milestone 1's notes; then the week of use.
+week of notes sorted without opening a menu. Run these checks once, after
+installing over Milestone 1's notes; then the week of use.
 
 1. Before installing, note which projects the board shows. After, each is a
    folder on the board with the same notes, and `~/Documents/Gooseberry` has a
@@ -137,8 +138,8 @@ first, once, after installing over Milestone 1's notes; then the week of use.
 ## By hand: Milestone 3
 
 Milestone 3's proof is a week of daily use on Shuffle where notes on windows
-never need putting away by hand. These checks come first, on
-Shuffle with Kadunce, once Shuffle's title bar with the dot is installed.
+never need putting away by hand. Run these checks first, on Shuffle with
+Kadunce, once Shuffle's title bar with the dot is installed.
 
 1. Over a document in an application with Shuffle's title bar, write a quick
    note stuck to it. A dot in the note's colour shows left of minimize; a
@@ -160,10 +161,10 @@ Shuffle with Kadunce, once Shuffle's title bar with the dot is installed.
    window to the front: they fold and step aside, and the dot is back when
    this one is in front again. Tap a note: the cursor is in it where it
    stands, and no card opens; type, tap the window, and the notes fold; open
-   them, and find the words there and on the board. A + shows
-   left of the dot while they are up: tap it, write a note, and close the
-   card: the new note is up over the window with the others. Tap the dot:
-   they go, the + with them, and stay gone until the dot is tapped again.
+   them, and find the words there and on the board. A + shows left of the
+   dot while they are up: tap it, write a note, and close the card: the new
+   note is up over the window with the others. Tap the dot: they go, the +
+   with them, and stay gone until the dot is tapped again.
 5. In a web browser that draws its own top bar, stick a note: there is no dot
    in the title bar. Open Spread and tap its stack: the card opens with the
    notes up over the window, and nothing comes up over the card. Tap the page:
@@ -173,9 +174,9 @@ Shuffle with Kadunce, once Shuffle's title bar with the dot is installed.
    notes are put away, and notes never moved make a stack at the card's
    bottom-right, the same size on every card, with its count; notes folded on
    their window show as their dot, and a tap on it opens the card with the top
-   note ready to type. With a note at
-   the window's top-left, open and close Spread slowly: the note moves with
-   the window as one picture, never starting from the corner. Tap the note:
+   note ready to type. With a note at the window's top-left, open and close
+   Spread slowly: the note moves with the window as one picture, never
+   starting from the corner. Tap the note:
    the card opens with it out on the window, the cursor in it and the keys
    up; type, and nothing comes up over the card. Tap a card's stack: the card
    opens with its notes up. Hold a note and carry it to another card: it is

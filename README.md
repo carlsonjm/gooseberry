@@ -100,7 +100,7 @@ again; notes stay.
 
 Gooseberry works on any KDE Plasma desktop. Where the Kadunce card workspace is
 running, the quick note opened in Spread takes its centre, and each card shows
-its notes there where they stand on the window. Where Tettegouche's Search is
+its window's notes where they stand. Where Tettegouche's Search is
 installed, notes are found there too, and Search can host the quick note
 itself. Where the title bar draws Gooseberry's dot, as Shuffle's does, a window
 with notes shows one. What each adds, and what it needs, is in

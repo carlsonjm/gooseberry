@@ -1,13 +1,13 @@
 # Note format
 
 How Gooseberry keeps notes on disk: where the folder is, what is in it, its
-folders, and the header at the top of each note. This is a contract. Another device reading the
-same folder, the file index, Search and any other program depend on it, so it
-is versioned, and a change that breaks it raises the version.
+folders, and the header at the top of each note. Other devices reading the
+same folder, the file index, Search and other programs depend on it, so it is
+versioned, and a change that breaks it raises the version.
 
-**Folder format:** 2. **Note format:** 2. Both from Milestone 2, when notes
-went into folders; the first of each is read and brought up to date
-(§ Versions).
+**Folder format:** 2. **Note format:** 2. Both date from Milestone 2, when notes
+went into folders. Gooseberry still reads version 1 of each and brings it up to
+date (§ Versions).
 
 ## Where the folder is
 
@@ -16,7 +16,7 @@ Documents folder: the desktop's own Documents folder where one is set, which is
 `~/Documents/Gooseberry` on most systems. Gooseberry makes the folder the
 first time it keeps a note, and makes it again if it is gone.
 
-This is engineering's choice, for three reasons:
+Engineering chose this place because:
 
 - It is a visible folder, so the desktop's file index finds notes by name and
   by what they say. The index leaves hidden folders out.
@@ -55,18 +55,17 @@ folder. It is for tests and trials.
 
 ## Folders
 
-Every note is kept in exactly one folder. **Inbox** is the notes folder itself;
-every other folder is a visible folder inside it, one level deep, named as the
-person named it. A file manager or a sync tool sees the same folders the board
+Each note is kept in one folder. **Inbox** is the notes folder itself. Every
+other folder is a visible folder inside it, one level deep, with the name the
+person gave it. A file manager or a sync tool sees the same folders the board
 does, and a folder made, renamed or removed there is seen within moments.
 
-- **The folder is where the file is.** No header key says it, so moving a note
-  is moving its file, in one step, with its ink beside it. The note's `changed`
-  time is then set, since its place changed.
+- **The folder is where the file is.** No header key records it, so moving a
+  note means moving its file, in one step, with its ink beside it. The move
+  sets the note's `changed` time.
 - **A folder lasts until it is removed,** empty or not. Removing it moves its
   notes and their ink to Inbox first; whatever else is left in it, such as a
-  sync tool's own files, goes to the desktop's trash with the folder. Nothing
-  is deleted outright.
+  sync tool's own files, goes to the desktop's trash with the folder.
 - **A name** is any text without a slash, not starting with a dot, and not
   Inbox, in any case. Spaces at its ends and runs of spaces inside are taken
   away.
@@ -126,14 +125,14 @@ Times are ISO 8601 with their offset from UTC, to the second.
 | `reminded` | no | When the reminder was shown |
 | `done` | no | When the note was marked done on the planner |
 
-- **Stuck** is apart from the folder: a stuck note is still kept in its
+- **Stuck** is separate from the folder: a stuck note is still kept in its
   folder, moving it to another folder leaves it stuck, and unsticking it leaves
   it where it is. `window` and `app` stay when it is unstuck, so "next time
   this opens" still has a window to wait for. A note stuck to a window with no
   name is not stuck.
 - **Place** keeps a note where it was let go on its window, in proportion
   when the window is resized. Setting it does not change `changed`, and
-  sticking the note to another window takes it away. A `place` this version
+  sticking the note to another window removes it. A `place` this version
   cannot read is kept as written, and the note is placed as one never placed.
 - **Size** keeps a note as big as it was resized on its window, on that
   window and any other it is stuck to later; the note is never larger than
@@ -178,11 +177,11 @@ Times are ISO 8601 with their offset from UTC, to the second.
   second; until then the note keeps its words. A note emptied that way is not
   sent to the trash when its card is closed.
 - **Two versions.** When another program changed a note's words while
-  Gooseberry was writing it, as a sync tool bringing another device's edit
-  during typing here, Gooseberry writes its own and keeps the other version as
-  a new note in the same folder. Neither is lost. Any other change made
-  elsewhere, as a note moved, resized, recoloured or tucked away, is kept when
-  typing waiting on the card is written.
+  Gooseberry was writing it, such as a sync tool bringing in another device's
+  edit during typing here, Gooseberry writes its own and keeps the other
+  version as a new note in the same folder. Any other change made elsewhere,
+  such as a note moved, resized, recoloured or tucked away, is kept when typing
+  waiting on the card is written.
 
 ## Versions
 
@@ -211,4 +210,5 @@ read as stuck to it; one that belonged to the workspace or was Loose is in
 Inbox. Then `.gooseberry` says `format: 2`. Each note's header is written in
 the second format the next time the note changes; until then a note of the
 first format is read as above wherever it is found. A first-version Gooseberry
-then finds a newer folder and changes nothing in it, as § Versions says.
+that opens the folder afterwards finds a newer version and changes nothing in
+it (§ Versions).

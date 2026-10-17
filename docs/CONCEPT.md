@@ -1,9 +1,9 @@
 # Concept
 
 What Gooseberry is for, who it is for, and the rules it keeps. What it does not
-do yet, and will not do, is in `LIMITATIONS.md`; settled rulings and what they
-rejected are in `DECISIONS.md`. What the card workspace and Search add is in
-`DESKTOP.md`.
+do yet, and will not do, is in `LIMITATIONS.md`. Settled decisions, and what
+they turned down, are in `DECISIONS.md`. What the card workspace and Search add
+is in `DESKTOP.md`.
 
 ## The person
 
@@ -46,7 +46,7 @@ Four places, one set of notes.
 - **A colour,** chosen with one tap, for Robin's own sorting. Colour carries no
   meaning Gooseberry acts on.
 - **Where it is kept:** one folder, Inbox unless Robin or the workspace says
-  otherwise. Already filled in, never a question Robin has to answer first.
+  otherwise. Gooseberry fills it in, so Robin has nothing to answer first.
 - **What it is stuck to:** one window or document, or nothing.
 - **A reminder,** optional: a time, or "next time this opens".
 - **No title.** The first words are the title.
@@ -57,11 +57,11 @@ Four places, one set of notes.
   the tap and the writing.
 - **Never lost.** A note is kept as it is written, through a crash or a
   restart. Removing one sends it to the desktop's trash.
-- **No room taken unasked.** A note never takes space on screen that Robin did
-  not ask for, and putting it away never costs an extra tap. Tucking a note away
-  keeps it, findable, on the board.
-- **The work stays in front.** Gooseberry never covers what Robin is working on
-  with something that has to be closed.
+- **No room taken unasked.** A note takes screen space only when Robin asks for
+  it, and putting it away costs no extra tap. A tucked-away note stays on the
+  board, where Robin can find it.
+- **The work stays in front.** Gooseberry does not cover Robin's work with
+  anything that has to be closed.
 - **Big and touchable.** 44 px touch targets, room to type, and every action
   reachable by touch alone.
 - **Plain words.** Folder, Stuck to, Tuck away, Remind. No jargon in the
@@ -73,9 +73,9 @@ Four places, one set of notes.
 | --- | --- | --- |
 | Keeping notes | A folder of plain Markdown files | Other apps, the file index and folder sync can all read them |
 | Reminders | The desktop's standard notifications | Whatever shows notifications on that desktop shows them |
-| Knowing what Robin is working on | Plasma's own window list: the window in front and the workspace's name | The same with or without Kadunce; Kadunce's snapshot only says what Kadunce is showing, for where the quick note stands (`DESKTOP.md`) |
+| Knowing what Robin is working on | Plasma's own window list: the window in front and the workspace's name | Works the same with or without Kadunce. Kadunce's snapshot only reports what Kadunce is showing, which places the quick note (`DESKTOP.md`) |
 | Being found | Tettegouche's Search, where installed | `DESKTOP.md` § Needs |
-| The assistant | Split Rock, where installed and set up, using Gooseberry as a tool | Optional; Gooseberry needs no assistant |
+| The assistant | Split Rock, where installed and set up, using Gooseberry as a tool | Optional |
 
 ## Risks
 
@@ -88,4 +88,4 @@ Four places, one set of notes.
   Kadunce, in Spread, and once brought up they fold to their dot on the window
   (`DESKTOP.md`).
 - **Habit.** A notes app that loses one thought, or asks one question too many,
-  is abandoned. Speed to the cursor is the product, not polish.
+  is abandoned. How fast the cursor appears matters more than polish.
