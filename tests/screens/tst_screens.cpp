@@ -337,8 +337,17 @@ void sweep(QQuickWindow *window, QPoint from, QPoint to)
 void tap(QQuickWindow *window, QQuickItem *item)
 {
     QVERIFY(item);
-    // Notes are laid out in columns once the list settles; tap where they end up.
+    // Rows move while the list settles (a note opened or changed sorts
+    // again); tap where the item ends up, once it has held still.
     QTest::qWait(30);
+    QPointF was = item->mapToScene({});
+    for (int i = 0; i < 40; ++i) {
+        QTest::qWait(30);
+        const QPointF now = item->mapToScene({});
+        if (now == was)
+            break;
+        was = now;
+    }
     const QPoint centre = item->mapToScene(QPointF(item->width() / 2, item->height() / 2)).toPoint();
     QTest::mouseClick(window, Qt::LeftButton, {}, centre);
 }
