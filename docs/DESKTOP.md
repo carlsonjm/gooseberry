@@ -278,6 +278,7 @@ tucked away, a dictionary of strings to variants:
 | `NewOn(s windowId, s caption, s app) → b` | Opens the quick-note card on a new note stuck to that window, found as `Toggle` finds it; it is kept from its first letter, as any quick note. Returns false when no open window matches or notes cannot be written. A title bar calls it from its + button |
 | `StickTo(s noteId, s windowId, s caption, s app) → b` | Sticks the note to that window, found as `Toggle` finds it, keeping its folder. Returns false when the note or the window is not found, or the note cannot be changed |
 | `Write(s noteId, s windowId, s caption, s app) → b` | Brings that window's notes up open, as `Show` does, with that note ready to type on where it stands: once they are drawn over the window, the cursor is in it and the on-screen keys come up. While paused it waits for the pause to end. Returns false when the window is not found or the note is not stuck to it. Spread calls it when a note or a folded dot on a card is tapped, and opens the card; a caller from before it calls `Show` |
+| `DrawFolded(b drawn)` | The caller draws folded notes itself, as a panel's island does, so Gooseberry leaves no dot over the window while their notes are folded. False ends it, as does the caller leaving the bus; with no caller drawing them, the dot is back over the window. A caller from before it leaves the dot there |
 
 | Signal | When |
 | --- | --- |

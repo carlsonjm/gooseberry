@@ -674,7 +674,8 @@ Window {
         readonly property bool light: 0.2126 * colour.r + 0.7152 * colour.g + 0.0722 * colour.b > 0.55
 
         objectName: "stuckDot"
-        visible: root.folded && topNote !== null
+        // A panel that shows folded notes as its island leaves none here.
+        visible: root.folded && topNote !== null && !root.stuck.dotElsewhere
         // Dragged, the dot takes the notes with it: where it is let go, the
         // notes stand, in the same order, its corner on their top one's.
         readonly property point moved: dotDrag.active ? dotDrag.activeTranslation : Qt.point(0, 0)
