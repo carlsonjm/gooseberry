@@ -93,6 +93,7 @@ QuickNoteService::QuickNoteService(Shell *shell, NoteStore *store, QObject *pare
     for (auto signal : {&NoteStore::noteAdded, &NoteStore::noteChanged, &NoteStore::noteRemoved}) {
         connect(m_store, signal, &m_pinnedCheck, qOverload<>(&QTimer::start));
     }
+    connect(m_shell, &Shell::backRequested, this, &QuickNoteService::Back);
     connect(m_shell, &Shell::boardShown, this, [this] {
         for (const QString &token : std::as_const(m_boardTokens)) {
             Q_EMIT BoardShown(token);
@@ -378,14 +379,23 @@ bool QuickNoteService::OpenNote(const QString &noteId)
     return true;
 }
 
-bool QuickNoteService::OpenNew(const QString &text)
+bool QuickNoteService::OpenOnCard(const QVariantMap &request)
 {
+    const QString noteId = request.value(QStringLiteral("id")).toString();
+    if (!noteId.isEmpty() && !m_store->note(noteId)) {
+        return false;
+    }
+    // The card takes the note; what a search had open here is finished.
     if (m_open) {
         m_capture->finish();
         m_open = false;
     }
-    m_shell->showCaptureWith(text);
-    return true;
+    const QString back = request.value(QStringLiteral("back")).toString().simplified();
+    if (noteId.isEmpty()) {
+        m_shell->showCaptureWith(request.value(QStringLiteral("text")).toString(), back);
+        return true;
+    }
+    return m_shell->openNoteWith(noteId, back);
 }
 
 QVariantMap QuickNoteService::Edit(const QString &noteId)

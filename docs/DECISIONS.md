@@ -225,17 +225,22 @@ inside folders, which lengthen every choice.
 The quick note opens on a card the size of the desktop's search, centred over
 the work, with the cursor in the note. With the on-screen keys up it rises
 only as far as it must to stay above them, then shortens, as the search does.
-All notes grows the card into the board, as Apps and Files grow the search; a
-note opened or started there brings the card back to its size. Gooseberry stays
-an application of its own, not part of the search. (The maintainer, 4 October.)
+All notes opens the board in Gooseberry's own window and the card goes.
+Gooseberry stays an application of its own, not part of the search. (The
+maintainer, 4 October; All notes, 17 October.)
 
 This supersedes the bottom sheet in `mockup/Capture.dc.html`; what the card
 holds, the size of its controls and the note colours still follow the mock-up.
 
-The card's layout follows § The note is the page. All notes grows the card
-to the whole work area less a 10 px gutter in 220 ms at Plasma's usual
-animation speed, easing out, with no Back button at that size: a note opened
-or started on the board, or `Esc`, brings the card back.
+The card's layout follows § The note is the page. A note opened from Search's
+Notes has a bar on top, ‹ Notes, which puts the card away and brings Search's
+Notes back; `Esc` does the same. The search's own note page has that way back,
+and the card took the note's place without it. (The maintainer, 17 October.)
+
+Rejected: growing the card into the board, as Apps and Files grow the search.
+The grown card stood over the Context Panel with no title bar, and the board
+there was not the window Gooseberry's own entry opens. (The maintainer,
+17 October.)
 
 Rejected: a sheet from the bottom of the screen, where the on-screen keys come
 up over it; and the card growing into a larger page for one note, which leaves
@@ -270,7 +275,8 @@ of this one.
 
 The board opens as a search of every note: Find or start a note along its top,
 and the places in one row under it, Today, the folders with Inbox first and
-New folder last, the windows with notes stuck to them, and Tucked away, quieter,
+New folder last, which makes one at a tap with its name ready to type over,
+the windows with notes stuck to them, and Tucked away, quieter,
 last, each a place to drop a carried note. Enter with words no note has starts
 a note with them. The notes of the place chosen fill the rest one a row, as a
 search lists what it finds: a bead in the note's colour, its first line, and
@@ -333,10 +339,9 @@ Gooseberry's own keeping.
 ## In Kadunce, the card takes Spread's centre
 
 Where Kadunce shows Spread, the quick-note card holds Spread's centre, as the
-desktop's search does, and All notes grows it into the Active card's room and
-hands that room to the board's window, which fades the card out. Over an Active
-card it stands on its own, and the board takes the Active card's place before
-the card fades. Without Kadunce, or with one that does not offer this, the card
+desktop's search does. Over an Active card it stands on its own. All notes, in
+either, gives the centre back and opens the board's own window, which Kadunce
+shows as any other card. Without Kadunce, or with one that does not offer this, the card
 is as it always was (`DESKTOP.md` § The quick note in Spread). (The maintainer,
 4 October.)
 

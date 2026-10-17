@@ -28,7 +28,7 @@ Four places, one set of notes.
    the desktop's search, with the cursor already in it; with the on-screen
    keys up it keeps above them. It saves as Robin writes. By default the note
    is stuck to whatever Robin is working on, and kept in the workspace's
-   folder; one tap changes either. All notes grows the card into the board.
+   folder; one tap changes either. All notes opens the board in its own window.
    Going back to the work puts the card away.
 2. **Notes on the work.** A window with notes shows a dot in its title bar,
    with a count when there are several. A tap brings them up where Robin left

@@ -14,6 +14,7 @@
 #include "Log.h"
 
 #include <KService>
+#include <KWaylandExtras>
 #include <KWindowSystem>
 #include <LayerShellQt/Window>
 
@@ -27,7 +28,8 @@
 #include <QQuickItem>
 #include <QScreen>
 #include <QTimer>
-#include <QUuid>
+
+#include <memory>
 
 Q_LOGGING_CATEGORY(DESKTOP, "gooseberry.desktop", QtWarningMsg)
 
@@ -56,6 +58,7 @@ Shell::Shell(NoteStore *store, QQmlEngine *engine, QObject *parent)
     // The title bar's + starts a note stuck to its window, on the card.
     connect(m_stuck, &StuckNotes::newRequested, this, [this](const QString &window, const QString &app) {
         m_capture->startNew({window, app, m_context->current().workspace});
+        setBack({});
         m_stuck->setCardOpen(true);
         raiseCard();
     });
@@ -69,30 +72,11 @@ Shell::Shell(NoteStore *store, QQmlEngine *engine, QObject *parent)
                                          this, SLOT(sleeping(bool)));
     // Another guest took Spread's centre: the card closes, the note kept.
     connect(m_guest, &SpreadGuest::dismissed, m_capture, &Capture::finish);
-    // A card that closes on its own gives Spread's centre back. One that
-    // handed its place to the board, or was dismissed, holds it no longer.
+    // A card that closes gives Spread's centre back, and the way back to
+    // whoever opened it goes with it.
     connect(m_capture, &Capture::finished, this, [this] {
-        stopHandOff();
         m_guest->end();
-    });
-    connect(m_guest, &SpreadGuest::launchCompleted, this, [this](const QString &token) {
-        if (m_handingOff && token == m_handOffToken) {
-            finishHandOff();
-        }
-    });
-    connect(m_guest, &SpreadGuest::boardSelected, this, [this] {
-        if (m_handingOff) {
-            finishHandOff();
-        }
-    });
-    // Not seen in the card's place in time: the grown card stays, showing
-    // the board itself.
-    connect(m_guest, &SpreadGuest::watchGaveUp, this, &Shell::stopHandOff);
-    m_handOffTimeout.setSingleShot(true);
-    connect(&m_handOffTimeout, &QTimer::timeout, this, [this] {
-        qCDebug(DESKTOP) << "the board did not take the card's place in time";
-        stopHandOff();
-        m_guest->end();
+        setBack({});
     });
     // On the first tap, before the desktop has said what is in front, a card
     // still empty takes up the window once it does.
@@ -171,90 +155,61 @@ QVariantList Shell::reminderChoices() const
     return ReminderWords::choices(!m_capture->window().isEmpty());
 }
 
-QString Shell::boardId() const
-{
-    const QString id = QGuiApplication::desktopFileName();
-    return (id.isEmpty() ? QStringLiteral("io.github.carlsonjm.Gooseberry") : id) + QStringLiteral(".desktop");
-}
-
-void Shell::setHandingOff(bool handingOff)
-{
-    if (handingOff != m_handingOff) {
-        m_handingOff = handingOff;
-        Q_EMIT handingOffChanged();
-    }
-}
-
-void Shell::stopHandOff()
-{
-    m_handOffTimeout.stop();
-    m_guest->stopWatching();
-    m_guest->cancelLaunch();
-    m_handOffToken.clear();
-    setHandingOff(false);
-}
-
-void Shell::finishHandOff()
-{
-    m_handOffTimeout.stop();
-    m_guest->stopWatching();
-    m_handOffToken.clear();
-    Q_EMIT handOffDone();
-}
-
 void Shell::boardFromCard()
 {
     const QString note = m_capture->noteId();
-    if (m_guest->active()) {
-        // In Spread: the neighbours fade and the card grows to the Active
-        // card's room; then the board opens, and Kadunce says when its window
-        // has taken the card's place.
-        setHandingOff(true);
-        connect(m_guest, &SpreadGuest::expandAnswered, this, [this, note](bool expanded) {
-            if (!m_handingOff) {
+    QQuickWindow *card = m_captureWindow;
+    // The board opens as Gooseberry's own window, as its entry opens it, and
+    // the card goes. On Wayland the card, which has the keyboard, asks for
+    // the board's turn in front first.
+    if (card && card->isVisible() && KWindowSystem::isPlatformWayland()) {
+        const quint32 serial = KWaylandExtras::lastInputSerial(card);
+        // The board opens once, with the token or, without one in time,
+        // without it; the waiter goes with the first.
+        auto *waiter = new QObject(this);
+        auto opened = std::make_shared<bool>(false);
+        auto open = [this, note, opened, waiter](const QString &token) {
+            if (*opened) {
                 return;
             }
-            if (!expanded) {
-                // Refused: the card shows the board itself, as without Kadunce.
-                setHandingOff(false);
-                return;
+            *opened = true;
+            waiter->deleteLater();
+            if (!token.isEmpty()) {
+                KWindowSystem::setCurrentXdgActivationToken(token);
             }
-            // The card grows over 220 ms before the board is asked for.
-            QTimer::singleShot(220, this, [this, note] {
-                if (!m_handingOff || !m_guest->active()) {
-                    return;
-                }
-                m_handOffToken = QUuid::createUuid().toString(QUuid::WithoutBraces);
-                if (m_guest->prepareLaunch({boardId()}, m_handOffToken)) {
-                    m_handOffTimeout.start(m_handOffWait);
-                } else {
-                    // Kadunce will not wait for it: the card gives Spread's
-                    // centre back and fades once the board has drawn.
-                    m_handOffToken.clear();
-                    m_guest->end(true);
-                    connect(this, &Shell::boardShown, this, [this] {
-                        if (m_handingOff) {
-                            finishHandOff();
-                        }
-                    }, Qt::SingleShotConnection);
-                }
-                showBoardOn(note);
-            });
-        }, Qt::SingleShotConnection);
-        m_guest->expand();
-    } else if (m_guest->overActiveCard()) {
-        // Over an Active card: the board opens and Kadunce puts it in the
-        // Active card's place; the grown card stays up until it has.
-        setHandingOff(true);
-        m_guest->watchForSelected(boardId(), m_handOffWait);
+            showBoardOn(note);
+        };
+        connect(KWaylandExtras::self(), &KWaylandExtras::xdgActivationTokenArrived, waiter,
+                [serial, open](int answered, const QString &token) {
+                    if (quint32(answered) == serial) {
+                        open(token);
+                    }
+                });
+        QTimer::singleShot(500, waiter, [open] {
+            open({});
+        });
+        KWaylandExtras::requestXdgActivationToken(card, serial, QGuiApplication::desktopFileName());
+    } else {
         showBoardOn(note);
+    }
+    m_capture->finish();
+}
+
+void Shell::setBack(const QString &label)
+{
+    if (label != m_backLabel) {
+        m_backLabel = label;
+        Q_EMIT backLabelChanged();
     }
 }
 
-void Shell::collapseCard()
+void Shell::goBack()
 {
-    stopHandOff();
-    m_guest->collapse();
+    if (m_backLabel.isEmpty()) {
+        return;
+    }
+    Q_EMIT backRequested();
+    m_capture->finish();
 }
 
 void Shell::handle(const QStringList &arguments)
@@ -347,12 +302,7 @@ void Shell::raiseCard()
     if (!window) {
         return;
     }
-    if (window->isVisible()) {
-        // A note opened from the board in the card: the card comes back to
-        // its size.
-        collapseCard();
-    } else {
-        stopHandOff();
+    if (!window->isVisible()) {
         // In Kadunce's Spread the card holds its centre, on Kadunce's display.
         const bool guest = m_guest->begin(window);
         if (QGuiApplication::platformName().startsWith(QLatin1String("wayland"))) {
@@ -384,11 +334,13 @@ void Shell::showCapture()
     showCaptureWith(QString());
 }
 
-void Shell::showCaptureWith(const QString &text)
+void Shell::showCaptureWith(const QString &text, const QString &back)
 {
     const CaptureContext context = m_context->current();
     qCDebug(DESKTOP) << "capture: window" << context.window << "app" << context.app << "workspace" << context.workspace;
     m_capture->startNew(context);
+    // After the note before has been finished, which takes its way back.
+    setBack(back);
     if (!text.isEmpty()) {
         m_capture->setText(text);
     }
@@ -397,13 +349,22 @@ void Shell::showCaptureWith(const QString &text)
 
 void Shell::openNote(const QString &id)
 {
-    if (m_capture->open(id)) {
-        raiseCard();
+    openNoteWith(id, {});
+}
+
+bool Shell::openNoteWith(const QString &id, const QString &back)
+{
+    if (!m_capture->open(id)) {
+        return false;
     }
+    setBack(back);
+    raiseCard();
+    return true;
 }
 
 void Shell::newNoteIn(const QString &placeKey)
 {
+    setBack({});
     m_capture->startNewIn(placeKey);
     raiseCard();
 }

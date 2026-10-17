@@ -68,7 +68,8 @@ of its text and closed goes to the desktop's trash.
 | Tap the checklist glyph | The lines become a checklist; again, plain text. |
 | Tap the bell | Remind's quick times come up above the line. Once set, the bell says when, with a cross to take it away. |
 | Tap ⋯ (More) | Copy all, Pin, Tuck away and Remove, over the note. Shown once the note is kept. Pin to the panel, or to the Actions Panel where Shuffle is installed, keeps the note in sight there, where the panel offers that, unpinning the note pinned before; Unpin, on the pinned note, takes it off. |
-| Tap the grid | All notes: the card grows into the board. |
+| Tap the grid | All notes: the board opens in Gooseberry's own window and the card goes. |
+| Tap ‹ Notes on top of the card | Shown on a note opened from Search's Notes: the card goes, the note kept, and Search's Notes comes back. `Esc` does the same. |
 
 ## Keep a note in a folder
 
@@ -94,7 +95,7 @@ in the workspace's folder, or Inbox, and stuck to the window in front.
 
 | Input | What happens |
 | --- | --- |
-| Tap New folder on the board, type a name, then press Enter | The folder is made, empty, and the board shows it. It stays until it is removed. |
+| Tap New folder on the board | A folder named New folder is made, empty, and the board shows it with its name ready to type over; type a name and press Enter, or leave it. A second one is New folder 2. It stays until it is removed. |
 | Tap Rename under a folder's name, type, then press Enter | The folder takes the new name; its notes stay in it. |
 | Tap New notes on (the workspace) go here | Notes written on this workspace go into the folder. Tap again for Inbox. |
 | Tap Remove folder | The folder goes and its notes go to Inbox. Undo, in the message that follows, puts them back. |
@@ -168,16 +169,14 @@ today again.
 
 | Input | What happens |
 | --- | --- |
-| Tap All notes on the card | The card grows to the whole work area and the board takes its place, on Today, as Apps and Files grow the desktop's search. A note opened or started there, or `Esc`, brings the card back. |
-| Tap All notes on the card in Kadunce's Spread | The cards beside it fade and the card grows into the Active card's room; the board's window takes its place and the card fades out. |
-| Tap All notes on the card over an Active card in Kadunce | The card grows, the board's window takes the Active card's place, and the card fades out. |
+| Tap All notes on the card | The card goes and the board opens on the note's place, in Gooseberry's own window with its title bar, as tapping Gooseberry opens it. In Kadunce's Spread the window opens as any other card. |
 | Tap Gooseberry, or hold it and tap All notes | The board opens on Today, as an ordinary window: it resizes, and a card workspace can place it beside another window. |
 
 ## Open a note
 
 | Input | What happens |
 | --- | --- |
-| Tap the note on the board | The note opens on the quick-note card, to read and change. In the card, the board gives way to it. |
+| Tap the note on the board | The note opens on the quick-note card, to read and change. |
 
 ## Tuck a note away
 

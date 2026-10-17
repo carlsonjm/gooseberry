@@ -41,7 +41,6 @@ const QString KWin = QStringLiteral("org.kde.KWin");
 const QString KadunceObject = QStringLiteral("/Kadunce");
 const QString KadunceInterface = QStringLiteral("co.goodinput.Kadunce");
 const QString FakeConnection = QStringLiteral("fake-kadunce");
-const QString BoardId = QStringLiteral("io.github.carlsonjm.Gooseberry.desktop");
 
 QJsonObject jsonRect(const QRect &rect)
 {
@@ -282,7 +281,9 @@ private:
         QTRY_VERIFY(button->isVisible() && button->opacity() > 0);
         const QPoint centre = button->mapToScene(QPointF(button->width() / 2, button->height() / 2)).toPoint();
         QTest::mouseClick(card(), Qt::LeftButton, {}, centre);
-        QTRY_VERIFY(card()->property("expanded").toBool());
+        // The board opens as Gooseberry's own window, and the card goes.
+        QTRY_VERIFY(board() && board()->isVisible());
+        QTRY_VERIFY(!card()->isVisible());
     }
 
     QRegion expectedCardMask() const
@@ -311,7 +312,6 @@ private Q_SLOTS:
     void init()
     {
         m_kadunce->reset(QGuiApplication::primaryScreen()->name());
-        m_shell->setHandOffWait(10000);
     }
 
     void cleanup()
@@ -324,7 +324,6 @@ private Q_SLOTS:
         if (board()) {
             board()->hide();
         }
-        QVERIFY(!m_shell->handingOff());
         QVERIFY(!m_shell->guest()->active());
         QVERIFY(m_home->holds(m_home->notesFolder()));
     }
@@ -341,7 +340,7 @@ private Q_SLOTS:
     }
 
     // Without Kadunce the card is as it always was: centred, and All notes
-    // shows the board in the card itself.
+    // opens the board's window.
     void withoutKadunce()
     {
         setKadunce(false);
@@ -349,10 +348,6 @@ private Q_SLOTS:
         QVERIFY(!m_shell->guest()->active());
         QVERIFY(card()->mask().isEmpty());
         tapAllNotes();
-        QVERIFY(!m_shell->handingOff());
-        QVERIFY(!board() || !board()->isVisible());
-        QTest::qWait(300);
-        QVERIFY(card()->isVisible());
         QVERIFY(m_kadunce->calls().isEmpty());
     }
 
@@ -389,17 +384,14 @@ private Q_SLOTS:
         QVERIFY(card()->mask().isEmpty());
         QCOMPARE(m_kadunce->methods().contains(QStringLiteral("beginCompanionGuest")), asked);
         tapAllNotes();
-        QVERIFY(!m_shell->handingOff());
-        QVERIFY(!board() || !board()->isVisible());
-        m_shell->capture()->finish();
-        QTRY_VERIFY(!card()->isVisible());
         QVERIFY(!m_kadunce->methods().contains(QStringLiteral("endLauncherGuest")));
     }
 
     // In Spread the card asks for the centre with its own bus name and
     // object, and is drawn where Kadunce says; outside it, presses are
-    // Spread's. All notes grows it into the Active card's room, opens the
-    // board, and once Kadunce says the board has arrived the card fades.
+    // Spread's. All notes gives the centre back and opens the board as
+    // Gooseberry's own window, for Kadunce to show as any other; nothing is
+    // grown or handed over.
     void allNotesInSpread()
     {
         setKadunce(true);
@@ -414,47 +406,14 @@ private Q_SLOTS:
         QTRY_COMPARE(cardGeometry(), QRect(200, 150, 400, 260));
         QCOMPARE(card()->mask(), expectedCardMask());
 
-        QSignalSpy shown(m_shell, &Shell::boardShown);
         tapAllNotes();
-        QVERIFY(m_shell->handingOff());
-        QTRY_VERIFY(m_kadunce->methods().contains(QStringLiteral("setLauncherGuestExpanded")));
-        const FakeKadunce::Call expand = m_kadunce->last(QStringLiteral("setLauncherGuestExpanded"));
-        QCOMPARE(expand.arguments.value(0).toBool(), true);
-        // Kadunce takes the call only from the bus name that began the guest.
-        QCOMPARE(expand.sender, begin.arguments.value(0).toString());
-        QTRY_COMPARE(cardGeometry(), QRect(40, 40, 720, 520));
-        QCOMPARE(card()->mask(), QRegion(QRect(40, 40, 720, 520)));
+        QTRY_COMPARE(m_kadunce->methods().count(QStringLiteral("endLauncherGuest")), 1);
+        QVERIFY(!m_shell->guest()->active());
+        QVERIFY(card()->mask().isEmpty());
+        QVERIFY(!m_kadunce->methods().contains(QStringLiteral("setLauncherGuestExpanded")));
+        QVERIFY(!m_kadunce->methods().contains(QStringLiteral("prepareLauncherGuestLaunch")));
 
-        QTRY_VERIFY(m_kadunce->methods().contains(QStringLiteral("prepareLauncherGuestLaunch")));
-        const FakeKadunce::Call prepare = m_kadunce->last(QStringLiteral("prepareLauncherGuestLaunch"));
-        QCOMPARE(prepare.arguments.value(0).toStringList(), QStringList{BoardId});
-        const QString token = prepare.arguments.value(1).toString();
-        QVERIFY(!token.isEmpty());
-        QTRY_VERIFY(board() && board()->isVisible());
-        QTRY_VERIFY(shown.count() >= 1);
-        // The board has drawn; the card still waits for Kadunce.
-        QTest::qWait(300);
-        QVERIFY(card()->isVisible());
-        QVERIFY(!card()->property("fading").toBool());
-
-        // A word for another request changes nothing.
-        callCard(QStringLiteral("completeGuestLaunch"), {QStringLiteral("another")});
-        QTest::qWait(200);
-        QVERIFY(!card()->property("fading").toBool());
-
-        callCard(QStringLiteral("completeGuestLaunch"), {token});
-        QTRY_VERIFY(card()->property("fading").toBool());
-        // It fades where it stood, not where it would stand alone.
-        QCOMPARE(cardGeometry(), QRect(40, 40, 720, 520));
-        QTRY_VERIFY(!card()->isVisible());
-        QVERIFY(board()->isVisible());
-        QVERIFY(!m_shell->handingOff());
-        // Kadunce ended the guest with the hand-off; nothing is asked back.
-        QTest::qWait(200);
-        QVERIFY(!m_kadunce->methods().contains(QStringLiteral("endLauncherGuest")));
-        QVERIFY(!m_kadunce->methods().contains(QStringLiteral("cancelLauncherGuestLaunch")));
-
-        // The next card asks again, with the whole surface to start from.
+        // The next card asks again.
         openCard();
         QCOMPARE(m_kadunce->methods().count(QStringLiteral("beginCompanionGuest")), 2);
         QCOMPARE(card()->mask(), expectedCardMask());
@@ -496,65 +455,8 @@ private Q_SLOTS:
         QVERIFY(kept);
     }
 
-    // Kadunce refuses the Active card's room: the guest ends, and the card
-    // shows the board itself, as without Kadunce.
-    void growRefused()
-    {
-        setKadunce(true);
-        m_kadunce->change([](FakeKadunce::Setup &setup) {
-            setup.expand = false;
-        });
-        openCard();
-        tapAllNotes();
-        QTRY_COMPARE(m_kadunce->methods().count(QStringLiteral("endLauncherGuest")), 1);
-        QTRY_VERIFY(!m_shell->handingOff());
-        QVERIFY(!m_shell->guest()->active());
-        QVERIFY(card()->mask().isEmpty());
-        QTest::qWait(400);
-        QVERIFY(!m_kadunce->methods().contains(QStringLiteral("prepareLauncherGuestLaunch")));
-        QVERIFY(!board() || !board()->isVisible());
-        QVERIFY(card()->isVisible());
-    }
-
-    // Kadunce will not wait for the board: the guest ends, the board opens,
-    // and the card fades where it stood once the board has drawn.
-    void launchRefused()
-    {
-        setKadunce(true);
-        m_kadunce->change([](FakeKadunce::Setup &setup) {
-            setup.prepare = false;
-        });
-        openCard();
-        tapAllNotes();
-        QTRY_VERIFY(board() && board()->isVisible());
-        QTRY_COMPARE(m_kadunce->methods().count(QStringLiteral("endLauncherGuest")), 1);
-        QTRY_VERIFY(card()->property("fading").toBool());
-        QCOMPARE(cardGeometry(), QRect(40, 40, 720, 520));
-        QTRY_VERIFY(!card()->isVisible());
-        QTest::qWait(200);
-        QCOMPARE(m_kadunce->methods().count(QStringLiteral("endLauncherGuest")), 1);
-    }
-
-    // Kadunce never says the board arrived: after the wait the launch is
-    // called off, the centre given back, and the grown card stays.
-    void launchNeverArrives()
-    {
-        setKadunce(true);
-        m_shell->setHandOffWait(500);
-        openCard();
-        tapAllNotes();
-        QTRY_VERIFY(m_kadunce->methods().contains(QStringLiteral("prepareLauncherGuestLaunch")));
-        QTRY_VERIFY_WITH_TIMEOUT(m_kadunce->methods().contains(QStringLiteral("endLauncherGuest")), 3000);
-        QVERIFY(m_kadunce->methods().contains(QStringLiteral("cancelLauncherGuestLaunch")));
-        QVERIFY(!m_shell->handingOff());
-        QVERIFY(card()->isVisible());
-        QVERIFY(card()->property("expanded").toBool());
-        QVERIFY(!card()->property("fading").toBool());
-    }
-
-    // Over an Active card there is no guest. All notes grows the card and
-    // opens the board; the card stays up until Kadunce reports the board as
-    // the selected card, then fades.
+    // Over an Active card there is no guest: All notes opens the board's
+    // window, which Kadunce puts in the Active card's place as any other.
     void allNotesOverActiveCard()
     {
         setKadunce(true);
@@ -566,54 +468,8 @@ private Q_SLOTS:
         QVERIFY(!m_kadunce->methods().contains(QStringLiteral("companionGuestProtocolVersion")));
         QVERIFY(!m_kadunce->methods().contains(QStringLiteral("beginCompanionGuest")));
         QVERIFY(card()->mask().isEmpty());
-        const QRect resting = cardGeometry();
-
         tapAllNotes();
-        QVERIFY(m_shell->handingOff());
-        QTRY_VERIFY(board() && board()->isVisible());
-        QTRY_VERIFY(cardGeometry().width() > resting.width());
-
-        // Something else changed; the work window is still the one selected.
-        fakeBus().send(QDBusMessage::createSignal(KadunceObject, KadunceInterface, QStringLiteral("workspaceContextChanged")));
-        QTest::qWait(300);
-        QVERIFY(card()->isVisible());
-        QVERIFY(!card()->property("fading").toBool());
-
-        m_kadunce->change([](FakeKadunce::Setup &setup) {
-            setup.selected = QStringLiteral("w-board");
-        });
-        fakeBus().send(QDBusMessage::createSignal(KadunceObject, KadunceInterface, QStringLiteral("workspaceContextChanged")));
-        QTRY_VERIFY(card()->property("fading").toBool());
-        QTRY_VERIFY(!card()->isVisible());
-        QVERIFY(board()->isVisible());
-        QVERIFY(!m_shell->handingOff());
-        QVERIFY(!m_kadunce->methods().contains(QStringLiteral("setLauncherGuestExpanded")));
         QVERIFY(!m_kadunce->methods().contains(QStringLiteral("endLauncherGuest")));
-    }
-
-    // Over an Active card, the board never seen in its place: the grown card
-    // stays, showing the board itself.
-    void overActiveCardGivesUp()
-    {
-        setKadunce(true);
-        m_kadunce->change([](FakeKadunce::Setup &setup) {
-            setup.presentation = QStringLiteral("active");
-        });
-        m_shell->setHandOffWait(500);
-        openCard();
-        tapAllNotes();
-        QVERIFY(m_shell->handingOff());
-        QTRY_VERIFY_WITH_TIMEOUT(!m_shell->handingOff(), 3000);
-        QVERIFY(card()->isVisible());
-        QVERIFY(card()->property("expanded").toBool());
-        QVERIFY(!card()->property("fading").toBool());
-        // A report after giving up is no longer the card's to act on.
-        m_kadunce->change([](FakeKadunce::Setup &setup) {
-            setup.selected = QStringLiteral("w-board");
-        });
-        fakeBus().send(QDBusMessage::createSignal(KadunceObject, KadunceInterface, QStringLiteral("workspaceContextChanged")));
-        QTest::qWait(300);
-        QVERIFY(!card()->property("fading").toBool());
     }
 };
 

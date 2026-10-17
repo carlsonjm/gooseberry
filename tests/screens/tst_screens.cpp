@@ -45,6 +45,7 @@ class FakeShell : public QObject
     Q_PROPERTY(QObject *notes MEMBER m_notes CONSTANT)
     Q_PROPERTY(QObject *store MEMBER m_store CONSTANT)
     Q_PROPERTY(QObject *planner MEMBER m_planner CONSTANT)
+    Q_PROPERTY(QString backLabel MEMBER backLabel NOTIFY backLabelChanged)
 
 public:
     FakeShell(NoteStore *store, Capture *capture, Places *places, PlaceNotes *notes)
@@ -58,12 +59,26 @@ public:
 
     QString opened;
     QString newIn;
+    QString backLabel;
+    int boards = 0;
+    int wentBack = 0;
+
+    void setBack(const QString &label)
+    {
+        backLabel = label;
+        Q_EMIT backLabelChanged();
+    }
+
+Q_SIGNALS:
+    void backLabelChanged();
 
 public Q_SLOTS:
     void openNote(const QString &id) { opened = id; }
     void newNoteIn(const QString &place) { newIn = place; }
     void showBoard() { }
     void showCapture() { }
+    void boardFromCard() { ++boards; }
+    void goBack() { ++wentBack; }
     QString applicationName() const { return QStringLiteral("Gooseberry"); }
     QString reminderLabel(const QDateTime &remind, bool onOpen) const { return ReminderWords::label(remind, onOpen); }
     QVariantList reminderChoices() const { return ReminderWords::choices(true); }
@@ -984,13 +999,12 @@ private Q_SLOTS:
         QTRY_COMPARE(card->y(), 133.0);
     }
 
-    // All notes grows the card into the board, as Apps grows the search; a
-    // note opened there or Esc brings the note back, and a
-    // second Esc or a tap outside the card puts it away.
-    void cardGrowsIntoTheBoard()
+    // All notes opens the board as Gooseberry's own window, and the card
+    // goes. A note opened from a search's Notes has a bar on top leading back
+    // there, which Esc takes too; Esc on any other puts the card away.
+    void cardOpensTheBoardAndGoesBack()
     {
         m_capture->setText(QStringLiteral("Flick threshold"));
-        const QString written = m_capture->noteId();
         Places places(m_store.get());
         PlaceNotes notes(m_store.get());
         FakeShell shell(m_store.get(), m_capture.get(), &places, &notes);
@@ -1005,35 +1019,27 @@ private Q_SLOTS:
         QVERIFY(QTest::qWaitForWindowExposed(window));
         auto *card = window->property("card").value<QQuickItem *>();
         QTRY_COMPARE(card->width(), 806.0);
+        QVERIFY(!itemNamed(card, QStringLiteral("backBar"))->isVisible());
 
         tap(window, itemNamed(card, QStringLiteral("allNotes")));
-        QVERIFY(window->property("expanded").toBool());
-        QTRY_COMPARE(card->width(), 1240.0);
-        QTRY_COMPARE(card->height(), 716.0);
-        QCOMPARE(card->y(), 10.0);
-        QTRY_VERIFY(itemNamed(card, QStringLiteral("note-") + written));
-        QVERIFY(itemNamed(card, QStringLiteral("place-today"))->isVisible());
-        picture(window, QStringLiteral("card-board"));
-        for (QQuickItem *button : buttonsIn(window->property("board").value<QQuickItem *>())) {
-            QVERIFY2(button->height() >= 44 && button->width() >= 44, qPrintable(button->objectName()));
-        }
+        QCOMPARE(shell.boards, 1);
+        QCOMPARE(card->width(), 806.0);
 
-        // A note tapped on the board opens on the card, back at its size.
-        tap(window, itemNamed(card, QStringLiteral("note-") + written));
-        QCOMPARE(shell.opened, written);
-        QMetaObject::invokeMethod(window, "open"); // As the shell does for it.
-        QVERIFY(!window->property("expanded").toBool());
-        QTRY_COMPARE(card->width(), 806.0);
-
-        // At full size there is no Back button: Esc brings the note back, and
-        // a second Esc puts the card away.
-        tap(window, itemNamed(card, QStringLiteral("allNotes")));
-        QVERIFY(window->property("expanded").toBool());
-        QVERIFY(!itemNamed(card, QStringLiteral("backToNote")));
+        // From a search's Notes: the bar leads back, and so does Esc.
+        shell.setBack(QStringLiteral("Notes"));
+        QQuickItem *back = itemNamed(card, QStringLiteral("back"));
+        QTRY_VERIFY(back->isVisible());
+        QVERIFY(back->height() >= 44);
+        QVERIFY(itemNamed(card, QStringLiteral("page"))->mapToItem(card, QPointF()).y() >= back->mapToItem(card, QPointF()).y() + 30);
+        picture(window, QStringLiteral("card-back"));
+        tap(window, back);
+        QCOMPARE(shell.wentBack, 1);
         QSignalSpy finished(m_capture.get(), &Capture::finished);
         QTest::keyClick(window, Qt::Key_Escape);
-        QVERIFY(!window->property("expanded").toBool());
+        QCOMPARE(shell.wentBack, 2);
         QCOMPARE(finished.count(), 0);
+        shell.setBack({});
+        QTRY_VERIFY(!itemNamed(card, QStringLiteral("backBar"))->isVisible());
         QTest::keyClick(window, Qt::Key_Escape);
         QCOMPARE(finished.count(), 1);
 
@@ -1162,17 +1168,29 @@ private Q_SLOTS:
         tap(board, find(QStringLiteral("noticeAction")));
         QTRY_COMPARE(m_store->note(loose)->folder, QStringLiteral("Home"));
 
-        // New folder: named once, then shown.
+        // New folder: one tap makes it and shows it, its name ready to type
+        // over in place; a second tap makes another, numbered.
         tap(board, find(QStringLiteral("place-newfolder")));
-        QQuickItem *name = find(QStringLiteral("newFolderName"));
+        QVERIFY(m_store->hasFolder(QStringLiteral("New folder")));
+        QCOMPARE(notes.place(), QStringLiteral("folder:New folder"));
+        QQuickItem *name = find(QStringLiteral("renameField"));
         QVERIFY(name->isVisible());
         QTRY_VERIFY(name->hasActiveFocus());
+        QCOMPARE(name->property("selectedText").toString(), QStringLiteral("New folder"));
         type(board, QStringLiteral("Tablet"));
         QTest::keyClick(board, Qt::Key_Return);
         QVERIFY(m_store->hasFolder(QStringLiteral("Tablet")));
+        QVERIFY(!m_store->hasFolder(QStringLiteral("New folder")));
         QCOMPARE(notes.place(), QStringLiteral("folder:Tablet"));
         QVERIFY(!name->isVisible());
         QTRY_VERIFY(find(QStringLiteral("place-folder:Tablet")));
+        QVERIFY(m_store->makeFolder(QStringLiteral("New folder")));
+        tap(board, find(QStringLiteral("place-newfolder")));
+        QVERIFY(m_store->hasFolder(QStringLiteral("New folder 2")));
+        QTest::keyClick(board, Qt::Key_Escape);
+        QVERIFY(m_store->removeFolder(QStringLiteral("New folder 2")).has_value());
+        QVERIFY(m_store->removeFolder(QStringLiteral("New folder")).has_value());
+        tap(board, find(QStringLiteral("place-folder:Tablet")));
         QVERIFY(find(QStringLiteral("folderActions"))->isVisible());
         picture(board, QStringLiteral("board-folder"));
 

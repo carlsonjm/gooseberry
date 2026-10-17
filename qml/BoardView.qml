@@ -21,12 +21,9 @@ Item {
     property date now: new Date()
     // Drawn where a person can see it: in a shown window, and not faded out.
     readonly property bool shown: visible && Window.window !== null && Window.window.visible
-    // Inside the quick-note card, whose corners it follows.
-    property bool collapsible: false
     // The note being carried, while one is: its id, colour and title.
     property var carrying: null
-    // Naming a new folder in the side list, or renaming the one shown.
-    property bool naming: false
+    // Renaming the folder shown, a new one included.
     property bool renaming: false
     readonly property string shownFolder: notes.place.startsWith("folder:") ? notes.place.substring(7) : ""
     readonly property string workspace: shell.currentWorkspace ? shell.currentWorkspace() : ""
@@ -34,7 +31,6 @@ Item {
     // Each time the board is opened it starts on Today.
     function reset() {
         search.text = "";
-        naming = false;
         renaming = false;
         notes.place = "today";
         now = new Date();
@@ -74,16 +70,24 @@ Item {
         return "folder";
     }
 
-    function makeFolder(name) {
+    // One tap makes a folder, shows it, and has its name ready to type over.
+    function newFolder() {
+        const taken = places.folders;
+        let name = i18n("New folder");
+        for (let n = 2; taken.indexOf(name) >= 0; ++n) {
+            name = i18nc("a new folder's name, numbered", "New folder %1", n);
+        }
         const problem = places.makeFolder(name);
         if (problem.length > 0) {
             notice.show(problem);
             return;
         }
-        naming = false;
-        newFolderName.text = "";
         search.text = "";
-        notes.place = "folder:" + name.trim().replace(/\s+/g, " ");
+        notes.place = "folder:" + name;
+        renameField.text = name;
+        renaming = true;
+        renameField.forceActiveFocus();
+        renameField.selectAll();
     }
 
     function renameFolder(name) {
@@ -240,7 +244,19 @@ Item {
                     clip: true
                     model: board.places
                     boundsBehavior: Flickable.StopAtBounds
-                    Kirigami.WheelHandler { target: placeList; horizontalStepSize: Qt.styleHints.wheelScrollLines * 80 / 3 }
+                    // A wheel or a touchpad, either way, moves the row along.
+                    WheelHandler {
+                        target: null
+                        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+                        onWheel: event => {
+                            const pixels = Math.abs(event.pixelDelta.x) + Math.abs(event.pixelDelta.y) > 0
+                            const along = pixels
+                                ? (Math.abs(event.pixelDelta.x) > Math.abs(event.pixelDelta.y) ? event.pixelDelta.x : event.pixelDelta.y)
+                                : (Math.abs(event.angleDelta.x) > Math.abs(event.angleDelta.y) ? event.angleDelta.x : event.angleDelta.y) / 120 * 80;
+                            const end = Math.max(0, placeList.contentWidth - placeList.width);
+                            placeList.contentX = Math.max(0, Math.min(end, placeList.contentX - along));
+                        }
+                    }
                     // A thin rule before the folders, the windows and Tucked
                     // away; Today, first, has none.
                     section.property: "section"
@@ -272,8 +288,7 @@ Item {
                         Accessible.name: label
                         onClicked: {
                             if (newFolder) {
-                                board.naming = true;
-                                newFolderName.forceActiveFocus();
+                                board.newFolder();
                                 return;
                             }
                             search.text = "";
@@ -324,31 +339,6 @@ Item {
                                 }
                             }
                         }
-                    }
-                }
-
-                // A new folder's name, typed once; Enter makes it.
-                QQC2.TextField {
-                    id: newFolderName
-                    objectName: "newFolderName"
-                    Layout.preferredWidth: 220
-                    visible: board.naming
-                    implicitHeight: 44
-                    placeholderText: i18n("Name the folder")
-                    Accessible.name: i18n("New folder")
-                    leftPadding: 16
-                    rightPadding: 16
-                    onAccepted: {
-                        if (text.trim().length > 0) {
-                            board.makeFolder(text);
-                        }
-                    }
-                    Keys.onEscapePressed: board.naming = false
-                    background: Rectangle {
-                        radius: 22
-                        color: Qt.alpha(Kirigami.Theme.textColor, 0.07)
-                        border.width: 1
-                        border.color: newFolderName.activeFocus ? Kirigami.Theme.focusColor : Qt.alpha(Kirigami.Theme.textColor, 0.35)
                     }
                 }
             }
@@ -528,6 +518,7 @@ Item {
                             id: scroller
                             anchors.fill: parent
                             contentWidth: availableWidth
+                            contentHeight: grid.implicitHeight
                             // A carried note moves, the board stays still.
                             Binding {
                                 target: scroller.contentItem

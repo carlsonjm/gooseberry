@@ -67,28 +67,16 @@ The card asks with `beginCompanionGuest(its unique bus name, "/CompanionGuest",
 | Method | Gooseberry |
 | --- | --- |
 | `dismissGuest()` | Another guest took the centre: the card closes, the note kept. Nothing is asked back |
-| `completeGuestLaunch(s requestToken)` | The board's window has taken the card's place: the card fades out over 190 ms where it stood |
 
-A card that closes on its own, by a tap outside or Esc, calls
+A card that closes on its own, by a tap outside, Esc or All notes, calls
 `endLauncherGuest()` once.
 
-**All notes in Spread.** The card calls `setLauncherGuestExpanded(true)` from
-the same bus name; the neighbours fade and the card grows to the reply's
-`active` rectangle. It then calls
-`prepareLauncherGuestLaunch(["io.github.carlsonjm.Gooseberry.desktop"], token)`,
-opens the board, and fades on `completeGuestLaunch(token)`. Where Kadunce
-refuses to grow the card, the guest ends and the card shows the board itself,
-as without Kadunce. Where it will not wait for the board, the guest ends, the
-board opens, and the card fades once the board has drawn. Where the board has
-not arrived after 10 seconds, the card calls `cancelLauncherGuestLaunch()` and
-`endLauncherGuest()` and stays, showing the board itself.
-
-**All notes over an Active card.** No guest: the card grows, the board opens,
-and the grown card stays up until the snapshot reports the board's window,
-application `io.github.carlsonjm.Gooseberry`, as `cardStage.selectedCardId`,
-which is Kadunce putting it in the Active card's place. Then it fades. Gooseberry
-reads the snapshot again on each `workspaceContextChanged`, and stops waiting
-after 10 seconds, leaving the grown card showing the board itself.
+**All notes.** In Spread, over an Active card and without Kadunce alike, All
+notes opens the board as Gooseberry's own window, the one its entry opens, and
+the card goes. Kadunce shows that window as it shows any other, with its title
+bar. The card neither grows nor asks Kadunce to place the board
+(`setLauncherGuestExpanded`, `prepareLauncherGuestLaunch`): a board placed in
+the card's room had no title bar and stood over the Context Panel.
 
 ### What Kadunce does not offer
 
@@ -122,14 +110,15 @@ and its folder or window, opening the note rather than a file.
 From Notes 1.1, Search's Notes mode is a board of its own: every note before
 anything is typed and the ones with the words as they are typed (`Find` with no
 words, below). A note chosen there, or started with the words typed, opens on
-Gooseberry's own card and Search closes (`OpenNote` and `OpenNew`). Its panel
+Gooseberry's own card and Search closes (`OpenOnCard`). The card then has a
+bar on top, "‹ Notes", leading back to Search's Notes (`Back`). Its panel
 starts a quick note on the card and keeps the pinned note in sight
 (`Pinned`).
 
 ### The quick note in Search
 
 Search can host the quick note as one of its modes (`DECISIONS.md`), as it
-does with a Gooseberry that has no `OpenNew`. Search draws the note pad in its
+does with a Gooseberry that has no `OpenOnCard`. Search draws the note pad in its
 own window; Gooseberry keeps the note and offers it on the session bus. Search
 loads none of Gooseberry's code.
 
@@ -191,7 +180,7 @@ dictionary of strings to variants:
 | `OpenBoard(s noteId, s requestToken) → b` | Opens the board as an ordinary window, on the place that note sits in, or on Today for an empty id |
 | `Find(s words, u limit) → av` | The notes with those words in their text, their folder's name or the window they are stuck to, as the board's search finds them, tucked away ones included; no words, or only spaces, gives every note; the most recently changed first, and no more than `limit` (0 for all). Each a dictionary: `id`, `title` (the first words), `excerpt` (the line with the words, when they are not in the title; else empty), `colour`, `colourHex`, `folder`, `folderLabel`, `stuck` (`b`), `window` and `app` (when stuck), `tucked` (`b`), `changed` (ISO 8601), and from Notes 1.1 `remind` (as the note's `remind` key) and `done` (`b`, marked done on the planner). It changes nothing and opens nothing. From Milestone 4 |
 | `OpenNote(s noteId) → b` | Opens that note on Gooseberry's own card, as a tap on the board does; false for a note that is not there. From Milestone 4 |
-| `OpenNew(s text) → b` | Opens Gooseberry's own card on a new note holding those words, as its Capture action does with none. From Notes 1.1 |
+| `OpenOnCard(a{sv} request) → b` | Opens Gooseberry's own card on the note `id`, as a tap on the board does, or, with no `id`, on a new note holding `text`. With `back`, the card has a bar on top bearing those words; taking it, or Esc, sends `Back` and puts the card away. False for an `id` that is not there. From Notes 1.1 |
 | `Edit(s noteId) → a{sv}` | Makes that note the open one, for the search to write on as on a note `Start` began, finishing the one open before as `Done` does; a note that is not there is refused. From Notes 1.1 |
 | `SetPinned(b on) → a{sv}` | Pins the open note, or unpins it. One note is pinned at a time: pinning another unpins the first. A note not kept yet is refused. From Notes 1.1 |
 | `Pinned() → a{sv}` | The pinned note: `id`, `title`, `colour` and `colourHex`; an empty dictionary when none is. From Notes 1.1 |
@@ -201,6 +190,7 @@ dictionary of strings to variants:
 | `Changed(a{sv})` | The open note changed other than by a call here: on the board, on Gooseberry's card, or by another program writing its file |
 | `BoardShown(s requestToken)` | The board's window, asked for by `OpenBoard` with that token, has drawn its first frame |
 | `PinnedChanged(a{sv})` | A note was pinned or unpinned, or the pinned note's first words or colour changed, or it was tucked away or removed, which unpins it. It carries what `Pinned()` returns. From Notes 1.1 |
+| `Back()` | The card's way back, which an `OpenOnCard` with `back` asked for, was taken: the caller shows what the note was opened from. From Notes 1.1 |
 
 **Added in Milestone 1, within version 1.** The keys `remind`,
 `remindLabel`, `remindChoices`, `checklist` and `lines`, and the methods
@@ -230,13 +220,14 @@ as each letter is typed, it calls `Find` only while Gooseberry is running,
 without starting it, and never waits on the reply.
 
 **Added in Notes 1.1, within version 1.** `Find` with no words, the keys
-`remind` and `done` on what it gives, the methods `Edit` and `OpenNew`, and
-the pin: the key `pinned`, the methods `SetPinned` and `Pinned` and the signal
-`PinnedChanged`. A search can then list the notes before anything is typed, as
-Gooseberry's board does, and hand a note to Gooseberry's own card with
-`OpenNote`, or a new one with the words typed with `OpenNew`; a panel can keep
-the pinned note in sight. `OpenNote` and `OpenNew` finish a note a search had
-open with `Start` or `Edit`, as the card takes over. A caller that does not
+`remind` and `done` on what it gives, the methods `Edit` and `OpenOnCard` and
+the signal `Back`, and the pin: the key `pinned`, the methods `SetPinned` and
+`Pinned` and the signal `PinnedChanged`. A search can then list the notes before
+anything is typed, as Gooseberry's board does, and hand a note, or a new one
+with the words typed, to Gooseberry's own card with `OpenOnCard`, with a way
+back to its Notes; a panel can keep the pinned note in sight. `OpenNote` and
+`OpenOnCard` finish a note a search had open with `Start` or `Edit`, as the
+card takes over. A caller that does not
 know them keeps working as before.
 
 For All notes, Search calls `OpenBoard` with a token of its own and waits for

@@ -512,13 +512,14 @@ private Q_SLOTS:
         call(QStringLiteral("Done"));
     }
 
-    // From Notes 1.1: OpenNew hands a new note with the words typed to the
-    // card, finishing the one a search had open.
-    void openNewHandsTheWordsToTheCard()
+    // From Notes 1.1: OpenOnCard hands a new note with the words typed, or a
+    // kept one, to the card, finishing the one a search had open.
+    void openOnCardHandsTheNoteToTheCard()
     {
         call(QStringLiteral("Start"));
         const QString drafted = call(QStringLiteral("SetText"), {QStringLiteral("Seed order")}).value(QStringLiteral("id")).toString();
-        const QDBusReply<bool> opened = m_note->call(QStringLiteral("OpenNew"), QStringLiteral("Water the ferns"));
+        const QVariantMap words{{QStringLiteral("text"), QStringLiteral("Water the ferns")}, {QStringLiteral("back"), QStringLiteral("Notes")}};
+        QDBusReply<bool> opened = m_note->call(QStringLiteral("OpenOnCard"), words);
         QVERIFY(opened.isValid());
         QVERIFY(opened.value());
         QVERIFY(!call(QStringLiteral("State")).value(QStringLiteral("open")).toBool());
@@ -527,6 +528,13 @@ private Q_SLOTS:
         const QVariantList found = asList(m_note->call(QStringLiteral("Find"), QStringLiteral("ferns"), uint(0)).arguments().value(0));
         QCOMPARE(found.size(), 1);
         QCOMPARE(asMap(found.first()).value(QStringLiteral("title")).toString(), QStringLiteral("Water the ferns"));
+
+        opened = m_note->call(QStringLiteral("OpenOnCard"), QVariantMap{{QStringLiteral("id"), drafted}, {QStringLiteral("back"), QStringLiteral("Notes")}});
+        QVERIFY(opened.isValid());
+        QVERIFY(opened.value());
+        opened = m_note->call(QStringLiteral("OpenOnCard"), QVariantMap{{QStringLiteral("id"), QStringLiteral("no-such-note")}});
+        QVERIFY(opened.isValid());
+        QVERIFY(!opened.value());
     }
 
     // From Notes 1.1: one note is pinned at a time, a panel is told when it
