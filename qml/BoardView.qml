@@ -186,10 +186,10 @@ Item {
         // and Tucked away. A carried note can be let go on a place.
         ColumnLayout {
             Layout.fillWidth: true
-            Layout.leftMargin: 28
-            Layout.rightMargin: 28
+            Layout.leftMargin: 24
+            Layout.rightMargin: 24
             Layout.topMargin: 20
-            spacing: 10
+            spacing: 12
 
             QQC2.TextField {
                 id: search
@@ -284,7 +284,9 @@ Item {
                         readonly property bool quiet: key === "tucked" || newFolder
                         objectName: "place-" + key
                         implicitHeight: 44
-                        implicitWidth: Math.max(44, placeRow.implicitWidth + 28)
+                        // Once there is a folder, New folder is a + after them.
+                        readonly property bool plus: newFolder && board.places.folders.length > 0
+                        implicitWidth: plus ? 44 : Math.max(44, placeRow.implicitWidth + 28)
                         focusPolicy: Qt.NoFocus
                         Accessible.name: label
                         onClicked: {
@@ -319,9 +321,19 @@ Item {
                             border.color: Kirigami.Theme.highlightColor
                         }
                         contentItem: Item {
+                            Kirigami.Icon {
+                                anchors.centerIn: parent
+                                visible: placeButton.plus
+                                implicitWidth: 20
+                                implicitHeight: 20
+                                source: "list-add"
+                                color: Qt.alpha(Kirigami.Theme.textColor, 0.72)
+                                isMask: true
+                            }
                             RowLayout {
                                 id: placeRow
                                 anchors.centerIn: parent
+                                visible: !placeButton.plus
                                 spacing: 6
                                 QQC2.Label {
                                     text: placeButton.newFolder ? i18n("+ New folder") : placeButton.label
@@ -349,15 +361,15 @@ Item {
             id: main
             Layout.fillWidth: true
             Layout.fillHeight: true
-            spacing: 18
+            spacing: 16
             // Under this width the day strip takes a line of its own.
             readonly property bool roomy: width >= 820
 
             RowLayout {
                 Layout.fillWidth: true
-                Layout.leftMargin: 28
-                Layout.rightMargin: 28
-                Layout.topMargin: 14
+                Layout.leftMargin: 24
+                Layout.rightMargin: 24
+                Layout.topMargin: 16
                 spacing: 16
 
                 ColumnLayout {
@@ -383,8 +395,8 @@ Item {
                         visible: !board.renaming
                         Layout.fillWidth: true
                         Accessible.role: Accessible.Heading
-                        font.pixelSize: 30
-                        font.weight: Font.ExtraBold
+                        font.pixelSize: 24
+                        font.weight: Font.DemiBold
                         elide: Text.ElideRight
                         text: {
                             if (board.searching) return i18np("%1 note", "%1 notes", board.notes.count);
@@ -401,7 +413,7 @@ Item {
                         Layout.fillWidth: true
                         implicitHeight: 48
                         font.pixelSize: 24
-                        font.weight: Font.ExtraBold
+                        font.weight: Font.DemiBold
                         Accessible.name: i18n("Folder name")
                         onAccepted: {
                             if (text.trim().length > 0) {
@@ -414,7 +426,7 @@ Item {
                     Flow {
                         objectName: "folderActions"
                         Layout.fillWidth: true
-                        Layout.topMargin: 6
+                        Layout.topMargin: 8
                         visible: board.shownFolder.length > 0 && !board.searching
                         enabled: !board.shell.store.readOnly
                         spacing: 8
@@ -462,15 +474,6 @@ Item {
                     onNoteDropped: (id, day) => board.dropOn("day", id, day)
                 }
 
-                Pill {
-                    objectName: "newNote"
-                    tall: true
-                    primary: true
-                    text: i18n("New note")
-                    iconName: "list-add"
-                    enabled: !board.shell.store.readOnly
-                    onClicked: board.shell.newNoteIn(board.searching ? "inbox" : board.notes.place)
-                }
             }
 
             DayStrip {
@@ -484,7 +487,7 @@ Item {
             RowLayout {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                Layout.leftMargin: 28
+                Layout.leftMargin: 24
                 spacing: 24
 
                 PlannerColumn {
@@ -498,15 +501,14 @@ Item {
                 ColumnLayout {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    spacing: 14
+                    spacing: 16
 
                     QQC2.Label {
                         objectName: "ideasHeading"
                         visible: board.planning
-                        text: i18n("Ideas · No date needed").toUpperCase()
+                        text: i18n("Ideas · no date needed")
                         font.pixelSize: 13
-                        font.weight: Font.ExtraBold
-                        font.letterSpacing: 0.8
+                        font.weight: Font.DemiBold
                         color: Kirigami.Theme.disabledTextColor
                         Accessible.role: Accessible.Heading
                     }
@@ -531,14 +533,16 @@ Item {
                             // One note a row, as Search's Notes lists them.
                             Column {
                                 id: grid
-                                width: scroller.availableWidth - 28
-                                bottomPadding: 28
+                                width: scroller.availableWidth - 24
+                                // Clear of the floating New note.
+                                bottomPadding: 96
                                 spacing: 2
                                 Repeater {
                                     model: board.notes
                                     delegate: NoteCard {
                                         id: noteCard
                                         width: grid.width
+                                        wide: grid.width >= 640
                                         showPlace: board.searching || !board.notes.place.startsWith("folder:") && board.notes.place !== "inbox"
                                         opacity: board.carrying && board.carrying.id === noteId ? 0.35 : 1
                                         onTapped: tucked ? board.bringBack(noteId, placeLabel) : board.shell.openNote(noteId)
@@ -553,7 +557,7 @@ Item {
 
                         Kirigami.PlaceholderMessage {
                             anchors.centerIn: parent
-                            anchors.horizontalCenterOffset: -14
+                            anchors.horizontalCenterOffset: -12
                             width: Math.min(parent.width - 2 * Kirigami.Units.gridUnit, 420)
                             visible: board.notes.count === 0
                             icon.name: board.iconFor(board.notes.place)
@@ -610,6 +614,24 @@ Item {
             font.pixelSize: 15
             font.weight: Font.Medium
         }
+    }
+
+    // New note floats in the board's corner, in the highlight colour, in
+    // reach while the list scrolls.
+    Pill {
+        objectName: "newNote"
+        z: 1
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        anchors.margins: 24
+        implicitHeight: 56
+        tall: true
+        accent: true
+        visible: board.carrying === null
+        text: i18n("New note")
+        iconName: "list-add"
+        enabled: !board.shell.store.readOnly
+        onClicked: board.shell.newNoteIn(board.searching ? "inbox" : board.notes.place)
     }
 
     // The trash, shown only while a note is carried.

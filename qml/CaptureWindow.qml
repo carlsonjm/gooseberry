@@ -182,14 +182,13 @@ Window {
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.top: parent.top
-            height: visible ? 44 : 0
+            height: visible ? 56 : 0
             visible: root.backLabel.length > 0
 
             Pill {
                 objectName: "back"
-                x: 12
-                y: 0
-                compact: true
+                x: 16
+                y: 12
                 iconName: "go-previous"
                 text: root.backLabel
                 onClicked: root.shell.goBack()

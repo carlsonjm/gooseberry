@@ -14,7 +14,9 @@ QQC2.AbstractButton {
     // Drawn 30 pixels tall, as a header's pill, inside the full touch height.
     property bool compact: false
     property bool primary: false
-    readonly property bool filled: checked || primary
+    // Filled in the person's highlight colour: the board's floating New note.
+    property bool accent: false
+    readonly property bool filled: checked || primary || accent
 
     implicitHeight: tall ? 52 : 44
     implicitWidth: Math.max(implicitHeight, row.implicitWidth + 2 * horizontalPadding)
@@ -30,8 +32,9 @@ QQC2.AbstractButton {
             anchors.verticalCenter: parent.verticalCenter
             height: pill.compact ? 30 : parent.height
             radius: height / 2
-            color: pill.filled ? Kirigami.Theme.textColor
-                               : Qt.alpha(Kirigami.Theme.textColor, pill.down ? 0.16 : 0.07)
+            color: pill.accent ? (pill.down ? Qt.darker(Kirigami.Theme.highlightColor, 1.15) : Kirigami.Theme.highlightColor)
+                 : pill.filled ? Kirigami.Theme.textColor
+                 : Qt.alpha(Kirigami.Theme.textColor, pill.down ? 0.16 : 0.07)
             border.width: pill.filled ? 0 : 1
             border.color: Qt.alpha(Kirigami.Theme.textColor, 0.35)
         }
@@ -54,8 +57,9 @@ QQC2.AbstractButton {
                 id: label
                 text: pill.text
                 font.pixelSize: pill.tall ? 15 : pill.compact ? 13 : 14
-                font.weight: pill.primary ? Font.Bold : Font.DemiBold
-                color: pill.filled ? Kirigami.Theme.backgroundColor : Kirigami.Theme.textColor
+                font.weight: pill.primary || pill.accent ? Font.Bold : Font.DemiBold
+                color: pill.accent ? Kirigami.Theme.highlightedTextColor
+                     : pill.filled ? Kirigami.Theme.backgroundColor : Kirigami.Theme.textColor
                 elide: Text.ElideMiddle
                 Layout.maximumWidth: 420
             }

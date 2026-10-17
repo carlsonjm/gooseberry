@@ -95,7 +95,7 @@ in the workspace's folder, or Inbox, and stuck to the window in front.
 
 | Input | What happens |
 | --- | --- |
-| Tap New folder on the board | A folder named New folder is made, empty, and the board shows it with its name ready to type over; type a name and press Enter, or leave it. A second one is New folder 2. It stays until it is removed. |
+| Tap New folder on the board, the + after the folders once there is one | A folder named New folder is made, empty, and the board shows it with its name ready to type over; type a name and press Enter, or leave it. A second one is New folder 2. It stays until it is removed. |
 | Tap Rename under a folder's name, type, then press Enter | The folder takes the new name; its notes stay in it. |
 | Tap New notes on (the workspace) go here | Notes written on this workspace go into the folder. Tap again for Inbox. |
 | Tap Remove folder | The folder goes and its notes go to Inbox. Undo, in the message that follows, puts them back. |

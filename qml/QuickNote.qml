@@ -243,13 +243,13 @@ Item {
                         selectedTextColor: "#1A1A1A"
                         wrapMode: TextEdit.Wrap
                         textFormat: TextEdit.PlainText
-                        font.pixelSize: 21
+                        font.pixelSize: 20
                         font.weight: Font.Medium
                         leftPadding: 24
                         // Clear of the colour's dot.
                         rightPadding: 60
-                        topPadding: 22
-                        bottomPadding: 22
+                        topPadding: 24
+                        bottomPadding: 24
                         background: null
                         // Selecting with a mouse or a touchpad stays on in
                         // tablet mode, where the desktop's style turns it off
@@ -279,7 +279,7 @@ Item {
                     objectName: "colourDot"
                     anchors.right: parent.right
                     anchors.top: parent.top
-                    anchors.margins: 6
+                    anchors.margins: 8
                     implicitWidth: 44
                     implicitHeight: 44
                     focusPolicy: Qt.NoFocus
@@ -507,9 +507,9 @@ Item {
                 RowLayout {
                     objectName: "status"
                     readonly property bool trouble: quick.capture.problem.length > 0 || quick.capture.readOnly
-                    Layout.leftMargin: 6
+                    Layout.leftMargin: 8
                     Layout.maximumWidth: tray.width * 0.3
-                    spacing: 6
+                    spacing: 8
                     Kirigami.Icon {
                         implicitWidth: 16
                         implicitHeight: 16
@@ -626,7 +626,7 @@ Item {
         ColumnLayout {
             id: moreRows
             anchors.fill: parent
-            anchors.margins: 6
+            anchors.margins: 8
             spacing: 2
 
             MenuRow {
@@ -667,8 +667,8 @@ Item {
                 Layout.preferredHeight: 1
                 Layout.leftMargin: 8
                 Layout.rightMargin: 8
-                Layout.topMargin: 3
-                Layout.bottomMargin: 3
+                Layout.topMargin: 4
+                Layout.bottomMargin: 4
                 color: Qt.alpha(Kirigami.Theme.textColor, 0.15)
             }
             MenuRow {

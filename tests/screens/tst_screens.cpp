@@ -1091,6 +1091,8 @@ private Q_SLOTS:
         auto find = [board](const QString &name) { return itemNamed(board->contentItem(), name); };
         QTRY_VERIFY(find(QStringLiteral("note-") + onWindow));
         QVERIFY(find(QStringLiteral("place-window:SpreadGesture.qml")));
+        // On a wide board a row also tells when the note changed.
+        QVERIFY(itemNamed(find(QStringLiteral("note-") + onWindow), QStringLiteral("when"))->isVisible());
 
         // Tapping a note opens it on the card.
         tap(board, find(QStringLiteral("note-") + loose));
@@ -1115,7 +1117,12 @@ private Q_SLOTS:
 
         // New note in a place goes there.
         tap(board, find(QStringLiteral("place-window:SpreadGesture.qml")));
-        tap(board, find(QStringLiteral("newNote")));
+        // New note floats in the board's bottom right corner.
+        QQuickItem *newNote = find(QStringLiteral("newNote"));
+        const QPointF corner = newNote->mapToScene({newNote->width(), newNote->height()});
+        QCOMPARE(corner.x(), board->width() - 24);
+        QCOMPARE(corner.y(), board->height() - 24);
+        tap(board, newNote);
         QCOMPARE(shell.newIn, QStringLiteral("window:SpreadGesture.qml"));
 
         // The places in one row along the top, under the search: Today,
@@ -1130,6 +1137,9 @@ private Q_SLOTS:
         QVERIFY(inbox->x() < home->x() && home->x() < shuffle->x() && shuffle->x() < newFolder->x());
         QVERIFY(newFolder->x() < window->x() && window->x() < find(QStringLiteral("place-tucked"))->x());
         QCOMPARE(inbox->y(), window->y());
+        // With folders made, New folder is a + after them.
+        QVERIFY(newFolder->property("plus").toBool());
+        QCOMPARE(newFolder->width(), 44.0);
         QQuickItem *searchField = find(QStringLiteral("search"));
         QVERIFY(inbox->mapToScene({0, 0}).y() > searchField->mapToScene({0, searchField->height()}).y());
 

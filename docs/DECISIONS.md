@@ -275,13 +275,20 @@ of this one.
 
 The board opens as a search of every note: Find or start a note along its top,
 and the places in one row under it, Today, the folders with Inbox first and
-New folder last, which makes one at a tap with its name ready to type over,
+New folder last, a + once there is a folder, which makes one at a tap with its
+name ready to type over,
 the windows with notes stuck to them, and Tucked away, quieter,
 last, each a place to drop a carried note. Enter with words no note has starts
 a note with them. The notes of the place chosen fill the rest one a row, as a
-search lists what it finds: a bead in the note's colour, its first line, and
+search lists what it finds: a swatch in the note's colour, its first line, and
 its folder and window under it, each still held to be carried, with the
-planner on Today. New note stays a large button for a finger. A desktop's search that hosts the notes draws the same
+planner on Today. On a wide board a row shows more, the note's next words
+under its first line and its place and when it changed at its end, so the
+width tells rather than stands empty. New note floats in the board's corner
+in the highlight colour, a large button in reach of a finger while the list
+scrolls. Sizes and spacing come from the suite's visual language (Kadunce's
+`docs/ITASCA-VISUAL-LANGUAGE.md`). (The maintainer, 17 October, choosing wide
+rows and a floating New note.) A desktop's search that hosts the notes draws the same
 board in its Notes mode, so Gooseberry's own window and the search read as one
 (`DESKTOP.md` § The quick note in Search). (The maintainer, 17 October,
 choosing the board as a search of three directions.) This replaces the places
