@@ -1,9 +1,8 @@
 # With cards and Search
 
 What Gooseberry adds where Kadunce's card workspace or Tettegouche's Search is
-present, what it reads from them, and what it would need from them. Without
-either, Gooseberry is complete on its own; each is found at run time and never
-required.
+present, what it reads from them, and what it would need from them. Gooseberry
+is complete without either; it looks for each at run time.
 
 ## What Gooseberry offers any desktop
 
@@ -40,10 +39,10 @@ session.
 Kadunce publishes a versioned, read-only workspace snapshot on the session bus
 (its `docs/TETTEGOUCHE-CONTEXT.md`, version 1): the window in front, every
 application window with its card membership, the Active card and its Stack.
-Gooseberry reads from it only what Kadunce is showing, Spread or an Active
-card, and which card is selected, for where the quick-note card stands
-(below). The window a note is stuck to comes from Plasma's window list, with
-or without Kadunce.
+Gooseberry reads two things from it, to place the quick-note card (below):
+what Kadunce is showing, Spread or an Active card, and which card is selected.
+The window a note is stuck to comes from Plasma's window list, with or without
+Kadunce.
 
 A Stack and a Bento pair are made by hand in Kadunce. Robin can already hold a
 Gooseberry window and let it go on a card to stack them, or drag it to an edge
@@ -111,10 +110,10 @@ after 10 seconds, leaving the grown card showing the board itself.
 
 Search draws only from a closed list of local sources: applications, KDE's file
 index and recent documents, settings, a calculator and unit conversion (its
-`docs/SEARCH-CONTRACT.md`). If notes are kept as plain files, KDE's file index
-already finds them by name, and by content where indexing allows, as files.
-Notes are kept that way, so Search finds them before it offers anything more;
-Tettegouche is the bridge that makes them look like notes.
+`docs/SEARCH-CONTRACT.md`). Notes are plain files, so KDE's file index already
+finds them by name, and by content where indexing allows, and Search lists them
+as files with no extra work. Tettegouche is the bridge that makes them look
+like notes.
 
 From Milestone 4, Search also asks Gooseberry for the notes with the words
 typed (`Find`, below) and lists them among its results, each with its colour
@@ -126,9 +125,9 @@ and its folder or window, opening the note rather than a file.
 
 ### The quick note in Search
 
-Search hosts the quick note as one of its modes (`DECISIONS.md`). It draws the
-note pad in its own window and keeps nothing: Gooseberry keeps the note, and
-offers it on the session bus. Search loads none of Gooseberry's code.
+Search hosts the quick note as one of its modes (`DECISIONS.md`). Search draws
+the note pad in its own window; Gooseberry keeps the note and offers it on the
+session bus. Search loads none of Gooseberry's code.
 
 - **Service:** `io.github.carlsonjm.gooseberry`, owned by the one running
   Gooseberry. A call before Gooseberry has started starts it, from its bus
@@ -139,7 +138,7 @@ offers it on the session bus. Search loads none of Gooseberry's code.
   when the number is one it knows. A method or a key added later, which a
   version-1 caller can ignore, keeps the number; any other change raises it.
 
-The quick note in Search is a session of its own, apart from the note on
+The quick note in Search is a session of its own, separate from the note on
 Gooseberry's card. Every method that changes the note writes it to the folder
 before it returns, and every method returns the note as Gooseberry keeps it, a
 dictionary of strings to variants:
@@ -182,7 +181,7 @@ dictionary of strings to variants:
 | `SetLineChecked(u line, b checked) → a{sv}` | Ticks or unticks the item on that line, counted from 0 as in `lines`; a line that is not an item is refused. From Milestone 1 |
 | `Done() → a{sv}` | Finishes the note, as Done on the card; a note left empty goes to the trash. The next `Start` begins a new one |
 | `TuckAway() → a{sv}` | Tucks the note away and finishes it |
-| `Remove() → a{sv}` | Moves the note to the desktop's trash and finishes it; nothing is deleted |
+| `Remove() → a{sv}` | Moves the note to the desktop's trash and finishes it |
 | `UndoRemove() → a{sv}` | Brings back the note `Remove` sent to the trash; the reply's `restored` says whether it did |
 | `OpenBoard(s noteId, s requestToken) → b` | Opens the board as an ordinary window, on the place that note sits in, or on Today for an empty id |
 | `Find(s words, u limit) → av` | The notes with those words in their text, their folder's name or the window they are stuck to, as the board's search finds them, tucked away ones included; the most recently changed first, and no more than `limit` (0 for all). Each a dictionary: `id`, `title` (the first words), `excerpt` (the line with the words, when they are not in the title; else empty), `colour`, `colourHex`, `folder`, `folderLabel`, `stuck` (`b`), `window` and `app` (when stuck), `tucked` (`b`) and `changed` (ISO 8601). It changes nothing and opens nothing. From Milestone 4 |
@@ -196,13 +195,13 @@ dictionary of strings to variants:
 **Added in Milestone 1, within version 1.** The keys `remind`,
 `remindLabel`, `remindChoices`, `checklist` and `lines`, and the methods
 `SetReminder`, `SetChecklist` and `SetLineChecked`. A version-1 caller that
-does not know them ignores the keys and never calls the methods, and keeps
-working as before. A search that offers them shows Remind and Checklist as the
+does not know them ignores them and keeps working as before. A search that
+offers them shows Remind and Checklist as the
 card does: Remind offers `remindChoices` and sends the chosen `time`, or
 `opens`; Checklist calls `SetChecklist`, each box calls `SetLineChecked`, and
 words typed in an item go with `SetText` as any typing does, the text keeping
-its `- [ ] ` and `- [x] ` markers. The reminder itself is Gooseberry's to show,
-wherever the note was written. `Changed` also tells a reminder or a tick made
+its `- [ ] ` and `- [x] ` markers. Gooseberry shows the reminder itself,
+wherever the note was written. `Changed` also reports a reminder or a tick made
 elsewhere.
 
 **Added in Milestone 2, within version 1.** The keys `folder`,
@@ -229,8 +228,8 @@ moment to Kadunce so the window takes the card's place.
 
 From Milestone 3, Gooseberry tells the desktop which open windows have notes
 stuck to them, and answers a tap on them. A title bar draws the dot from it
-(Shuffle), and Spread draws each card's notes (Kadunce). Neither keeps notes:
-what they draw is always what this interface last said.
+(Shuffle), and Spread draws each card's notes (Kadunce). Neither stores notes;
+each draws what this interface last reported.
 
 - **Service:** `io.github.carlsonjm.gooseberry`, as for the quick note. A
   caller never starts Gooseberry for this: it watches for the name and, while
@@ -290,30 +289,32 @@ uses `app` only to choose between entries with the same caption (compared
 without case, and also matching when either ends with the other after a dot).
 
 **Shown over the window.** A tap on the dot brings the notes up on a surface of
-Gooseberry's own, above the windows and laid exactly over the one with the
-notes, following it as it moves or is resized; the window itself is never moved
-or resized. Each note stands where it was last let go there, written as the
-note's `place` (`FORMAT.md`); one never placed starts at the top-right, the
-newest on top. Each is as big as it was last resized there, written as its
-`size`. Notes brought up stay up until Robin puts them away with the dot
-again. Nothing else puts them away. The surface takes presses only on the
-notes, so a tap anywhere else on the window reaches the window. A note is
-typed on where it stands, never in a popup: a tap on it puts the cursor in it,
-and its words are kept as the quick note keeps them, from the first letter
-(`Capture`). While the notes are open the surface holds the keys, asked for
-once it has drawn: the desktop brings a top-layer surface to the front as
-soon as it will take them, and hands them back to whatever Robin taps or
-types into next. Losing them so, to the window or another, the notes fold
-into one dot where the top note stands, as `folded` describes; the dot takes
-no keys, and a tap on it opens the notes with the top note ready to type.
-Stepping aside, for Spread or the quick-note card, does not fold them, but
-open notes left over a window that goes behind another do fold. A tap
+Gooseberry's own. The surface sits above the windows, laid exactly over the one
+with the notes, and follows it as it moves or is resized. Gooseberry does not
+move or resize the window itself. Each note stands where it was last let go
+there, written as the note's `place` (`FORMAT.md`); one never placed starts at
+the top-right, the newest on top. Each is as big as it was last resized there,
+written as its `size`. Notes brought up stay up until Robin puts them away with
+the dot again, and only the dot puts them away. The surface takes presses only
+on the notes, so a tap anywhere else on the window reaches the window.
+
+A note is typed on where it stands, not in a popup: a tap on it puts the cursor
+in it, and its words are kept as the quick note keeps them, from the first
+letter (`Capture`). While the notes are open the surface holds the keys, asking
+for them once it has drawn. The desktop brings a top-layer surface to the front
+as soon as it will take the keys, and hands them back to whatever Robin taps or
+types into next. When the keys go elsewhere, to the window or another, the
+notes fold into one dot where the top note stands, as `folded` describes. The
+dot takes no keys, and a tap on it opens the notes with the top note ready to
+type. Stepping aside, for Spread or the quick-note card, does not fold them,
+but open notes left over a window that goes behind another do fold. A tap
 anywhere else, `Esc`, Spread opening or another window's notes coming up ends
-the typing; what was typed is kept. While a window's
-notes are up, its title bar shows a + to the left of the dot, which starts a
-new note stuck to it (`NewOn`). While the window is behind another, while
-Spread is open and while a note is open on the quick-note card, the notes step
-aside, and they come back with it.
+the typing; what was typed is kept.
+
+While a window's notes are up, its title bar shows a + to the left of the dot,
+which starts a new note stuck to it (`NewOn`). While the window is behind
+another, while Spread is open and while a note is open on the quick-note card,
+the notes step aside, and they come back with it.
 
 ## Split Rock
 
@@ -322,14 +323,15 @@ assistant can find notes, read one, and add one when Robin asks, and says when
 it reads one. From a note, "next step" sends only that note, and offers a
 checklist, a reminder or a better home; nothing changes until Robin chooses.
 What Robin keeps from the assistant becomes notes here too (`DECISIONS.md`).
-This waits while Split Rock's own work is on hold. Gooseberry needs no
-assistant, and offers none of its own.
+This waits while Split Rock's own work is on hold. Gooseberry has no assistant
+of its own.
 
 ## Needs
 
-Each is for that component to take up in the open, under its own contracts.
-None is assumed. Already taken up: Kadunce draws each card's notes in Spread and
-carries a note to another card (`StickTo`); Shuffle's title bar draws the dot;
+Each component takes up its needs in the open, under its own contracts, and
+Gooseberry counts on none of them. Already taken up: Kadunce draws each card's
+notes in Spread and carries a note to another card (`StickTo`); Shuffle's title
+bar draws the dot;
 Tettegouche lists notes among its results (`Find`) and hosts the quick note as
 its Notes mode.
 

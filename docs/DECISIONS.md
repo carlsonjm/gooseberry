@@ -1,7 +1,7 @@
 # Decisions
 
-Each settled ruling: the rule, why it holds, and what was rejected. Decisions
-still open are kept privately.
+Each settled decision: what was decided, why, and what was turned down.
+Decisions still open are kept privately.
 
 ## Gooseberry is its own component, under its own name
 
