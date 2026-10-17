@@ -1172,8 +1172,17 @@ private Q_SLOTS:
             // press to close itself: rest the pointer off the list until no
             // popup is up, so the tap reaches Tuck whatever the desktop.
             QTest::mouseMove(board, QPoint(2, 2));
-            QTRY_VERIFY(!QString::fromLatin1(topItemAt(board->contentItem(), at)->metaObject()->className())
-                             .startsWith(QStringLiteral("QQuickOverlay")));
+            auto popups = [&] {
+                QStringList open;
+                QQuickItem *top = topItemAt(board->contentItem(), at);
+                if (QString::fromLatin1(top->metaObject()->className()).startsWith(QStringLiteral("QQuickOverlay"))) {
+                    for (QQuickItem *child : top->childItems())
+                        if (child->isVisible())
+                            open << describe(child) + QStringLiteral(" of ") + QString::fromLatin1(child->parent() ? child->parent()->metaObject()->className() : "none");
+                }
+                return open;
+            };
+            QTRY_VERIFY2(popups().isEmpty(), qPrintable(popups().join(QStringLiteral("; "))));
             lastTuck = QStringLiteral("tuck at %1,%2 enabled %3 opacity %4; under it: %5")
                            .arg(at.x()).arg(at.y()).arg(tuck->isEnabled()).arg(tuck->opacity())
                            .arg(describe(topItemAt(board->contentItem(), at)));
@@ -1495,6 +1504,10 @@ int main(int argc, char *argv[])
     TestHome home;
     qputenv("QT_QPA_PLATFORM", "offscreen");
     qputenv("QT_QUICK_BACKEND", "software");
+    // No tooltips under a resting pointer: they would take the next press
+    // to close themselves, whatever desktop the tests run on. Controls that
+    // ask for hover themselves, such as the floating New note, still have it.
+    qputenv("QT_QUICK_CONTROLS_HOVER_ENABLED", "0");
     QGuiApplication app(argc, argv);
     KLocalizedString::setApplicationDomain("gooseberry");
     QGuiApplication::setApplicationDisplayName(QStringLiteral("Gooseberry"));
