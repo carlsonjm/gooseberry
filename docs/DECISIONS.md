@@ -232,7 +232,7 @@ maintainer, 4 October; All notes, 17 October.)
 This supersedes the bottom sheet in `mockup/Capture.dc.html`; what the card
 holds, the size of its controls and the note colours still follow the mock-up.
 
-The card's layout follows § The note is the page. A note opened from Search's
+The card's layout follows § The quick note listens. A note opened from Search's
 Notes has a bar on top, ‹ Notes, which puts the card away and brings Search's
 Notes back; `Esc` does the same. The search's own note page has that way back,
 and the card took the note's place without it. (The maintainer, 17 October.)
@@ -246,42 +246,55 @@ Rejected: a sheet from the bottom of the screen, where the on-screen keys come
 up over it; and the card growing into a larger page for one note, which leaves
 nothing to browse where Apps and Files have their lists.
 
-## The note is the page
+## The quick note listens
 
-The quick note is the page and little else. The page fills the card inside
-12 px margins, in the note's colour with 8 px corners, and the note's colour
-is a dot in its top-right corner: a tap lays the five colours out beside it.
-Under the page is one 44 px line: where the note is kept and what it is stuck
-to, as quiet words that open their choices, a tick for kept as written, then
-Checklist, Remind, More and All notes as glyphs. Remind says when once a
-reminder is set. More holds what a kept note rarely needs: Copy all, Pin, Tuck
-away and Remove. One note is pinned at a time, and the desktop's panel keeps it
-in sight beside a dot that starts a quick note. There is no Done: going back to the work, or `Esc`, puts the card
-away, and `Esc` first closes whatever is open on the note. (The maintainer,
-17 October, choosing "Just paper" of three directions.) This replaces the
-card's layout of 4 October: the header with the application's tile and name,
-the five colours and the All notes pill, the Checklist and Remind pills, the
-Folder and Stuck to chips, and Saved as you go, Tuck away, Remove and Done.
+The quick note is its words and little else, shaped as the search: the words
+fill the card inside 12 px margins on the card's own ground, and the note's
+colour is a dot beside their first line: a tap lays the five colours out beside
+it. Words that ask for something offer it under the note, each a tap: a day
+named offers a reminder at nine that morning, or six for tonight; lines begun
+with "- " offer a checklist; a #word offers to keep the note in that folder,
+made if it is new. A taken offer goes, and shows kept on the line below. Past
+a hairline is one 44 px line: where the note is kept and what it is stuck to,
+as quiet words that open their choices, a tick for kept as written, then
+Checklist, Remind, More and All notes as glyphs, with "Words that ask for
+something offer it" while nothing is offered and there is room. Remind says
+when once a reminder is set. More holds what a kept note rarely needs: Copy
+all, Pin, Tuck away and Remove. One note is pinned at a time, and the
+desktop's panel keeps it in sight beside a dot that starts a quick note. There
+is no Done: going back to the work, or `Esc`, puts the card away, and `Esc`
+first closes whatever is open on the note. Sizes and spacing come from the
+suite's visual language. (The maintainer, 17 October: "Listens", after first
+choosing "Just paper" of three directions.) This replaces the paper page in
+the note's colour, and before it the card's layout of 4 October: the header
+with the application's tile and name, the five colours and the All notes
+pill, the Checklist and Remind pills, the Folder and Stuck to chips, and Saved
+as you go, Tuck away, Remove and Done.
 
-It holds because that layout gave the rarely used actions the same size as
-writing, and the card was mostly controls around a small page.
+It holds because the words are what a quick note is for, and what they ask
+for can be offered from them rather than sought among controls.
 
 Rejected: the note on its own over the work with the folders as paper stacks
-to drop it on, and a note shaped as the search that offers a reminder, a
-checklist or a folder from the words typed. The latter may come later on top
-of this one.
+to drop it on, and the paper page with nothing offered.
 
 ## The board is a search
 
 The board opens as a search of every note: Find or start a note along its top,
 and the places in one row under it, Today, the folders with Inbox first and
-New folder last, which makes one at a tap with its name ready to type over,
+New folder last, a + once there is a folder, which makes one at a tap with its
+name ready to type over,
 the windows with notes stuck to them, and Tucked away, quieter,
 last, each a place to drop a carried note. Enter with words no note has starts
 a note with them. The notes of the place chosen fill the rest one a row, as a
-search lists what it finds: a bead in the note's colour, its first line, and
+search lists what it finds: a swatch in the note's colour, its first line, and
 its folder and window under it, each still held to be carried, with the
-planner on Today. New note stays a large button for a finger. A desktop's search that hosts the notes draws the same
+planner on Today. On a wide board a row shows more, the note's next words
+under its first line and its place and when it changed at its end, so the
+width tells rather than stands empty. New note floats in the board's corner
+in the highlight colour, a large button in reach of a finger while the list
+scrolls; under a pointer it lights, with a soft ring of its colour. Sizes and spacing come from the suite's visual language (Kadunce's
+`docs/ITASCA-VISUAL-LANGUAGE.md`). (The maintainer, 17 October, choosing wide
+rows and a floating New note.) A desktop's search that hosts the notes draws the same
 board in its Notes mode, so Gooseberry's own window and the search read as one
 (`DESKTOP.md` § The quick note in Search). (The maintainer, 17 October,
 choosing the board as a search of three directions.) This replaces the places
@@ -360,7 +373,7 @@ October):
   on a paper list. Checklist again turns it back into text.
 - **A planned note is marked done by a tick on its planner row.** Done then
   stands where its time was, and its words are struck through. The card has
-  no Done of its own (§ The note is the page).
+  no Done of its own (§ The quick note listens).
 - **A reminder offers Done and In 10 minutes,** and tapping it opens the note.
   In 10 minutes is a new reminder, shown once like any other.
 

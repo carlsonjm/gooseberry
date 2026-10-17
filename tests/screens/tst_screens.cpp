@@ -12,6 +12,7 @@
 #include <KLocalizedString>
 
 #include <QClipboard>
+#include <algorithm>
 #include <QGuiApplication>
 #include <QLocale>
 #include <QPointingDevice>
@@ -334,6 +335,31 @@ void sweep(QQuickWindow *window, QPoint from, QPoint to)
     QTest::qWait(30);
 }
 
+// The topmost visible item under a scene point, for saying what a missed tap hit.
+QQuickItem *topItemAt(QQuickItem *root, const QPointF &scenePos)
+{
+    // The overlay always holds Kirigami's notification layer, which lets
+    // presses through; look under it.
+    if (!root->isVisible() || root->opacity() <= 0
+        || QString::fromLatin1(root->metaObject()->className()).startsWith(QStringLiteral("QQuickOverlay")))
+        return nullptr;
+    QList<QQuickItem *> kids = root->childItems();
+    std::stable_sort(kids.begin(), kids.end(), [](QQuickItem *a, QQuickItem *b) { return a->z() < b->z(); });
+    for (auto it = kids.crbegin(); it != kids.crend(); ++it) {
+        if (QQuickItem *hit = topItemAt(*it, scenePos))
+            return hit;
+    }
+    return root->contains(root->mapFromScene(scenePos)) ? root : nullptr;
+}
+
+QString describe(QQuickItem *item)
+{
+    QStringList chain;
+    for (QQuickItem *up = item; up && chain.size() < 4; up = up->parentItem())
+        chain << QStringLiteral("%1(%2)").arg(QString::fromLatin1(up->metaObject()->className()), up->objectName());
+    return chain.join(QStringLiteral(" < "));
+}
+
 void tap(QQuickWindow *window, QQuickItem *item)
 {
     QVERIFY(item);
@@ -401,10 +427,10 @@ private Q_SLOTS:
         m_store.reset();
     }
 
-    // The note is the page: it fills the card inside 12 px margins, with
-    // the colour a dot in its corner, and one 44 px line under it holding
-    // where the note is kept, what it is stuck to, its controls and All
-    // notes, which ends 12 px from the right edge.
+    // The note's words fill the card inside 12 px margins, with the colour
+    // a dot beside them, and, past a hairline, one 44 px line under them
+    // holding where the note is kept, what it is stuck to, its controls and
+    // All notes, which ends 12 px from the right edge.
     void pageFillsTheCard()
     {
         QQuickItem *page = named(QStringLiteral("page"));
@@ -417,7 +443,7 @@ private Q_SLOTS:
         QQuickItem *tray = named(QStringLiteral("tray"));
         QCOMPARE(tray->height(), 44.0);
         const QPointF trayAt = tray->mapToItem(note(), QPointF());
-        QCOMPARE(trayAt.y(), pageAt.y() + page->height() + 8);
+        QCOMPARE(trayAt.y(), pageAt.y() + page->height() + 8 + 1 + 8);
         QCOMPARE(trayAt.y() + tray->height(), note()->height() - 12);
         QQuickItem *allNotes = named(QStringLiteral("allNotes"));
         QCOMPARE(allNotes->mapToItem(note(), QPointF()).x() + allNotes->width(), note()->width() - 12);
@@ -826,6 +852,33 @@ private Q_SLOTS:
         QVERIFY(!named(QStringLiteral("noReminder"))->isVisible());
     }
 
+    // The note listens: a day offers a reminder, lines begun with "- " a
+    // checklist and a #word a folder, each taken with a tap, after which it
+    // is offered no more.
+    void wordsOffer()
+    {
+        m_capture->setText(QStringLiteral("Call Sam tomorrow\n- parking\n- deposit\n#cabin"));
+        QTRY_VERIFY(named(QStringLiteral("offers"))->isVisible());
+        QVERIFY(!named(QStringLiteral("listensHint"))->isVisible());
+        QQuickItem *remind = named(QStringLiteral("offer-remind"));
+        const QDateTime tomorrow(QDate::currentDate().addDays(1), QTime(9, 0));
+        QCOMPARE(remind->property("text").toString(), QStringLiteral("Remind %1").arg(ReminderWords::label(tomorrow, false)));
+        picture(m_view.get(), QStringLiteral("note-offers"));
+        tap(m_view.get(), remind);
+        QCOMPARE(m_capture->remindAt(), tomorrow);
+        QTRY_VERIFY(!named(QStringLiteral("offer-remind")));
+
+        tap(m_view.get(), named(QStringLiteral("offer-folder")));
+        QCOMPARE(m_capture->folder(), QStringLiteral("Cabin"));
+        QTRY_VERIFY(!named(QStringLiteral("offer-folder")));
+
+        tap(m_view.get(), named(QStringLiteral("offer-checklist")));
+        QVERIFY(m_capture->checklist());
+        QVERIFY(!m_capture->text().contains(QStringLiteral("- - ")));
+        QVERIFY(m_capture->text().contains(QStringLiteral("- [ ] parking")));
+        QTRY_VERIFY(!named(QStringLiteral("offers"))->isVisible());
+    }
+
     // Pick a time: a day on and an hour and a quarter later than the next
     // whole hour, then Set.
     void pickATime()
@@ -1091,22 +1144,63 @@ private Q_SLOTS:
         auto find = [board](const QString &name) { return itemNamed(board->contentItem(), name); };
         QTRY_VERIFY(find(QStringLiteral("note-") + onWindow));
         QVERIFY(find(QStringLiteral("place-window:SpreadGesture.qml")));
+        // On a wide board a row also tells when the note changed.
+        QVERIFY(itemNamed(find(QStringLiteral("note-") + onWindow), QStringLiteral("when"))->isVisible());
 
         // Tapping a note opens it on the card.
         tap(board, find(QStringLiteral("note-") + loose));
         QCOMPARE(shell.opened, loose);
 
         // Tuck away from the note, and undo it from the message that follows.
-        tap(board, itemNamed(find(QStringLiteral("note-") + onWindow), QStringLiteral("tuck")));
-        QVERIFY(m_store->note(onWindow)->tucked);
+        // Opening or tucking a note lays the rows out again, so a row is
+        // found afresh each time.
+        QString lastTuck;
+        auto tuckRow = [&](const QString &id) {
+            QTest::qWait(200);
+            QQuickItem *tuck = itemNamed(find(QStringLiteral("note-") + id), QStringLiteral("tuck"));
+            QVERIFY(tuck);
+            // Scroll the row to the middle of what the list shows, clear of
+            // the header above it and New note over its end, at any size.
+            QQuickItem *list = nullptr;
+            for (QQuickItem *up = tuck; up && !list; up = up->parentItem()) {
+                if (up->inherits("QQuickFlickable"))
+                    list = up;
+            }
+            QVERIFY(list);
+            auto *content = list->property("contentItem").value<QQuickItem *>();
+            QVERIFY(content);
+            const qreal rowY = tuck->mapToItem(content, QPointF(0, tuck->height() / 2)).y();
+            const qreal most = qMax<qreal>(0, list->property("contentHeight").toReal() - list->height());
+            list->setProperty("contentY", qBound<qreal>(0, rowY - list->height() / 2, most));
+            QTest::qWait(50);
+            tuck = itemNamed(find(QStringLiteral("note-") + id), QStringLiteral("tuck"));
+            QVERIFY(tuck);
+            const QRectF shown = list->mapRectToScene(QRectF(0, 0, list->width(), list->height()));
+            const QRectF button = tuck->mapRectToScene(QRectF(0, 0, tuck->width(), tuck->height()));
+            QVERIFY2(shown.contains(button), qPrintable(QStringLiteral("tuck %1,%2 outside the list %3,%4 to %5,%6")
+                                                            .arg(button.x()).arg(button.y()).arg(shown.left()).arg(shown.top())
+                                                            .arg(shown.right()).arg(shown.bottom())));
+            QQuickItem *newNote = find(QStringLiteral("newNote"));
+            QVERIFY(!newNote->mapRectToScene(QRectF(0, 0, newNote->width(), newNote->height())).intersects(button));
+            const QPointF at = tuck->mapToScene({tuck->width() / 2, tuck->height() / 2});
+            // Rest the pointer off the list, so nothing under it is hovered.
+            QTest::mouseMove(board, QPoint(2, 2));
+            QTest::qWait(50);
+            lastTuck = QStringLiteral("tuck at %1,%2 enabled %3 opacity %4; under it: %5")
+                           .arg(at.x()).arg(at.y()).arg(tuck->isEnabled()).arg(tuck->opacity())
+                           .arg(describe(topItemAt(board->contentItem(), at)));
+            tap(board, tuck);
+        };
+        tuckRow(onWindow);
+        QVERIFY2(m_store->note(onWindow)->tucked, qPrintable(lastTuck));
         QTRY_VERIFY(find(QStringLiteral("noticeAction"))->isVisible());
         tap(board, find(QStringLiteral("noticeAction")));
         QVERIFY(!m_store->note(onWindow)->tucked);
 
         // Tuck it away again, then bring it back from Tucked away.
         QTRY_VERIFY(find(QStringLiteral("note-") + onWindow));
-        tap(board, itemNamed(find(QStringLiteral("note-") + onWindow), QStringLiteral("tuck")));
-        QVERIFY(m_store->note(onWindow)->tucked);
+        tuckRow(onWindow);
+        QVERIFY2(m_store->note(onWindow)->tucked, qPrintable(lastTuck));
         tap(board, find(QStringLiteral("place-tucked")));
         QCOMPARE(notes.place(), QStringLiteral("tucked"));
         QTRY_VERIFY(find(QStringLiteral("note-") + onWindow));
@@ -1115,7 +1209,18 @@ private Q_SLOTS:
 
         // New note in a place goes there.
         tap(board, find(QStringLiteral("place-window:SpreadGesture.qml")));
-        tap(board, find(QStringLiteral("newNote")));
+        // New note floats in the board's bottom right corner.
+        QQuickItem *newNote = find(QStringLiteral("newNote"));
+        const QPointF corner = newNote->mapToScene({newNote->width(), newNote->height()});
+        QCOMPARE(corner.x(), board->width() - 24);
+        QCOMPARE(corner.y(), board->height() - 24);
+        // Under the pointer it lights, with a ring round it.
+        QQuickItem *ring = itemNamed(newNote, QStringLiteral("ring"));
+        QVERIFY(ring);
+        QCOMPARE(ring->opacity(), 0.0);
+        QTest::mouseMove(board, newNote->mapToScene({newNote->width() / 2, newNote->height() / 2}).toPoint());
+        QTRY_COMPARE(ring->opacity(), 1.0);
+        tap(board, newNote);
         QCOMPARE(shell.newIn, QStringLiteral("window:SpreadGesture.qml"));
 
         // The places in one row along the top, under the search: Today,
@@ -1130,6 +1235,9 @@ private Q_SLOTS:
         QVERIFY(inbox->x() < home->x() && home->x() < shuffle->x() && shuffle->x() < newFolder->x());
         QVERIFY(newFolder->x() < window->x() && window->x() < find(QStringLiteral("place-tucked"))->x());
         QCOMPARE(inbox->y(), window->y());
+        // With folders made, New folder is a + after them.
+        QVERIFY(newFolder->property("plus").toBool());
+        QCOMPARE(newFolder->width(), 44.0);
         QQuickItem *searchField = find(QStringLiteral("search"));
         QVERIFY(inbox->mapToScene({0, 0}).y() > searchField->mapToScene({0, searchField->height()}).y());
 
@@ -1345,7 +1453,7 @@ private Q_SLOTS:
         // Ideas beside it: no note with a time among them; the checklist as
         // its heading and items.
         QVERIFY(find(QStringLiteral("ideasHeading"))->isVisible());
-        QCOMPARE(find(QStringLiteral("ideasHeading"))->property("text").toString(), QStringLiteral("IDEAS · NO DATE NEEDED"));
+        QCOMPARE(find(QStringLiteral("ideasHeading"))->property("text").toString(), QStringLiteral("Ideas · no date needed"));
         QVERIFY(find(QStringLiteral("note-") + groceries));
         QVERIFY(!find(QStringLiteral("note-") + next));
         QQuickItem *groceriesCard = find(QStringLiteral("note-") + groceries);
@@ -1399,6 +1507,10 @@ int main(int argc, char *argv[])
     TestHome home;
     qputenv("QT_QPA_PLATFORM", "offscreen");
     qputenv("QT_QUICK_BACKEND", "software");
+    // No tooltips under a resting pointer: they would take the next press
+    // to close themselves, whatever desktop the tests run on. Controls that
+    // ask for hover themselves, such as the floating New note, still have it.
+    qputenv("QT_QUICK_CONTROLS_HOVER_ENABLED", "0");
     QGuiApplication app(argc, argv);
     KLocalizedString::setApplicationDomain("gooseberry");
     QGuiApplication::setApplicationDisplayName(QStringLiteral("Gooseberry"));

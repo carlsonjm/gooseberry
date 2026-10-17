@@ -64,7 +64,8 @@ of its text and closed goes to the desktop's trash.
 
 | Input | What happens |
 | --- | --- |
-| Tap the dot in the page's corner | The five colours lie out beside it; a tap on one colours the note and puts them away. |
+| Tap the dot beside the note's words | The five colours lie out beside it; a tap on one colours the note and puts them away. |
+| Tap an offer under the note | What the words asked for is done: a day named sets a reminder at nine that morning (six for tonight), lines begun with "- " become a checklist, a #word keeps the note in that folder, made if new. The offer goes. |
 | Tap the checklist glyph | The lines become a checklist; again, plain text. |
 | Tap the bell | Remind's quick times come up above the line. Once set, the bell says when, with a cross to take it away. |
 | Tap ⋯ (More) | Copy all, Pin, Tuck away and Remove, over the note. Shown once the note is kept. Pin to the panel, or to the Actions Panel where Shuffle is installed, keeps the note in sight there, where the panel offers that, unpinning the note pinned before; Unpin, on the pinned note, takes it off. |
@@ -95,7 +96,7 @@ in the workspace's folder, or Inbox, and stuck to the window in front.
 
 | Input | What happens |
 | --- | --- |
-| Tap New folder on the board | A folder named New folder is made, empty, and the board shows it with its name ready to type over; type a name and press Enter, or leave it. A second one is New folder 2. It stays until it is removed. |
+| Tap New folder on the board, the + after the folders once there is one | A folder named New folder is made, empty, and the board shows it with its name ready to type over; type a name and press Enter, or leave it. A second one is New folder 2. It stays until it is removed. |
 | Tap Rename under a folder's name, type, then press Enter | The folder takes the new name; its notes stay in it. |
 | Tap New notes on (the workspace) go here | Notes written on this workspace go into the folder. Tap again for Inbox. |
 | Tap Remove folder | The folder goes and its notes go to Inbox. Undo, in the message that follows, puts them back. |
