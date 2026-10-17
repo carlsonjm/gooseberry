@@ -1185,11 +1185,16 @@ private Q_SLOTS:
         QVERIFY(!name->isVisible());
         QTRY_VERIFY(find(QStringLiteral("place-folder:Tablet")));
         QVERIFY(m_store->makeFolder(QStringLiteral("New folder")));
+        // The row is laid out again for the folder before New folder is tapped.
+        QTRY_VERIFY(find(QStringLiteral("place-folder:New folder")));
+        QTest::qWait(50);
         tap(board, find(QStringLiteral("place-newfolder")));
         QVERIFY(m_store->hasFolder(QStringLiteral("New folder 2")));
         QTest::keyClick(board, Qt::Key_Escape);
         QVERIFY(m_store->removeFolder(QStringLiteral("New folder 2")).has_value());
         QVERIFY(m_store->removeFolder(QStringLiteral("New folder")).has_value());
+        QTRY_VERIFY(!find(QStringLiteral("place-folder:New folder")));
+        QTest::qWait(50);
         tap(board, find(QStringLiteral("place-folder:Tablet")));
         QVERIFY(find(QStringLiteral("folderActions"))->isVisible());
         picture(board, QStringLiteral("board-folder"));
