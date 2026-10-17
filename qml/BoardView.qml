@@ -21,12 +21,9 @@ Item {
     property date now: new Date()
     // Drawn where a person can see it: in a shown window, and not faded out.
     readonly property bool shown: visible && Window.window !== null && Window.window.visible
-    // Inside the quick-note card, whose corners it follows.
-    property bool collapsible: false
     // The note being carried, while one is: its id, colour and title.
     property var carrying: null
-    // Naming a new folder in the side list, or renaming the one shown.
-    property bool naming: false
+    // Renaming the folder shown, a new one included.
     property bool renaming: false
     readonly property string shownFolder: notes.place.startsWith("folder:") ? notes.place.substring(7) : ""
     readonly property string workspace: shell.currentWorkspace ? shell.currentWorkspace() : ""
@@ -34,7 +31,6 @@ Item {
     // Each time the board is opened it starts on Today.
     function reset() {
         search.text = "";
-        naming = false;
         renaming = false;
         notes.place = "today";
         now = new Date();
@@ -74,16 +70,24 @@ Item {
         return "folder";
     }
 
-    function makeFolder(name) {
+    // One tap makes a folder, shows it, and has its name ready to type over.
+    function newFolder() {
+        const taken = places.folders;
+        let name = i18n("New folder");
+        for (let n = 2; taken.indexOf(name) >= 0; ++n) {
+            name = i18nc("a new folder's name, numbered", "New folder %1", n);
+        }
         const problem = places.makeFolder(name);
         if (problem.length > 0) {
             notice.show(problem);
             return;
         }
-        naming = false;
-        newFolderName.text = "";
         search.text = "";
-        notes.place = "folder:" + name.trim().replace(/\s+/g, " ");
+        notes.place = "folder:" + name;
+        renameField.text = name;
+        renaming = true;
+        renameField.forceActiveFocus();
+        renameField.selectAll();
     }
 
     function renameFolder(name) {
@@ -172,79 +176,100 @@ Item {
         }
     }
 
-    RowLayout {
+    ColumnLayout {
         anchors.fill: parent
         spacing: 0
 
-        Rectangle {
-            Layout.fillHeight: true
-            Layout.preferredWidth: 250
-            // Inside the card, its corners follow the card's.
-            topLeftRadius: board.collapsible ? 7 : 0
-            bottomLeftRadius: board.collapsible ? 7 : 0
-            Kirigami.Theme.colorSet: Kirigami.Theme.View
-            Kirigami.Theme.inherit: false
-            color: Kirigami.Theme.backgroundColor
+        // Along the top, as Search's Notes has it: Find or start a note, and
+        // the places in one row under it, Today, the folders with Inbox
+        // first and New folder last, the windows with notes stuck to them,
+        // and Tucked away. A carried note can be let go on a place.
+        ColumnLayout {
+            Layout.fillWidth: true
+            Layout.leftMargin: 28
+            Layout.rightMargin: 28
+            Layout.topMargin: 20
+            spacing: 10
 
-            ColumnLayout {
-                anchors.fill: parent
-                anchors.margins: 12
-                anchors.topMargin: 14
-                spacing: 2
-
-                QQC2.TextField {
-                    id: search
-                    objectName: "search"
-                    Layout.fillWidth: true
-                    Layout.bottomMargin: 10
-                    implicitHeight: 44
-                    placeholderText: i18n("Search notes")
-                    leftPadding: 40
-                    rightPadding: 14
-                    onTextChanged: board.notes.search = text
-                    background: Rectangle {
-                        radius: 22
-                        color: Qt.alpha(Kirigami.Theme.textColor, 0.07)
-                        border.width: 1
-                        border.color: search.activeFocus ? Kirigami.Theme.focusColor : Qt.alpha(Kirigami.Theme.textColor, 0.35)
-                        Kirigami.Icon {
-                            anchors.left: parent.left
-                            anchors.leftMargin: 14
-                            anchors.verticalCenter: parent.verticalCenter
-                            implicitWidth: 16
-                            implicitHeight: 16
-                            source: "search"
-                            color: Kirigami.Theme.disabledTextColor
-                            isMask: true
-                        }
+            QQC2.TextField {
+                id: search
+                objectName: "search"
+                Layout.fillWidth: true
+                implicitHeight: 56
+                placeholderText: i18n("Find or start a note")
+                Accessible.name: i18n("Find or start a note")
+                font.pixelSize: 20
+                font.weight: Font.Medium
+                leftPadding: 52
+                rightPadding: 20
+                onTextChanged: board.notes.search = text
+                // Enter with words no note has starts a note with them.
+                onAccepted: {
+                    const words = text.trim();
+                    if (words.length === 0 || board.notes.count > 0 || board.shell.store.readOnly) {
+                        return;
+                    }
+                    board.shell.newNoteIn("inbox");
+                    board.shell.capture.text = words;
+                    text = "";
+                }
+                background: Rectangle {
+                    radius: height / 2
+                    color: Qt.alpha(Kirigami.Theme.textColor, 0.09)
+                    border.width: search.activeFocus ? 1 : 0
+                    border.color: Kirigami.Theme.focusColor
+                    Kirigami.Icon {
+                        anchors.left: parent.left
+                        anchors.leftMargin: 20
+                        anchors.verticalCenter: parent.verticalCenter
+                        implicitWidth: 20
+                        implicitHeight: 20
+                        source: Qt.resolvedUrl("icons/lucide/search.svg")
+                        color: Kirigami.Theme.disabledTextColor
+                        isMask: true
                     }
                 }
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 8
 
                 ListView {
                     id: placeList
-                    footer: Item {
-                        width: ListView.view ? ListView.view.width : 0
-                        height: 8
-                    }
                     Layout.fillWidth: true
-                    Layout.fillHeight: true
+                    implicitHeight: 44
+                    orientation: ListView.Horizontal
+                    spacing: 4
                     clip: true
                     model: board.places
                     boundsBehavior: Flickable.StopAtBounds
-                    // A wheel notch scrolls 80 pixels at Plasma's usual three lines per notch.
-                    Kirigami.WheelHandler { target: placeList; verticalStepSize: Qt.styleHints.wheelScrollLines * 80 / 3 }
+                    // A wheel or a touchpad, either way, moves the row along.
+                    WheelHandler {
+                        target: null
+                        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+                        onWheel: event => {
+                            const pixels = Math.abs(event.pixelDelta.x) + Math.abs(event.pixelDelta.y) > 0
+                            const along = pixels
+                                ? (Math.abs(event.pixelDelta.x) > Math.abs(event.pixelDelta.y) ? event.pixelDelta.x : event.pixelDelta.y)
+                                : (Math.abs(event.angleDelta.x) > Math.abs(event.angleDelta.y) ? event.angleDelta.x : event.angleDelta.y) / 120 * 80;
+                            const end = Math.max(0, placeList.contentWidth - placeList.width);
+                            placeList.contentX = Math.max(0, Math.min(end, placeList.contentX - along));
+                        }
+                    }
+                    // A thin rule before the folders, the windows and Tucked
+                    // away; Today, first, has none.
                     section.property: "section"
-                    section.delegate: QQC2.Label {
+                    section.delegate: Item {
                         required property string section
-                        width: ListView.view.width
-                        text: board.sectionTitle(section).toUpperCase()
-                        topPadding: 14
-                        bottomPadding: 4
-                        leftPadding: 10
-                        font.pixelSize: 11
-                        font.weight: Font.ExtraBold
-                        font.letterSpacing: 0.6
-                        color: Kirigami.Theme.disabledTextColor
+                        width: section.length > 0 ? 17 : 0
+                        height: 44
+                        Rectangle {
+                            anchors.centerIn: parent
+                            width: 1
+                            height: 20
+                            color: Qt.alpha(Kirigami.Theme.textColor, 0.2)
+                        }
                     }
                     delegate: QQC2.AbstractButton {
                         id: placeButton
@@ -255,15 +280,15 @@ Item {
                         // A carried note can be let go here.
                         readonly property bool takesNotes: key === "inbox" || key === "tucked" || key.startsWith("folder:")
                         readonly property bool newFolder: key === "newfolder"
+                        readonly property bool quiet: key === "tucked" || newFolder
                         objectName: "place-" + key
-                        width: ListView.view.width
                         implicitHeight: 44
+                        implicitWidth: Math.max(44, placeRow.implicitWidth + 28)
                         focusPolicy: Qt.NoFocus
                         Accessible.name: label
                         onClicked: {
                             if (newFolder) {
-                                board.naming = true;
-                                newFolderName.forceActiveFocus();
+                                board.newFolder();
                                 return;
                             }
                             search.text = "";
@@ -284,67 +309,36 @@ Item {
                             }
                         }
                         background: Rectangle {
-                            radius: 8
+                            radius: height / 2
                             color: dropHere.containsDrag ? Qt.alpha(Kirigami.Theme.highlightColor, 0.25)
                                  : placeButton.current ? Qt.alpha(Kirigami.Theme.textColor, 0.16)
-                                 : placeButton.down ? Qt.alpha(Kirigami.Theme.textColor, 0.08) : "transparent"
+                                 : placeButton.down ? Qt.alpha(Kirigami.Theme.textColor, 0.08)
+                                 : placeButton.hovered ? Qt.alpha(Kirigami.Theme.textColor, 0.06) : "transparent"
                             border.width: dropHere.containsDrag ? 2 : 0
                             border.color: Kirigami.Theme.highlightColor
                         }
-                        contentItem: RowLayout {
-                            spacing: 10
-                            Kirigami.Icon {
-                                Layout.leftMargin: 10
-                                implicitWidth: 16
-                                implicitHeight: 16
-                                source: board.iconFor(placeButton.key)
-                                fallback: "folder"
-                                color: Kirigami.Theme.textColor
-                                isMask: true
-                            }
-                            QQC2.Label {
-                                Layout.fillWidth: true
-                                text: placeButton.label
-                                elide: Text.ElideRight
-                                font.pixelSize: 14
-                                font.weight: Font.DemiBold
-                                color: placeButton.newFolder ? Kirigami.Theme.linkColor : Kirigami.Theme.textColor
-                            }
-                            QQC2.Label {
-                                Layout.rightMargin: 10
-                                text: placeButton.count
-                                visible: placeButton.count > 0
-                                font.pixelSize: 12
-                                font.weight: Font.DemiBold
-                                color: placeButton.current ? Kirigami.Theme.textColor : Kirigami.Theme.disabledTextColor
+                        contentItem: Item {
+                            RowLayout {
+                                id: placeRow
+                                anchors.centerIn: parent
+                                spacing: 6
+                                QQC2.Label {
+                                    text: placeButton.newFolder ? i18n("+ New folder") : placeButton.label
+                                    font.pixelSize: 13
+                                    font.weight: Font.DemiBold
+                                    color: placeButton.current ? Kirigami.Theme.textColor
+                                         : placeButton.quiet ? Kirigami.Theme.disabledTextColor
+                                         : Qt.alpha(Kirigami.Theme.textColor, 0.72)
+                                }
+                                QQC2.Label {
+                                    text: placeButton.count
+                                    visible: placeButton.count > 0 && placeButton.key !== "today"
+                                    font.pixelSize: 12
+                                    font.weight: Font.DemiBold
+                                    color: Kirigami.Theme.disabledTextColor
+                                }
                             }
                         }
-                    }
-                }
-
-                // A new folder's name, typed once; Enter makes it.
-                QQC2.TextField {
-                    id: newFolderName
-                    objectName: "newFolderName"
-                    Layout.fillWidth: true
-                    Layout.topMargin: 6
-                    visible: board.naming
-                    implicitHeight: 44
-                    placeholderText: i18n("Name the folder")
-                    Accessible.name: i18n("New folder")
-                    leftPadding: 14
-                    rightPadding: 14
-                    onAccepted: {
-                        if (text.trim().length > 0) {
-                            board.makeFolder(text);
-                        }
-                    }
-                    Keys.onEscapePressed: board.naming = false
-                    background: Rectangle {
-                        radius: 22
-                        color: Qt.alpha(Kirigami.Theme.textColor, 0.07)
-                        border.width: 1
-                        border.color: newFolderName.activeFocus ? Kirigami.Theme.focusColor : Qt.alpha(Kirigami.Theme.textColor, 0.35)
                     }
                 }
             }
@@ -362,7 +356,7 @@ Item {
                 Layout.fillWidth: true
                 Layout.leftMargin: 28
                 Layout.rightMargin: 28
-                Layout.topMargin: 22
+                Layout.topMargin: 14
                 spacing: 16
 
                 ColumnLayout {
@@ -524,6 +518,7 @@ Item {
                             id: scroller
                             anchors.fill: parent
                             contentWidth: availableWidth
+                            contentHeight: grid.implicitHeight
                             // A carried note moves, the board stays still.
                             Binding {
                                 target: scroller.contentItem
@@ -532,20 +527,25 @@ Item {
                                 when: board.carrying !== null
                             }
 
-                            Masonry {
+                            // One note a row, as Search's Notes lists them.
+                            Column {
                                 id: grid
                                 width: scroller.availableWidth - 28
-                                height: contentHeight + 28
-                                model: board.notes
-                                delegate: NoteCard {
-                                    id: noteCard
-                                    showPlace: board.searching || !board.notes.place.startsWith("folder:") && board.notes.place !== "inbox"
-                                    opacity: board.carrying && board.carrying.id === noteId ? 0.35 : 1
-                                    onTapped: tucked ? board.bringBack(noteId, placeLabel) : board.shell.openNote(noteId)
-                                    onTuckRequested: board.tuckAway(noteId)
-                                    onLifted: at => board.lift(noteCard, at)
-                                    onCarried: at => board.follow(at)
-                                    onLetGo: at => board.letGo(at)
+                                bottomPadding: 28
+                                spacing: 2
+                                Repeater {
+                                    model: board.notes
+                                    delegate: NoteCard {
+                                        id: noteCard
+                                        width: grid.width
+                                        showPlace: board.searching || !board.notes.place.startsWith("folder:") && board.notes.place !== "inbox"
+                                        opacity: board.carrying && board.carrying.id === noteId ? 0.35 : 1
+                                        onTapped: tucked ? board.bringBack(noteId, placeLabel) : board.shell.openNote(noteId)
+                                        onTuckRequested: board.tuckAway(noteId)
+                                        onLifted: at => board.lift(noteCard, at)
+                                        onCarried: at => board.follow(at)
+                                        onLetGo: at => board.letGo(at)
+                                    }
                                 }
                             }
                         }

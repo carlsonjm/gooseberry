@@ -6,11 +6,8 @@
 #include <QDBusConnection>
 #include <QDBusConnectionInterface>
 #include <QDBusMessage>
-#include <QDBusPendingCallWatcher>
-#include <QDBusPendingReply>
 #include <QDBusReply>
 #include <QGuiApplication>
-#include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QRegion>
@@ -58,25 +55,11 @@ QJsonObject workspaceContext()
     return root;
 }
 
-QString withoutDesktop(QString id)
-{
-    if (id.endsWith(QLatin1String(".desktop"))) {
-        id.chop(8);
-    }
-    return id.toLower();
-}
-
 } // namespace
 
 SpreadGuest::SpreadGuest(QObject *parent)
     : QObject(parent)
 {
-    m_watchTimeout.setSingleShot(true);
-    connect(&m_watchTimeout, &QTimer::timeout, this, [this] {
-        stopWatching();
-        qCDebug(DESKTOP) << "the board was not seen in the Active card's place";
-        Q_EMIT watchGaveUp();
-    });
 }
 
 bool SpreadGuest::publish()
@@ -88,14 +71,9 @@ bool SpreadGuest::publish()
 bool SpreadGuest::begin(QWindow *window)
 {
     m_window = window;
-    m_overActiveCard = false;
     if (m_active) {
         return true;
     }
-    m_held = false;
-    // A card that handed its place to the board kept that place's input
-    // while it faded; a new card starts with the whole surface again.
-    window->setMask(QRegion());
     auto *bus = QDBusConnection::sessionBus().interface();
     if (!bus || !bus->isServiceRegistered(Kadunce)) {
         return false;
@@ -103,11 +81,6 @@ bool SpreadGuest::begin(QWindow *window)
     const QJsonObject context = workspaceContext();
     const QJsonObject stage = context.value(QStringLiteral("cardStage")).toObject();
     const QString presentation = stage.value(QStringLiteral("presentation")).toString();
-    if (presentation == QLatin1String("active")) {
-        m_overActiveCard = true;
-        qCDebug(DESKTOP) << "over an Active card: no guest";
-        return false;
-    }
     if (presentation != QLatin1String("cardLine")) {
         return false;
     }
@@ -148,16 +121,8 @@ bool SpreadGuest::begin(QWindow *window)
     if (window->screen() != screen) {
         window->setScreen(screen);
     }
-    const QPoint origin = screen->geometry().topLeft();
-    m_cardRect = card.translated(-origin);
-    const QRect active = rectFrom(root.value(QStringLiteral("active"))).translated(-origin);
-    m_activeRect = root.value(QStringLiteral("presentationCapability")).toInt() == 1
-            && QRect(QPoint(), screen->geometry().size()).contains(active)
-        ? active
-        : QRect();
+    m_cardRect = card.translated(-screen->geometry().topLeft());
     m_active = true;
-    m_expanded = false;
-    ++m_generation;
     setMask();
     qCDebug(DESKTOP) << "holding Spread's centre at" << m_cardRect;
     Q_EMIT changed();
@@ -171,158 +136,26 @@ void SpreadGuest::setMask()
     }
     if (!m_active) {
         m_window->setMask(QRegion());
-    } else if (m_expanded) {
-        m_window->setMask(QRegion(m_activeRect));
     } else {
         // Outside the card, presses are Spread's.
         m_window->setMask(QRegion(m_cardRect.adjusted(-InputSafety, -InputSafety, InputSafety, InputSafety)));
     }
 }
 
-void SpreadGuest::leave(bool keepPlace)
+void SpreadGuest::leave()
 {
-    ++m_generation;
-    // A card fading where it stood keeps that place's input until it is gone.
-    m_held = keepPlace && m_expanded;
     m_active = false;
-    m_expanded = false;
-    m_launchToken.clear();
-    if (!m_held) {
-        setMask();
-    }
+    setMask();
     Q_EMIT changed();
 }
 
-void SpreadGuest::end(bool keepPlace)
+void SpreadGuest::end()
 {
     if (!m_active) {
-        if (m_held && !keepPlace) {
-            m_held = false;
-            Q_EMIT changed();
-        }
         return;
     }
     QDBusConnection::sessionBus().asyncCall(kadunce(QStringLiteral("endLauncherGuest")));
-    leave(keepPlace);
-}
-
-void SpreadGuest::expand()
-{
-    if (!m_active || !m_activeRect.isValid()) {
-        end();
-        Q_EMIT expandAnswered(false);
-        return;
-    }
-    const quint64 generation = ++m_generation;
-    QDBusMessage request = kadunce(QStringLiteral("setLauncherGuestExpanded"));
-    request.setArguments({true});
-    auto *watcher = new QDBusPendingCallWatcher(QDBusConnection::sessionBus().asyncCall(request, 700), this);
-    connect(watcher, &QDBusPendingCallWatcher::finished, this, [this, watcher, generation] {
-        const QDBusPendingReply<bool> reply = *watcher;
-        watcher->deleteLater();
-        if (generation != m_generation || !m_active) {
-            return;
-        }
-        if (reply.isError() || !reply.value()) {
-            end();
-            Q_EMIT expandAnswered(false);
-            return;
-        }
-        m_expanded = true;
-        setMask();
-        Q_EMIT changed();
-        Q_EMIT expandAnswered(true);
-    });
-}
-
-void SpreadGuest::collapse()
-{
-    if (!m_active || !m_expanded) {
-        return;
-    }
-    cancelLaunch();
-    m_expanded = false;
-    Q_EMIT changed();
-    // The input keeps the larger room until the card has shrunk into the
-    // smaller one.
-    const quint64 generation = ++m_generation;
-    QTimer::singleShot(260, this, [this, generation] {
-        if (generation != m_generation || !m_active) {
-            return;
-        }
-        QDBusMessage request = kadunce(QStringLiteral("setLauncherGuestExpanded"));
-        request.setArguments({false});
-        QDBusConnection::sessionBus().asyncCall(request);
-        setMask();
-    });
-}
-
-bool SpreadGuest::prepareLaunch(const QStringList &applicationIds, const QString &token)
-{
-    if (!m_active) {
-        return false;
-    }
-    QDBusMessage request = kadunce(QStringLiteral("prepareLauncherGuestLaunch"));
-    request.setArguments({applicationIds, token});
-    const QDBusReply<bool> reply = QDBusConnection::sessionBus().call(request, QDBus::Block, 500);
-    if (!reply.isValid() || !reply.value()) {
-        return false;
-    }
-    m_launchToken = token;
-    return true;
-}
-
-void SpreadGuest::cancelLaunch()
-{
-    if (m_launchToken.isEmpty()) {
-        return;
-    }
-    m_launchToken.clear();
-    QDBusConnection::sessionBus().asyncCall(kadunce(QStringLiteral("cancelLauncherGuestLaunch")));
-}
-
-void SpreadGuest::watchForSelected(const QString &applicationId, int timeoutMs)
-{
-    stopWatching();
-    m_watchedApplication = withoutDesktop(applicationId);
-    QDBusConnection::sessionBus().connect(Kadunce, KadunceObject, KadunceInterface,
-                                          QStringLiteral("workspaceContextChanged"), this, SLOT(contextChanged()));
-    m_watchTimeout.start(timeoutMs);
-    contextChanged();
-}
-
-void SpreadGuest::stopWatching()
-{
-    m_watchTimeout.stop();
-    if (m_watchedApplication.isEmpty()) {
-        return;
-    }
-    m_watchedApplication.clear();
-    QDBusConnection::sessionBus().disconnect(Kadunce, KadunceObject, KadunceInterface,
-                                             QStringLiteral("workspaceContextChanged"), this, SLOT(contextChanged()));
-}
-
-void SpreadGuest::contextChanged()
-{
-    if (m_watchedApplication.isEmpty()) {
-        return;
-    }
-    const QJsonObject context = workspaceContext();
-    const QString selected = context.value(QStringLiteral("cardStage")).toObject().value(QStringLiteral("selectedCardId")).toString();
-    if (selected.isEmpty()) {
-        return;
-    }
-    const QJsonArray applications = context.value(QStringLiteral("applications")).toArray();
-    for (const QJsonValue &value : applications) {
-        const QJsonObject application = value.toObject();
-        if (application.value(QStringLiteral("windowId")).toString() == selected
-            && withoutDesktop(application.value(QStringLiteral("appId")).toString()) == m_watchedApplication) {
-            stopWatching();
-            qCDebug(DESKTOP) << "the board stands in the Active card's place";
-            Q_EMIT boardSelected();
-            return;
-        }
-    }
+    leave();
 }
 
 void SpreadGuest::dismissGuest()
@@ -334,17 +167,6 @@ void SpreadGuest::dismissGuest()
     // Kadunce has already ended this guest; nothing is asked back.
     leave();
     Q_EMIT dismissed();
-}
-
-void SpreadGuest::completeGuestLaunch(const QString &requestToken)
-{
-    if (!m_active || requestToken.isEmpty() || requestToken != m_launchToken) {
-        return;
-    }
-    qCDebug(DESKTOP) << "the board has arrived in the card's place";
-    // The window takes the place; Kadunce ends the guest with the hand-off.
-    leave(true);
-    Q_EMIT launchCompleted(requestToken);
 }
 
 } // namespace Gooseberry

@@ -7,8 +7,8 @@ below is built.
 | --- | --- | --- |
 | Capture a note | Hold Gooseberry, then tap New note | None yet |
 | Finish a note | Tap the work around the card | `Esc` |
-| Keep a note in a folder | Tap Folder | None yet |
-| Stick a note to a window | Tap Stuck to | None yet |
+| Keep a note in a folder | Tap the folder's name | None yet |
+| Stick a note to a window | Tap the window's name, or Not stuck | None yet |
 | Start a folder | Tap New folder on the board | None yet |
 | Move a note | Hold a note on the board | None yet |
 | Set a reminder | Tap Remind | None yet |
@@ -19,7 +19,7 @@ below is built.
 | Tuck a note away | Tap Tuck away on the note | None yet |
 | Bring a note back | Tap Tucked away on the board, then the note | None yet |
 | Remove a note | Tap the note on the board, then Remove | None yet |
-| Find a note | Type in Search notes on the board | None yet |
+| Find a note | Type in Find or start a note on the board | None yet |
 | Bring up a window's notes | Tap the dot in its title bar | None yet |
 | Move a note over a window | Drag it | None yet |
 | Copy words from a note | Hold a word | `Ctrl+C` |
@@ -45,9 +45,8 @@ kept by Gooseberry (`DESKTOP.md`).
 | Input | What happens |
 | --- | --- |
 | Tap the work around the card | The card goes away. The note is already kept; there is nothing to confirm. |
-| Tap Done | The same. |
 | Go to another window | The same. |
-| Press `Esc` | The same; with the card grown into the board, the first `Esc` brings the note back. |
+| Press `Esc` | The same; with the card grown into the board, the first `Esc` brings the note back, and with colours, choices or More open on the note, the first `Esc` closes them. |
 
 With the on-screen keys up, the card rises only as far as it must to stay
 above them, then shortens; what does not fit scrolls. It returns as the keys go
@@ -61,15 +60,26 @@ place.
 A quick note closed with nothing written on it leaves nothing behind. A note emptied
 of its text and closed goes to the desktop's trash.
 
+## On the note
+
+| Input | What happens |
+| --- | --- |
+| Tap the dot in the page's corner | The five colours lie out beside it; a tap on one colours the note and puts them away. |
+| Tap the checklist glyph | The lines become a checklist; again, plain text. |
+| Tap the bell | Remind's quick times come up above the line. Once set, the bell says when, with a cross to take it away. |
+| Tap ⋯ (More) | Copy all, Pin, Tuck away and Remove, over the note. Shown once the note is kept. Pin to the panel, or to the Actions Panel where Shuffle is installed, keeps the note in sight there, where the panel offers that, unpinning the note pinned before; Unpin, on the pinned note, takes it off. |
+| Tap the grid | All notes: the board opens in Gooseberry's own window and the card goes. |
+| Tap ‹ Notes on top of the card | Shown on a note opened from Search's Notes: the card goes, the note kept, and Search's Notes comes back. `Esc` does the same. |
+
 ## Keep a note in a folder
 
-Two chips sit under the note, both already filled in: Folder, the folder the
-note is kept in, and Stuck to, the window it is stuck to. A new note is kept
+One line sits under the note, already filled in: the folder the note is kept
+in, then the window it is stuck to, each as quiet words with its glyph. A new note is kept
 in the workspace's folder, or Inbox, and stuck to the window in front.
 
 | Input | What happens |
 | --- | --- |
-| Tap Folder | The folders come up under it: the workspace's own first, then Inbox, then the rest, and a field for a new one. |
+| Tap the folder's name | The folders come up above the line: the workspace's own first, then Inbox, then the rest, and a field for a new one. |
 | Tap a folder | The note is kept there, at once, and the cursor goes back to the note. |
 | Type a name in New folder, then press Enter | The folder is made and the note is kept in it. A name that cannot be a folder's says why. |
 
@@ -77,7 +87,7 @@ in the workspace's folder, or Inbox, and stuck to the window in front.
 
 | Input | What happens |
 | --- | --- |
-| Tap Stuck to | The open windows come up under it, the one in front first, and Don't stick to a window. |
+| Tap the window's name, or Not stuck | The open windows come up above the line, the one in front first, and Don't stick to a window. |
 | Tap a window | The note is stuck to it, and comes back with it when it opens again. Its folder stays. |
 | Tap Don't stick to a window | The note is stuck to nothing; it stays in its folder. |
 
@@ -85,7 +95,7 @@ in the workspace's folder, or Inbox, and stuck to the window in front.
 
 | Input | What happens |
 | --- | --- |
-| Tap New folder on the board, type a name, then press Enter | The folder is made, empty, and the board shows it. It stays until it is removed. |
+| Tap New folder on the board | A folder named New folder is made, empty, and the board shows it with its name ready to type over; type a name and press Enter, or leave it. A second one is New folder 2. It stays until it is removed. |
 | Tap Rename under a folder's name, type, then press Enter | The folder takes the new name; its notes stay in it. |
 | Tap New notes on (the workspace) go here | Notes written on this workspace go into the folder. Tap again for Inbox. |
 | Tap Remove folder | The folder goes and its notes go to Inbox. Undo, in the message that follows, puts them back. |
@@ -159,23 +169,21 @@ today again.
 
 | Input | What happens |
 | --- | --- |
-| Tap All notes on the card | The card grows to the whole work area and the board takes its place, on Today, as Apps and Files grow the desktop's search. A note opened or started there, or `Esc`, brings the card back. |
-| Tap All notes on the card in Kadunce's Spread | The cards beside it fade and the card grows into the Active card's room; the board's window takes its place and the card fades out. |
-| Tap All notes on the card over an Active card in Kadunce | The card grows, the board's window takes the Active card's place, and the card fades out. |
+| Tap All notes on the card | The card goes and the board opens on the note's place, in Gooseberry's own window with its title bar, as tapping Gooseberry opens it. In Kadunce's Spread the window opens as any other card. |
 | Tap Gooseberry, or hold it and tap All notes | The board opens on Today, as an ordinary window: it resizes, and a card workspace can place it beside another window. |
 
 ## Open a note
 
 | Input | What happens |
 | --- | --- |
-| Tap the note on the board | The note opens on the quick-note card, to read and change. In the card, the board gives way to it. |
+| Tap the note on the board | The note opens on the quick-note card, to read and change. |
 
 ## Tuck a note away
 
 | Input | What happens |
 | --- | --- |
 | Tap Tuck away on the note | The note leaves view and waits under Tucked away on the board. Bring back, in the message that follows, undoes it. |
-| Tap Tuck away on the card | The same, for the note on the card. |
+| Tap More on the card, then Tuck away | The same, for the note on the card. |
 
 ## Bring a note back
 
@@ -194,7 +202,8 @@ today again.
 
 | Input | What happens |
 | --- | --- |
-| Type in Search notes on the board | The board shows every note with those words, or in a folder or stuck to a window of that name, tucked away ones too, whatever place was chosen. Clearing the search goes back to the place. |
+| Type in Find or start a note on the board | The board shows every note with those words, or in a folder or stuck to a window of that name, tucked away ones too, whatever place was chosen. Clearing the search goes back to the place. |
+| `Enter` in Find or start a note, with words no note has | Starts a note in Inbox with those words, on the quick-note card. |
 
 ## Bring up a window's notes
 
@@ -252,4 +261,4 @@ notes stuck over a window. On a checklist, Copy does not show.
 
 | Input | What happens |
 | --- | --- |
-| Turn the wheel over the quick-note card's page, or over the places down the board's side | Each notch moves 80 pixels, at Plasma's usual three lines a notch; more lines a notch in Plasma's settings move further. |
+| Turn the wheel over the quick-note card's page, or over the row of places along the board's top | Each notch moves 80 pixels, at Plasma's usual three lines a notch; more lines a notch in Plasma's settings move further. |

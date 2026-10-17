@@ -23,6 +23,7 @@ private Q_SLOTS:
         note.created = QDateTime(QDate(2026, 10, 4), QTime(14, 41, 12), QTimeZone::fromSecondsAheadOfUtc(-5 * 3600));
         note.changed = note.created.addSecs(65);
         note.tucked = true;
+        note.pinned = true;
 
         const Note read = Note::parse(note.serialize(), note.id, {});
         QCOMPARE(read.text, note.text);
@@ -34,6 +35,7 @@ private Q_SLOTS:
         QCOMPARE(read.created, note.created);
         QCOMPARE(read.changed, note.changed);
         QCOMPARE(read.tucked, true);
+        QCOMPARE(read.pinned, true);
         QCOMPARE(read.format, NoteFormat);
     }
 

@@ -66,18 +66,37 @@ public Q_SLOTS:
     Q_SCRIPTABLE QVariantList Find(const QString &words, uint limit);
     // Opens the note on Gooseberry's own card, as a tap on the board does.
     Q_SCRIPTABLE bool OpenNote(const QString &noteId);
+    // Added in version 1, from Notes 1.1. Opens Gooseberry's own card on the
+    // note "id", or on a new note holding "text" when there is no id. With
+    // "back", the card has a bar of those words on top, and taking it sends
+    // Back and puts the card away. False when there is no such note.
+    Q_SCRIPTABLE bool OpenOnCard(const QVariantMap &request);
+    // Added in version 1, from Notes 1.1. Makes that note the open one, for
+    // the search to write on, finishing the one open before.
+    Q_SCRIPTABLE QVariantMap Edit(const QString &noteId);
+    // Added in version 1, from Notes 1.1. Pins the open note, unpinning any
+    // other, or unpins it; and the pinned note, for a panel to keep in sight.
+    Q_SCRIPTABLE QVariantMap SetPinned(bool on);
+    Q_SCRIPTABLE QVariantMap Pinned() const;
 
 Q_SIGNALS:
     // The note changed by something other than a call here: the board, the
     // card or another program writing its file.
     Q_SCRIPTABLE void Changed(const QVariantMap &state);
     Q_SCRIPTABLE void BoardShown(const QString &requestToken);
+    // The pinned note, or its first words or colour, changed: what Pinned
+    // gives.
+    Q_SCRIPTABLE void PinnedChanged(const QVariantMap &pinned);
+    // Added in version 1, from Notes 1.1. The card's way back, which an
+    // OpenOnCard with "back" asked for, was taken.
+    Q_SCRIPTABLE void Back();
 
 private:
     QVariantMap state(bool open) const;
     QVariantList choices() const;
     QVariantList windowChoices() const;
     void changedElsewhere();
+    void checkPinned();
 
     Shell *m_shell;
     NoteStore *m_store;
@@ -89,6 +108,11 @@ private:
     // One change from elsewhere can touch text, colour and place at once;
     // it is told once.
     QTimer m_changed;
+    // The pinned note as last told, so it is told only when it changes.
+    // Pinning one note unpins another in two writes; it is looked at once
+    // both are done.
+    QVariantMap m_pinned;
+    QTimer m_pinnedCheck;
 };
 
 } // namespace Gooseberry

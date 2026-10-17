@@ -895,6 +895,37 @@ private Q_SLOTS:
         QVERIFY(capture.problem().isEmpty());
     }
 
+    // One note is pinned at a time; pinning changes no note's changed time,
+    // and tucking the pinned note away unpins it.
+    void oneNoteIsPinned()
+    {
+        Capture capture(m_store.get());
+        capture.startNew({});
+        QVERIFY(!capture.setPinned(true));
+        capture.setText(QStringLiteral("Dentist Tuesday"));
+        const QString first = capture.noteId();
+        const QDateTime changed = m_store->note(first)->changed;
+        QVERIFY(capture.setPinned(true));
+        QVERIFY(capture.pinned());
+        QCOMPARE(m_store->pinnedNote()->id, first);
+        QCOMPARE(m_store->note(first)->changed, changed);
+        QVERIFY(readFile(m_store->pathFor(first)).contains("\npinned: true\n"));
+
+        capture.finish();
+        capture.startNew({});
+        capture.setText(QStringLiteral("Pick up parcel"));
+        const QString second = capture.noteId();
+        QVERIFY(capture.setPinned(true));
+        QCOMPARE(m_store->pinnedNote()->id, second);
+        QVERIFY(!m_store->note(first)->pinned);
+        QVERIFY(!readFile(m_store->pathFor(first)).contains("pinned"));
+
+        capture.tuckAway();
+        QVERIFY(!capture.pinned());
+        QVERIFY(!m_store->pinnedNote());
+        QVERIFY(!m_store->note(second)->pinned);
+    }
+
     void newerFolderIsLeftAlone()
     {
         Capture capture(m_store.get());

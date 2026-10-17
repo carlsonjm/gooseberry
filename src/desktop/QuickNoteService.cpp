@@ -82,9 +82,18 @@ QuickNoteService::QuickNoteService(Shell *shell, NoteStore *store, QObject *pare
         }
     });
     for (auto signal : {&Capture::textChanged, &Capture::colourChanged, &Capture::belongingChanged,
-                        &Capture::foldersChanged, &Capture::noteChanged, &Capture::reminderChanged}) {
+                        &Capture::foldersChanged, &Capture::noteChanged, &Capture::reminderChanged,
+                        &Capture::pinnedChanged}) {
         connect(m_capture, signal, this, &QuickNoteService::changedElsewhere);
     }
+    m_pinned = Pinned();
+    m_pinnedCheck.setSingleShot(true);
+    m_pinnedCheck.setInterval(0);
+    connect(&m_pinnedCheck, &QTimer::timeout, this, &QuickNoteService::checkPinned);
+    for (auto signal : {&NoteStore::noteAdded, &NoteStore::noteChanged, &NoteStore::noteRemoved}) {
+        connect(m_store, signal, &m_pinnedCheck, qOverload<>(&QTimer::start));
+    }
+    connect(m_shell, &Shell::backRequested, this, &QuickNoteService::Back);
     connect(m_shell, &Shell::boardShown, this, [this] {
         for (const QString &token : std::as_const(m_boardTokens)) {
             Q_EMIT BoardShown(token);
@@ -318,8 +327,10 @@ bool QuickNoteService::OpenBoard(const QString &noteId, const QString &requestTo
 QVariantList QuickNoteService::Find(const QString &words, uint limit)
 {
     QList<Note> found;
+    // No words is every note, for a search's list before anything is typed.
+    const bool every = words.simplified().isEmpty();
     for (const Note &note : m_store->notes()) {
-        if (PlaceNotes::matches(note, words)) {
+        if (every || PlaceNotes::matches(note, words)) {
             found.append(note);
         }
     }
@@ -345,6 +356,10 @@ QVariantList QuickNoteService::Find(const QString &words, uint limit)
             {QStringLiteral("app"), note.isStuck() ? note.app : QString()},
             {QStringLiteral("tucked"), note.tucked},
             {QStringLiteral("changed"), note.changed.toOffsetFromUtc(note.changed.offsetFromUtc()).toString(Qt::ISODate)},
+            {QStringLiteral("remind"), note.remindOnOpen ? QStringLiteral("opens")
+                 : note.remind.isValid() ? note.remind.toOffsetFromUtc(note.remind.offsetFromUtc()).toString(Qt::ISODate)
+                                         : QString()},
+            {QStringLiteral("done"), note.done.isValid()},
         });
     }
     return results;
@@ -355,8 +370,87 @@ bool QuickNoteService::OpenNote(const QString &noteId)
     if (!m_store->note(noteId)) {
         return false;
     }
+    // The card takes the note; what a search had open here is finished.
+    if (m_open) {
+        m_capture->finish();
+        m_open = false;
+    }
     m_shell->openNote(noteId);
     return true;
+}
+
+bool QuickNoteService::OpenOnCard(const QVariantMap &request)
+{
+    const QString noteId = request.value(QStringLiteral("id")).toString();
+    if (!noteId.isEmpty() && !m_store->note(noteId)) {
+        return false;
+    }
+    // The card takes the note; what a search had open here is finished.
+    if (m_open) {
+        m_capture->finish();
+        m_open = false;
+    }
+    const QString back = request.value(QStringLiteral("back")).toString().simplified();
+    if (noteId.isEmpty()) {
+        m_shell->showCaptureWith(request.value(QStringLiteral("text")).toString(), back);
+        return true;
+    }
+    return m_shell->openNoteWith(noteId, back);
+}
+
+QVariantMap QuickNoteService::Edit(const QString &noteId)
+{
+    Calling calling(m_calling);
+    if (!m_store->note(noteId)) {
+        sendErrorReply(QDBusError::InvalidArgs, QStringLiteral("There is no note %1.").arg(noteId));
+        return {};
+    }
+    if (m_open && m_capture->noteId() != noteId) {
+        m_capture->finish();
+        m_open = false;
+    }
+    if (!m_open) {
+        m_open = m_capture->open(noteId);
+    }
+    return state(m_open);
+}
+
+QVariantMap QuickNoteService::SetPinned(bool on)
+{
+    Calling calling(m_calling);
+    if (!m_open) {
+        sendErrorReply(QDBusError::Failed, QStringLiteral("No quick note is open; call Start first."));
+        return {};
+    }
+    if (!m_capture->setPinned(on)) {
+        sendErrorReply(QDBusError::Failed, m_capture->kept() ? m_capture->problem()
+                                                             : QStringLiteral("The note has no words to keep yet."));
+        return {};
+    }
+    return state(m_open);
+}
+
+QVariantMap QuickNoteService::Pinned() const
+{
+    const auto note = m_store->pinnedNote();
+    if (!note) {
+        return {};
+    }
+    return {
+        {QStringLiteral("id"), note->id},
+        {QStringLiteral("title"), note->title()},
+        {QStringLiteral("colour"), note->colour},
+        {QStringLiteral("colourHex"), colourHex(note->colour)},
+    };
+}
+
+void QuickNoteService::checkPinned()
+{
+    const QVariantMap pinned = Pinned();
+    if (pinned != m_pinned) {
+        m_pinned = pinned;
+        Q_EMIT PinnedChanged(pinned);
+    }
 }
 
 QVariantMap QuickNoteService::state(bool open) const
@@ -387,6 +481,7 @@ QVariantMap QuickNoteService::state(bool open) const
         {QStringLiteral("open"), open},
         {QStringLiteral("id"), m_capture->noteId()},
         {QStringLiteral("kept"), m_capture->kept()},
+        {QStringLiteral("pinned"), m_capture->pinned()},
         {QStringLiteral("text"), m_capture->text()},
         {QStringLiteral("colour"), m_capture->colour()},
         {QStringLiteral("colours"), names},

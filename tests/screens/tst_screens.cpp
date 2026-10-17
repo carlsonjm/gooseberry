@@ -45,6 +45,7 @@ class FakeShell : public QObject
     Q_PROPERTY(QObject *notes MEMBER m_notes CONSTANT)
     Q_PROPERTY(QObject *store MEMBER m_store CONSTANT)
     Q_PROPERTY(QObject *planner MEMBER m_planner CONSTANT)
+    Q_PROPERTY(QString backLabel MEMBER backLabel NOTIFY backLabelChanged)
 
 public:
     FakeShell(NoteStore *store, Capture *capture, Places *places, PlaceNotes *notes)
@@ -58,12 +59,26 @@ public:
 
     QString opened;
     QString newIn;
+    QString backLabel;
+    int boards = 0;
+    int wentBack = 0;
+
+    void setBack(const QString &label)
+    {
+        backLabel = label;
+        Q_EMIT backLabelChanged();
+    }
+
+Q_SIGNALS:
+    void backLabelChanged();
 
 public Q_SLOTS:
     void openNote(const QString &id) { opened = id; }
     void newNoteIn(const QString &place) { newIn = place; }
     void showBoard() { }
     void showCapture() { }
+    void boardFromCard() { ++boards; }
+    void goBack() { ++wentBack; }
     QString applicationName() const { return QStringLiteral("Gooseberry"); }
     QString reminderLabel(const QDateTime &remind, bool onOpen) const { return ReminderWords::label(remind, onOpen); }
     QVariantList reminderChoices() const { return ReminderWords::choices(true); }
@@ -386,43 +401,33 @@ private Q_SLOTS:
         m_store.reset();
     }
 
-    // The approved layout: an 8 px card with a 1 px outline; a 44 px header
-    // with the yellow tile and the application's name at the left, the
-    // colours centred and a 30 px All notes pill 14 px from the right edge;
-    // the note pad 14 px under it, across the width inside 22 px margins.
-    void headerFollowsTheApprovedLayout()
+    // The note is the page: it fills the card inside 12 px margins, with
+    // the colour a dot in its corner, and one 44 px line under it holding
+    // where the note is kept, what it is stuck to, its controls and All
+    // notes, which ends 12 px from the right edge.
+    void pageFillsTheCard()
     {
-        QQuickItem *header = named(QStringLiteral("header"));
-        QVERIFY(header);
-        QCOMPARE(header->height(), 44.0);
-        QQuickItem *tile = named(QStringLiteral("appTile"));
-        QCOMPARE(tile->width(), 32.0);
-        QCOMPARE(tile->height(), 32.0);
-        QCOMPARE(tile->property("radius").toReal(), 8.0);
-        QCOMPARE(tile->property("color").value<QColor>(), QColor(QStringLiteral("#F2D98A")));
-        QCOMPARE(tile->mapToItem(note(), QPointF()).x(), 22.0);
-        QQuickItem *name = named(QStringLiteral("appName"));
-        QVERIFY(name->isVisible());
-        QCOMPARE(name->property("text").toString(), QStringLiteral("Gooseberry"));
-        QQuickItem *colours = named(QStringLiteral("colours"));
-        const QPointF coloursAt = colours->mapToItem(note(), QPointF());
-        QCOMPARE(coloursAt.x() + colours->width() / 2, note()->width() / 2);
-        QQuickItem *allNotes = named(QStringLiteral("allNotes"));
-        const QPointF allNotesAt = allNotes->mapToItem(note(), QPointF());
-        QCOMPARE(allNotesAt.x() + allNotes->width(), note()->width() - 14);
-        QCOMPARE(itemNamed(allNotes, QStringLiteral("face"))->height(), 30.0);
-        QVERIFY(allNotes->height() >= 44);
-        QQuickItem *pad = note()->property("editor").value<QQuickItem *>();
-        QQuickItem *page = pad->parentItem();
-        while (page && page->property("radius").toReal() != 14.0) {
-            page = page->parentItem();
-        }
+        QQuickItem *page = named(QStringLiteral("page"));
         QVERIFY(page);
+        QCOMPARE(page->property("radius").toReal(), 8.0);
         const QPointF pageAt = page->mapToItem(note(), QPointF());
-        const QPointF headerAt = header->mapToItem(note(), QPointF());
-        QCOMPARE(pageAt.y(), headerAt.y() + 44 + 14);
-        QCOMPARE(pageAt.x(), 22.0);
-        QCOMPARE(page->width(), note()->width() - 44);
+        QCOMPARE(pageAt.x(), 12.0);
+        QCOMPARE(pageAt.y(), 12.0);
+        QCOMPARE(page->width(), note()->width() - 24);
+        QQuickItem *tray = named(QStringLiteral("tray"));
+        QCOMPARE(tray->height(), 44.0);
+        const QPointF trayAt = tray->mapToItem(note(), QPointF());
+        QCOMPARE(trayAt.y(), pageAt.y() + page->height() + 8);
+        QCOMPARE(trayAt.y() + tray->height(), note()->height() - 12);
+        QQuickItem *allNotes = named(QStringLiteral("allNotes"));
+        QCOMPARE(allNotes->mapToItem(note(), QPointF()).x() + allNotes->width(), note()->width() - 12);
+        QQuickItem *dot = named(QStringLiteral("colourDot"));
+        QVERIFY(dot->isVisible());
+        QCOMPARE(dot->parentItem(), page);
+        QVERIFY(!named(QStringLiteral("colours"))->isVisible());
+        // Nothing rarely needed is laid out at rest.
+        QVERIFY(!named(QStringLiteral("moreMenu"))->isVisible());
+        QCOMPARE(named(QStringLiteral("folderChip"))->property("text").toString(), QStringLiteral("Inbox"));
     }
 
     // The page's words are selected by a mouse dragged across them, or by a
@@ -695,29 +700,35 @@ private Q_SLOTS:
     {
         m_capture->setText(QStringLiteral("kept, so Tuck away and Remove show"));
         const auto buttons = buttonsIn(note());
-        QVERIFY(buttons.size() >= 12);
+        QVERIFY(buttons.size() >= 7);
         for (QQuickItem *button : buttons) {
             QVERIFY2(button->height() >= 44 && button->width() >= 44,
                      qPrintable(QStringLiteral("%1 is %2×%3").arg(button->objectName()).arg(button->width()).arg(button->height())));
         }
     }
 
-    void colourIsOneTap()
+    // The colour's dot lays the five colours out; one of them chooses and
+    // puts them away.
+    void colourIsTheDot()
     {
         picture(m_view.get(), QStringLiteral("note-empty"));
+        tap(m_view.get(), named(QStringLiteral("colourDot")));
+        QVERIFY(named(QStringLiteral("colours"))->isVisible());
+        picture(m_view.get(), QStringLiteral("note-colours"));
         tap(m_view.get(), named(QStringLiteral("colour-lichen")));
+        QVERIFY(!named(QStringLiteral("colours"))->isVisible());
         QCOMPARE(m_capture->colour(), QStringLiteral("lichen"));
         type(m_view.get(), QStringLiteral("Groceries"));
         QCOMPARE(m_store->note(m_capture->noteId())->colour, QStringLiteral("lichen"));
         picture(m_view.get(), QStringLiteral("note-written"));
     }
 
-    // Two chips, both already filled in: the folder, and the window in
-    // front. Each opens its choices with a tap, and one more chooses.
+    // One line, already filled in: the folder, and the window in front.
+    // Each opens its choices with a tap, and one more chooses.
     void folderAndWindowAreChips()
     {
-        QCOMPARE(named(QStringLiteral("folderChip"))->property("text").toString(), QStringLiteral("Folder · Inbox ▾"));
-        QCOMPARE(named(QStringLiteral("stuckChip"))->property("text").toString(), QStringLiteral("Stuck to · SpreadGesture.qml ▾"));
+        QCOMPARE(named(QStringLiteral("folderChip"))->property("text").toString(), QStringLiteral("Inbox"));
+        QCOMPARE(named(QStringLiteral("stuckChip"))->property("text").toString(), QStringLiteral("SpreadGesture.qml"));
         QVERIFY(!named(QStringLiteral("folderChoices"))->isVisible());
 
         tap(m_view.get(), named(QStringLiteral("folderChip")));
@@ -727,7 +738,7 @@ private Q_SLOTS:
         tap(m_view.get(), named(QStringLiteral("folder-Shuffle")));
         QCOMPARE(m_capture->folder(), QStringLiteral("Shuffle"));
         QVERIFY(!named(QStringLiteral("folderChoices"))->isVisible());
-        QCOMPARE(named(QStringLiteral("folderChip"))->property("text").toString(), QStringLiteral("Folder · Shuffle ▾"));
+        QCOMPARE(named(QStringLiteral("folderChip"))->property("text").toString(), QStringLiteral("Shuffle"));
         // The cursor goes back to the note.
         QTRY_VERIFY(note()->property("editor").value<QQuickItem *>()->hasActiveFocus());
         type(m_view.get(), QStringLiteral("Price"));
@@ -744,7 +755,7 @@ private Q_SLOTS:
         QCOMPARE(m_capture->window(), QStringLiteral("shuffleforplasma.com"));
         QCOMPARE(m_capture->app(), QStringLiteral("org.mozilla.firefox"));
         QVERIFY(m_store->note(m_capture->noteId())->isStuck());
-        QCOMPARE(named(QStringLiteral("stuckChip"))->property("text").toString(), QStringLiteral("Stuck to · shuffleforplasma.com ▾"));
+        QCOMPARE(named(QStringLiteral("stuckChip"))->property("text").toString(), QStringLiteral("shuffleforplasma.com"));
 
         // Not stuck, it keeps its folder.
         tap(m_view.get(), named(QStringLiteral("stuckChip")));
@@ -752,7 +763,7 @@ private Q_SLOTS:
         QVERIFY(!m_capture->stuck());
         QVERIFY(!m_store->note(m_capture->noteId())->stuck);
         QCOMPARE(m_store->note(m_capture->noteId())->folder, QStringLiteral("Shuffle"));
-        QCOMPARE(named(QStringLiteral("stuckChip"))->property("text").toString(), QStringLiteral("Not stuck to a window ▾"));
+        QCOMPARE(named(QStringLiteral("stuckChip"))->property("text").toString(), QStringLiteral("Not stuck"));
     }
 
     void newFolderIsNamedOnce()
@@ -906,21 +917,32 @@ private Q_SLOTS:
         QVERIFY(!pad->isVisible());
     }
 
-    void doneFinishes()
+    // More holds what a kept note rarely needs: Copy all, Pin, Tuck away
+    // and Remove. Before the first letter there is nothing to act on.
+    void moreOnlyForAKeptNote()
     {
-        QSignalSpy finished(m_capture.get(), &Capture::finished);
+        QVERIFY(!named(QStringLiteral("more"))->isVisible());
         type(m_view.get(), QStringLiteral("x"));
-        tap(m_view.get(), named(QStringLiteral("done")));
-        QCOMPARE(finished.count(), 1);
-        QVERIFY(m_store->note(m_capture->noteId()).has_value());
-    }
-
-    void actionsOnlyForAKeptNote()
-    {
+        QVERIFY(named(QStringLiteral("more"))->isVisible());
         QVERIFY(!named(QStringLiteral("tuckAway"))->isVisible());
-        QVERIFY(!named(QStringLiteral("remove"))->isVisible());
-        type(m_view.get(), QStringLiteral("x"));
+        tap(m_view.get(), named(QStringLiteral("more")));
+        QVERIFY(named(QStringLiteral("moreMenu"))->isVisible());
         QVERIFY(named(QStringLiteral("tuckAway"))->isVisible());
+        picture(m_view.get(), QStringLiteral("note-more"));
+        tap(m_view.get(), named(QStringLiteral("copyAll")));
+        QCOMPARE(QGuiApplication::clipboard()->text(), QStringLiteral("x"));
+        QVERIFY(!named(QStringLiteral("moreMenu"))->isVisible());
+        tap(m_view.get(), named(QStringLiteral("more")));
+        auto *pin = named(QStringLiteral("pin"));
+        QCOMPARE(pin->property("text").toString(), QStringLiteral("Pin to the panel"));
+        tap(m_view.get(), pin);
+        QVERIFY(m_capture->pinned());
+        QCOMPARE(m_store->pinnedNote()->id, m_capture->noteId());
+        tap(m_view.get(), named(QStringLiteral("more")));
+        QCOMPARE(pin->property("text").toString(), QStringLiteral("Unpin from the panel"));
+        tap(m_view.get(), pin);
+        QVERIFY(!m_store->pinnedNote());
+        tap(m_view.get(), named(QStringLiteral("more")));
         tap(m_view.get(), named(QStringLiteral("remove")));
         QVERIFY(m_store->notes().isEmpty());
         QVERIFY(QFile::exists(m_home->trash()));
@@ -977,13 +999,12 @@ private Q_SLOTS:
         QTRY_COMPARE(card->y(), 133.0);
     }
 
-    // All notes grows the card into the board, as Apps grows the search; a
-    // note opened there or Esc brings the note back, and a
-    // second Esc or a tap outside the card puts it away.
-    void cardGrowsIntoTheBoard()
+    // All notes opens the board as Gooseberry's own window, and the card
+    // goes. A note opened from a search's Notes has a bar on top leading back
+    // there, which Esc takes too; Esc on any other puts the card away.
+    void cardOpensTheBoardAndGoesBack()
     {
         m_capture->setText(QStringLiteral("Flick threshold"));
-        const QString written = m_capture->noteId();
         Places places(m_store.get());
         PlaceNotes notes(m_store.get());
         FakeShell shell(m_store.get(), m_capture.get(), &places, &notes);
@@ -998,35 +1019,27 @@ private Q_SLOTS:
         QVERIFY(QTest::qWaitForWindowExposed(window));
         auto *card = window->property("card").value<QQuickItem *>();
         QTRY_COMPARE(card->width(), 806.0);
+        QVERIFY(!itemNamed(card, QStringLiteral("backBar"))->isVisible());
 
         tap(window, itemNamed(card, QStringLiteral("allNotes")));
-        QVERIFY(window->property("expanded").toBool());
-        QTRY_COMPARE(card->width(), 1240.0);
-        QTRY_COMPARE(card->height(), 716.0);
-        QCOMPARE(card->y(), 10.0);
-        QTRY_VERIFY(itemNamed(card, QStringLiteral("note-") + written));
-        QVERIFY(itemNamed(card, QStringLiteral("place-today"))->isVisible());
-        picture(window, QStringLiteral("card-board"));
-        for (QQuickItem *button : buttonsIn(window->property("board").value<QQuickItem *>())) {
-            QVERIFY2(button->height() >= 44 && button->width() >= 44, qPrintable(button->objectName()));
-        }
+        QCOMPARE(shell.boards, 1);
+        QCOMPARE(card->width(), 806.0);
 
-        // A note tapped on the board opens on the card, back at its size.
-        tap(window, itemNamed(card, QStringLiteral("note-") + written));
-        QCOMPARE(shell.opened, written);
-        QMetaObject::invokeMethod(window, "open"); // As the shell does for it.
-        QVERIFY(!window->property("expanded").toBool());
-        QTRY_COMPARE(card->width(), 806.0);
-
-        // At full size there is no Back button: Esc brings the note back, and
-        // a second Esc puts the card away.
-        tap(window, itemNamed(card, QStringLiteral("allNotes")));
-        QVERIFY(window->property("expanded").toBool());
-        QVERIFY(!itemNamed(card, QStringLiteral("backToNote")));
+        // From a search's Notes: the bar leads back, and so does Esc.
+        shell.setBack(QStringLiteral("Notes"));
+        QQuickItem *back = itemNamed(card, QStringLiteral("back"));
+        QTRY_VERIFY(back->isVisible());
+        QVERIFY(back->height() >= 44);
+        QVERIFY(itemNamed(card, QStringLiteral("page"))->mapToItem(card, QPointF()).y() >= back->mapToItem(card, QPointF()).y() + 30);
+        picture(window, QStringLiteral("card-back"));
+        tap(window, back);
+        QCOMPARE(shell.wentBack, 1);
         QSignalSpy finished(m_capture.get(), &Capture::finished);
         QTest::keyClick(window, Qt::Key_Escape);
-        QVERIFY(!window->property("expanded").toBool());
+        QCOMPARE(shell.wentBack, 2);
         QCOMPARE(finished.count(), 0);
+        shell.setBack({});
+        QTRY_VERIFY(!itemNamed(card, QStringLiteral("backBar"))->isVisible());
         QTest::keyClick(window, Qt::Key_Escape);
         QCOMPARE(finished.count(), 1);
 
@@ -1105,13 +1118,20 @@ private Q_SLOTS:
         tap(board, find(QStringLiteral("newNote")));
         QCOMPARE(shell.newIn, QStringLiteral("window:SpreadGesture.qml"));
 
-        // Folders down the side: Inbox first, New folder last.
+        // The places in one row along the top, under the search: Today,
+        // Inbox first among the folders, New folder last, then the windows
+        // and Tucked away.
         QQuickItem *inbox = find(QStringLiteral("place-inbox"));
         QQuickItem *home = find(QStringLiteral("place-folder:Home"));
         QQuickItem *shuffle = find(QStringLiteral("place-folder:Shuffle"));
         QQuickItem *newFolder = find(QStringLiteral("place-newfolder"));
-        QVERIFY(inbox->y() < home->y() && home->y() < shuffle->y() && shuffle->y() < newFolder->y());
-        QVERIFY(newFolder->y() < find(QStringLiteral("place-window:SpreadGesture.qml"))->y());
+        QQuickItem *window = find(QStringLiteral("place-window:SpreadGesture.qml"));
+        QVERIFY(find(QStringLiteral("place-today"))->x() < inbox->x());
+        QVERIFY(inbox->x() < home->x() && home->x() < shuffle->x() && shuffle->x() < newFolder->x());
+        QVERIFY(newFolder->x() < window->x() && window->x() < find(QStringLiteral("place-tucked"))->x());
+        QCOMPARE(inbox->y(), window->y());
+        QQuickItem *searchField = find(QStringLiteral("search"));
+        QVERIFY(inbox->mapToScene({0, 0}).y() > searchField->mapToScene({0, searchField->height()}).y());
 
         // A held note lifts and drops on a folder.
         tap(board, inbox);
@@ -1148,17 +1168,34 @@ private Q_SLOTS:
         tap(board, find(QStringLiteral("noticeAction")));
         QTRY_COMPARE(m_store->note(loose)->folder, QStringLiteral("Home"));
 
-        // New folder: named once, then shown.
+        // New folder: one tap makes it and shows it, its name ready to type
+        // over in place; a second tap makes another, numbered.
         tap(board, find(QStringLiteral("place-newfolder")));
-        QQuickItem *name = find(QStringLiteral("newFolderName"));
+        QVERIFY(m_store->hasFolder(QStringLiteral("New folder")));
+        QCOMPARE(notes.place(), QStringLiteral("folder:New folder"));
+        QQuickItem *name = find(QStringLiteral("renameField"));
         QVERIFY(name->isVisible());
         QTRY_VERIFY(name->hasActiveFocus());
+        QCOMPARE(name->property("selectedText").toString(), QStringLiteral("New folder"));
         type(board, QStringLiteral("Tablet"));
         QTest::keyClick(board, Qt::Key_Return);
         QVERIFY(m_store->hasFolder(QStringLiteral("Tablet")));
+        QVERIFY(!m_store->hasFolder(QStringLiteral("New folder")));
         QCOMPARE(notes.place(), QStringLiteral("folder:Tablet"));
         QVERIFY(!name->isVisible());
         QTRY_VERIFY(find(QStringLiteral("place-folder:Tablet")));
+        QVERIFY(m_store->makeFolder(QStringLiteral("New folder")));
+        // The row is laid out again for the folder before New folder is tapped.
+        QTRY_VERIFY(find(QStringLiteral("place-folder:New folder")));
+        QTest::qWait(50);
+        tap(board, find(QStringLiteral("place-newfolder")));
+        QVERIFY(m_store->hasFolder(QStringLiteral("New folder 2")));
+        QTest::keyClick(board, Qt::Key_Escape);
+        QVERIFY(m_store->removeFolder(QStringLiteral("New folder 2")).has_value());
+        QVERIFY(m_store->removeFolder(QStringLiteral("New folder")).has_value());
+        QTRY_VERIFY(!find(QStringLiteral("place-folder:New folder")));
+        QTest::qWait(50);
+        tap(board, find(QStringLiteral("place-folder:Tablet")));
         QVERIFY(find(QStringLiteral("folderActions"))->isVisible());
         picture(board, QStringLiteral("board-folder"));
 
@@ -1199,6 +1236,15 @@ private Q_SLOTS:
                                                                          button->property("text").toString())
                                     .arg(button->width()).arg(button->height())));
         }
+
+        // Words no note has, and Enter, start a note with them in Inbox.
+        tap(board, searchField);
+        type(board, QStringLiteral("Zebra crossing"));
+        QTRY_COMPARE(notes.count(), 0);
+        QTest::keyClick(board, Qt::Key_Return);
+        QCOMPARE(shell.newIn, QStringLiteral("inbox"));
+        QCOMPARE(m_capture->text(), QStringLiteral("Zebra crossing"));
+        QCOMPARE(searchField->property("text").toString(), QString());
     }
 
     // Today on the board, as the mock-up draws it: the day strip, the

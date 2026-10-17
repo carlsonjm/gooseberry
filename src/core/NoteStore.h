@@ -81,6 +81,11 @@ public:
     // since it was last read here, that version is first kept as a note of
     // its own, so neither is lost.
     bool save(Note note, Touch touch = Touch::Changed);
+    // Pins a note, unpinning the one pinned before, or unpins it. Neither
+    // changes when the notes were last changed.
+    bool pin(const QString &id, bool on);
+    // The pinned note; none when no note is, or when it is tucked away.
+    std::optional<Note> pinnedNote() const;
     // Keeps another version of a note, as one changed on another device, as
     // a new note in the same folder. Returns its id, or an empty string with
     // lastError.

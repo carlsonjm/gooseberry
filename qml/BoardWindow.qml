@@ -17,6 +17,8 @@ Kirigami.ApplicationWindow {
     minimumHeight: 420
     visible: false
     pageStack.globalToolBar.style: Kirigami.ApplicationHeaderStyle.None
+    // One page: a sideways swipe is the places row's, not the page stack's.
+    pageStack.interactive: false
 
     // The board starts on Today, or on the place a note sits in.
     function present(place) {
