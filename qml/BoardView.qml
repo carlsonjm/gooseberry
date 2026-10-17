@@ -244,15 +244,16 @@ Item {
                     clip: true
                     model: board.places
                     boundsBehavior: Flickable.StopAtBounds
-                    // A wheel or a touchpad, either way, moves the row along.
+                    // A wheel or a touchpad, either way, moves the row along,
+                    // at twice the distance a list moves down.
                     WheelHandler {
                         target: null
                         acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
                         onWheel: event => {
                             const pixels = Math.abs(event.pixelDelta.x) + Math.abs(event.pixelDelta.y) > 0
-                            const along = pixels
+                            const along = 2 * (pixels
                                 ? (Math.abs(event.pixelDelta.x) > Math.abs(event.pixelDelta.y) ? event.pixelDelta.x : event.pixelDelta.y)
-                                : (Math.abs(event.angleDelta.x) > Math.abs(event.angleDelta.y) ? event.angleDelta.x : event.angleDelta.y) / 120 * 80;
+                                : (Math.abs(event.angleDelta.x) > Math.abs(event.angleDelta.y) ? event.angleDelta.x : event.angleDelta.y) / 120 * 80);
                             const end = Math.max(0, placeList.contentWidth - placeList.width);
                             placeList.contentX = Math.max(0, Math.min(end, placeList.contentX - along));
                         }
