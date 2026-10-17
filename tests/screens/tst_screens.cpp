@@ -1112,13 +1112,20 @@ private Q_SLOTS:
         tap(board, find(QStringLiteral("newNote")));
         QCOMPARE(shell.newIn, QStringLiteral("window:SpreadGesture.qml"));
 
-        // Folders down the side: Inbox first, New folder last.
+        // The places in one row along the top, under the search: Today,
+        // Inbox first among the folders, New folder last, then the windows
+        // and Tucked away.
         QQuickItem *inbox = find(QStringLiteral("place-inbox"));
         QQuickItem *home = find(QStringLiteral("place-folder:Home"));
         QQuickItem *shuffle = find(QStringLiteral("place-folder:Shuffle"));
         QQuickItem *newFolder = find(QStringLiteral("place-newfolder"));
-        QVERIFY(inbox->y() < home->y() && home->y() < shuffle->y() && shuffle->y() < newFolder->y());
-        QVERIFY(newFolder->y() < find(QStringLiteral("place-window:SpreadGesture.qml"))->y());
+        QQuickItem *window = find(QStringLiteral("place-window:SpreadGesture.qml"));
+        QVERIFY(find(QStringLiteral("place-today"))->x() < inbox->x());
+        QVERIFY(inbox->x() < home->x() && home->x() < shuffle->x() && shuffle->x() < newFolder->x());
+        QVERIFY(newFolder->x() < window->x() && window->x() < find(QStringLiteral("place-tucked"))->x());
+        QCOMPARE(inbox->y(), window->y());
+        QQuickItem *searchField = find(QStringLiteral("search"));
+        QVERIFY(inbox->mapToScene({0, 0}).y() > searchField->mapToScene({0, searchField->height()}).y());
 
         // A held note lifts and drops on a folder.
         tap(board, inbox);
@@ -1206,6 +1213,15 @@ private Q_SLOTS:
                                                                          button->property("text").toString())
                                     .arg(button->width()).arg(button->height())));
         }
+
+        // Words no note has, and Enter, start a note with them in Inbox.
+        tap(board, searchField);
+        type(board, QStringLiteral("Zebra crossing"));
+        QTRY_COMPARE(notes.count(), 0);
+        QTest::keyClick(board, Qt::Key_Return);
+        QCOMPARE(shell.newIn, QStringLiteral("inbox"));
+        QCOMPARE(m_capture->text(), QStringLiteral("Zebra crossing"));
+        QCOMPARE(searchField->property("text").toString(), QString());
     }
 
     // Today on the board, as the mock-up draws it: the day strip, the

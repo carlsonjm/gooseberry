@@ -19,7 +19,7 @@ below is built.
 | Tuck a note away | Tap Tuck away on the note | None yet |
 | Bring a note back | Tap Tucked away on the board, then the note | None yet |
 | Remove a note | Tap the note on the board, then Remove | None yet |
-| Find a note | Type in Search notes on the board | None yet |
+| Find a note | Type in Find or start a note on the board | None yet |
 | Bring up a window's notes | Tap the dot in its title bar | None yet |
 | Move a note over a window | Drag it | None yet |
 | Copy words from a note | Hold a word | `Ctrl+C` |
@@ -202,7 +202,8 @@ today again.
 
 | Input | What happens |
 | --- | --- |
-| Type in Search notes on the board | The board shows every note with those words, or in a folder or stuck to a window of that name, tucked away ones too, whatever place was chosen. Clearing the search goes back to the place. |
+| Type in Find or start a note on the board | The board shows every note with those words, or in a folder or stuck to a window of that name, tucked away ones too, whatever place was chosen. Clearing the search goes back to the place. |
+| `Enter` in Find or start a note, with words no note has | Starts a note in Inbox with those words, on the quick-note card. |
 
 ## Bring up a window's notes
 
@@ -261,4 +262,4 @@ stuck over a window alike. On a checklist, Copy does not show.
 
 | Input | What happens |
 | --- | --- |
-| Turn the wheel over the quick-note card's page, or over the places down the board's side | Each notch moves 80 pixels, at Plasma's usual three lines a notch; more lines a notch in Plasma's settings move further. |
+| Turn the wheel over the quick-note card's page, or over the row of places along the board's top | Each notch moves 80 pixels, at Plasma's usual three lines a notch; more lines a notch in Plasma's settings move further. |

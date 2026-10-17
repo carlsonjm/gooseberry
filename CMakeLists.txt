@@ -75,6 +75,7 @@ qt_add_qml_module(gooseberry-screens
         qml/icons/lucide/layout-grid.svg
         qml/icons/lucide/list-checks.svg
         qml/icons/lucide/pin.svg
+        qml/icons/lucide/search.svg
         qml/icons/lucide/trash-2.svg
         qml/icons/lucide/triangle-alert.svg
         qml/icons/lucide/x.svg

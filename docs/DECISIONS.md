@@ -266,6 +266,25 @@ to drop it on, and a note shaped as the search that offers a reminder, a
 checklist or a folder from the words typed. The latter may come later on top
 of this one.
 
+## The board is a search
+
+The board opens as a search of every note: Find or start a note along its top,
+and the places in one row under it, Today, the folders with Inbox first and
+New folder last, the windows with notes stuck to them, and Tucked away, quieter,
+last, each a place to drop a carried note. Enter with words no note has starts
+a note with them. The notes of the place chosen fill the rest as before, with
+the planner on Today. A desktop's search that hosts the notes draws the same
+board in its Notes mode, so Gooseberry's own window and the search read as one
+(`DESKTOP.md` § The quick note in Search). (The maintainer, 17 October,
+choosing the board as a search of three directions.) This replaces the places
+running down the board's side.
+
+It holds because the side list took a quarter of the board for what is chosen
+once, and the search is how a note is most often found.
+
+Rejected: one list from today's notes down to the folders, with the note open
+beside it, and a desk of folder stacks and windows with their notes.
+
 ## The quick-note card is a surface of the desktop's own
 
 The card is drawn on a layer of the desktop's own, across the room the panels

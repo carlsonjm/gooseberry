@@ -172,79 +172,88 @@ Item {
         }
     }
 
-    RowLayout {
+    ColumnLayout {
         anchors.fill: parent
         spacing: 0
 
-        Rectangle {
-            Layout.fillHeight: true
-            Layout.preferredWidth: 250
-            // Inside the card, its corners follow the card's.
-            topLeftRadius: board.collapsible ? 7 : 0
-            bottomLeftRadius: board.collapsible ? 7 : 0
-            Kirigami.Theme.colorSet: Kirigami.Theme.View
-            Kirigami.Theme.inherit: false
-            color: Kirigami.Theme.backgroundColor
+        // Along the top, as Search's Notes has it: Find or start a note, and
+        // the places in one row under it, Today, the folders with Inbox
+        // first and New folder last, the windows with notes stuck to them,
+        // and Tucked away. A carried note can be let go on a place.
+        ColumnLayout {
+            Layout.fillWidth: true
+            Layout.leftMargin: 28
+            Layout.rightMargin: 28
+            Layout.topMargin: 20
+            spacing: 10
 
-            ColumnLayout {
-                anchors.fill: parent
-                anchors.margins: 12
-                anchors.topMargin: 14
-                spacing: 2
-
-                QQC2.TextField {
-                    id: search
-                    objectName: "search"
-                    Layout.fillWidth: true
-                    Layout.bottomMargin: 10
-                    implicitHeight: 44
-                    placeholderText: i18n("Search notes")
-                    leftPadding: 40
-                    rightPadding: 14
-                    onTextChanged: board.notes.search = text
-                    background: Rectangle {
-                        radius: 22
-                        color: Qt.alpha(Kirigami.Theme.textColor, 0.07)
-                        border.width: 1
-                        border.color: search.activeFocus ? Kirigami.Theme.focusColor : Qt.alpha(Kirigami.Theme.textColor, 0.35)
-                        Kirigami.Icon {
-                            anchors.left: parent.left
-                            anchors.leftMargin: 14
-                            anchors.verticalCenter: parent.verticalCenter
-                            implicitWidth: 16
-                            implicitHeight: 16
-                            source: "search"
-                            color: Kirigami.Theme.disabledTextColor
-                            isMask: true
-                        }
+            QQC2.TextField {
+                id: search
+                objectName: "search"
+                Layout.fillWidth: true
+                implicitHeight: 56
+                placeholderText: i18n("Find or start a note")
+                Accessible.name: i18n("Find or start a note")
+                font.pixelSize: 20
+                font.weight: Font.Medium
+                leftPadding: 52
+                rightPadding: 20
+                onTextChanged: board.notes.search = text
+                // Enter with words no note has starts a note with them.
+                onAccepted: {
+                    const words = text.trim();
+                    if (words.length === 0 || board.notes.count > 0 || board.shell.store.readOnly) {
+                        return;
+                    }
+                    board.shell.newNoteIn("inbox");
+                    board.shell.capture.text = words;
+                    text = "";
+                }
+                background: Rectangle {
+                    radius: height / 2
+                    color: Qt.alpha(Kirigami.Theme.textColor, 0.09)
+                    border.width: search.activeFocus ? 1 : 0
+                    border.color: Kirigami.Theme.focusColor
+                    Kirigami.Icon {
+                        anchors.left: parent.left
+                        anchors.leftMargin: 20
+                        anchors.verticalCenter: parent.verticalCenter
+                        implicitWidth: 20
+                        implicitHeight: 20
+                        source: Qt.resolvedUrl("icons/lucide/search.svg")
+                        color: Kirigami.Theme.disabledTextColor
+                        isMask: true
                     }
                 }
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 8
 
                 ListView {
                     id: placeList
-                    footer: Item {
-                        width: ListView.view ? ListView.view.width : 0
-                        height: 8
-                    }
                     Layout.fillWidth: true
-                    Layout.fillHeight: true
+                    implicitHeight: 44
+                    orientation: ListView.Horizontal
+                    spacing: 4
                     clip: true
                     model: board.places
                     boundsBehavior: Flickable.StopAtBounds
-                    // A wheel notch scrolls 80 pixels at Plasma's usual three lines per notch.
-                    Kirigami.WheelHandler { target: placeList; verticalStepSize: Qt.styleHints.wheelScrollLines * 80 / 3 }
+                    Kirigami.WheelHandler { target: placeList; horizontalStepSize: Qt.styleHints.wheelScrollLines * 80 / 3 }
+                    // A thin rule before the folders, the windows and Tucked
+                    // away; Today, first, has none.
                     section.property: "section"
-                    section.delegate: QQC2.Label {
+                    section.delegate: Item {
                         required property string section
-                        width: ListView.view.width
-                        text: board.sectionTitle(section).toUpperCase()
-                        topPadding: 14
-                        bottomPadding: 4
-                        leftPadding: 10
-                        font.pixelSize: 11
-                        font.weight: Font.ExtraBold
-                        font.letterSpacing: 0.6
-                        color: Kirigami.Theme.disabledTextColor
+                        width: section.length > 0 ? 17 : 0
+                        height: 44
+                        Rectangle {
+                            anchors.centerIn: parent
+                            width: 1
+                            height: 20
+                            color: Qt.alpha(Kirigami.Theme.textColor, 0.2)
+                        }
                     }
                     delegate: QQC2.AbstractButton {
                         id: placeButton
@@ -255,9 +264,10 @@ Item {
                         // A carried note can be let go here.
                         readonly property bool takesNotes: key === "inbox" || key === "tucked" || key.startsWith("folder:")
                         readonly property bool newFolder: key === "newfolder"
+                        readonly property bool quiet: key === "tucked" || newFolder
                         objectName: "place-" + key
-                        width: ListView.view.width
                         implicitHeight: 44
+                        implicitWidth: Math.max(44, placeRow.implicitWidth + 28)
                         focusPolicy: Qt.NoFocus
                         Accessible.name: label
                         onClicked: {
@@ -284,39 +294,34 @@ Item {
                             }
                         }
                         background: Rectangle {
-                            radius: 8
+                            radius: height / 2
                             color: dropHere.containsDrag ? Qt.alpha(Kirigami.Theme.highlightColor, 0.25)
                                  : placeButton.current ? Qt.alpha(Kirigami.Theme.textColor, 0.16)
-                                 : placeButton.down ? Qt.alpha(Kirigami.Theme.textColor, 0.08) : "transparent"
+                                 : placeButton.down ? Qt.alpha(Kirigami.Theme.textColor, 0.08)
+                                 : placeButton.hovered ? Qt.alpha(Kirigami.Theme.textColor, 0.06) : "transparent"
                             border.width: dropHere.containsDrag ? 2 : 0
                             border.color: Kirigami.Theme.highlightColor
                         }
-                        contentItem: RowLayout {
-                            spacing: 10
-                            Kirigami.Icon {
-                                Layout.leftMargin: 10
-                                implicitWidth: 16
-                                implicitHeight: 16
-                                source: board.iconFor(placeButton.key)
-                                fallback: "folder"
-                                color: Kirigami.Theme.textColor
-                                isMask: true
-                            }
-                            QQC2.Label {
-                                Layout.fillWidth: true
-                                text: placeButton.label
-                                elide: Text.ElideRight
-                                font.pixelSize: 14
-                                font.weight: Font.DemiBold
-                                color: placeButton.newFolder ? Kirigami.Theme.linkColor : Kirigami.Theme.textColor
-                            }
-                            QQC2.Label {
-                                Layout.rightMargin: 10
-                                text: placeButton.count
-                                visible: placeButton.count > 0
-                                font.pixelSize: 12
-                                font.weight: Font.DemiBold
-                                color: placeButton.current ? Kirigami.Theme.textColor : Kirigami.Theme.disabledTextColor
+                        contentItem: Item {
+                            RowLayout {
+                                id: placeRow
+                                anchors.centerIn: parent
+                                spacing: 6
+                                QQC2.Label {
+                                    text: placeButton.newFolder ? i18n("+ New folder") : placeButton.label
+                                    font.pixelSize: 13
+                                    font.weight: Font.DemiBold
+                                    color: placeButton.current ? Kirigami.Theme.textColor
+                                         : placeButton.quiet ? Kirigami.Theme.disabledTextColor
+                                         : Qt.alpha(Kirigami.Theme.textColor, 0.72)
+                                }
+                                QQC2.Label {
+                                    text: placeButton.count
+                                    visible: placeButton.count > 0 && placeButton.key !== "today"
+                                    font.pixelSize: 12
+                                    font.weight: Font.DemiBold
+                                    color: Kirigami.Theme.disabledTextColor
+                                }
                             }
                         }
                     }
@@ -326,14 +331,13 @@ Item {
                 QQC2.TextField {
                     id: newFolderName
                     objectName: "newFolderName"
-                    Layout.fillWidth: true
-                    Layout.topMargin: 6
+                    Layout.preferredWidth: 220
                     visible: board.naming
                     implicitHeight: 44
                     placeholderText: i18n("Name the folder")
                     Accessible.name: i18n("New folder")
-                    leftPadding: 14
-                    rightPadding: 14
+                    leftPadding: 16
+                    rightPadding: 16
                     onAccepted: {
                         if (text.trim().length > 0) {
                             board.makeFolder(text);
@@ -362,7 +366,7 @@ Item {
                 Layout.fillWidth: true
                 Layout.leftMargin: 28
                 Layout.rightMargin: 28
-                Layout.topMargin: 22
+                Layout.topMargin: 14
                 spacing: 16
 
                 ColumnLayout {
