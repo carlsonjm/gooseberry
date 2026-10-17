@@ -2,15 +2,16 @@
 import QtQuick
 import QtQuick.Controls as QQC2
 import QtQuick.Layouts
+import org.kde.kirigami as Kirigami
 
-// The note as a checklist, on its page: each item with a box to tick, ticked
+// The note as a checklist, in the note's ink: each item with a box to tick, ticked
 // ones struck through where they stand, and the heading above them. Return
 // starts the next item; backspace in an empty one takes it away.
 QQC2.ScrollView {
     id: pad
 
     required property QtObject capture
-    readonly property color ink: "#1A1A1A"
+    readonly property color ink: Kirigami.Theme.textColor
     readonly property var lines: capture.lines
     onLinesChanged: sync()
     Component.onCompleted: sync()
@@ -128,7 +129,7 @@ QQC2.ScrollView {
                                 text: "✓"
                                 font.pixelSize: 16
                                 font.weight: Font.Bold
-                                color: "#F8F8FF"
+                                color: Kirigami.Theme.backgroundColor
                             }
                         }
                     }
@@ -143,10 +144,10 @@ QQC2.ScrollView {
                     text: row.line.text
                     readOnly: pad.capture.readOnly
                     color: row.line.checked ? Qt.alpha(pad.ink, 0.5) : pad.ink
-                    selectionColor: Qt.rgba(0, 0, 0, 0.2)
-                    selectedTextColor: pad.ink
+                    selectionColor: Kirigami.Theme.highlightColor
+                    selectedTextColor: Kirigami.Theme.highlightedTextColor
                     wrapMode: TextEdit.Wrap
-                    font.pixelSize: 22
+                    font.pixelSize: 20
                     font.weight: row.line.item ? Font.Medium : Font.Bold
                     font.strikeout: row.line.checked
                     Accessible.name: row.line.text
