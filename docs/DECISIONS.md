@@ -1,7 +1,7 @@
 # Decisions
 
 Each settled ruling: the rule, why it holds, and what was rejected. Decisions
-still open are in `ROADMAP.md` § Open decisions.
+still open are kept privately.
 
 ## Gooseberry is its own component, under its own name
 

@@ -4,8 +4,7 @@ For every task, read only this startup set, in order:
 
 1. `AGENTS.md`
 2. `docs/CONCEPT.md`
-3. `docs/ROADMAP.md`
-4. The suite record, kept privately in the Shuffle repository and read from its
+3. The suite record, kept privately in the Shuffle repository and read from its
    checkout beside this one: `../shuffle/docs/suite/CURRENT_STATE.md` and
    `../shuffle/docs/suite/SWARM.md`. Its `ROADMAP-CC.md` is no longer
    maintained and stays only as a record. When the suite record is not checked
@@ -14,8 +13,8 @@ For every task, read only this startup set, in order:
 
 Then open only the documents the work touches; `docs/README.md` routes each
 subject to its document. Before proposing an approach, check
-`docs/DECISIONS.md` for one that was already rejected, and `docs/ROADMAP.md`
-§ Open decisions for one still waiting on the maintainer.
+`docs/DECISIONS.md` for one that was already rejected. What Gooseberry does not
+do yet, and will not do, is in `docs/LIMITATIONS.md`.
 
 Claude Code loads `CLAUDE.md` automatically. It routes into this same startup set
 and adds no separate protocol.
@@ -41,15 +40,16 @@ These hold here, because this program keeps what a person wrote.
 - Window positions belong to the window manager. Gooseberry may ask Kadunce for
   room or a place; it never moves or resizes a window itself.
 - Nothing about the cards contract is assumed before the maintainer settles
-  § Open decisions in `docs/ROADMAP.md`, and nothing is asked of Kadunce or
-  Tettegouche that their own documents do not offer. A need goes in
-  `docs/DESKTOP.md` § Needs, for that component to take up in the open.
+  it, and nothing is asked of Kadunce or Tettegouche that their own documents
+  do not offer. A need goes in `docs/DESKTOP.md` § Needs, for that component to
+  take up in the open.
 - Tests never read or change a real person's notes, settings or session.
 
 ## Writing here
 
-- `docs/ROADMAP.md` is the plan for this repository; suite order lives in the
-  suite record.
+- The plan for this repository is kept privately; suite order lives in the
+  suite record. `docs/LIMITATIONS.md` says only what Gooseberry does not do
+  yet and will not do.
 - A ruling goes in `docs/DECISIONS.md` as its rule, why it holds, and what was
   rejected.
 - Public text stays fit to publish: no attribution by initial, and no paths into
