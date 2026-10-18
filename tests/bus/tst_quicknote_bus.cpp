@@ -192,6 +192,11 @@ private Q_SLOTS:
         }
         const QDBusMessage hidden = stuck.call(QStringLiteral("Hide"));
         QCOMPARE(hidden.type(), QDBusMessage::ReplyMessage);
+        // A panel drawing folded notes as its island says so, and stops.
+        for (const bool drawn : {true, true, false}) {
+            const QDBusMessage held = stuck.call(QStringLiteral("DrawFolded"), drawn);
+            QCOMPARE(held.type(), QDBusMessage::ReplyMessage);
+        }
     }
 
     // Start gives an empty note with everything a pad needs to draw it, and

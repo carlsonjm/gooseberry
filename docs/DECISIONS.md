@@ -97,6 +97,11 @@ on-screen keys up. Typing ends kept before they fold. Windows with a title-bar
 dot fold the same way; that dot still puts them away. In Spread a card whose
 notes are folded shows the dot in their place. (The maintainer, 15 October.)
 
+Where the desktop's panel shows the window's notes as an island, as Shuffle's
+does, folded notes leave no dot over the window: the island brings them back,
+and Shuffle's title bar and top bar draw no dot. Without such a panel the dot
+stays where it is. (The maintainer, 17 October.)
+
 It holds because an application that draws its own top bar, as web browsers
 do, has no title-bar dot, so its notes could otherwise come back only from
 Spread, and notes left open cover the work. To see the tap that goes to the

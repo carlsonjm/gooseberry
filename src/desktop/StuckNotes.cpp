@@ -10,6 +10,8 @@
 
 #include <QDBusConnection>
 #include <QDBusError>
+#include <QDBusMessage>
+#include <QDBusServiceWatcher>
 #include <QGuiApplication>
 #include <QQuickWindow>
 #include <QRegion>
@@ -541,6 +543,35 @@ void StuckNotes::Pause(bool paused)
         if (ended) {
             Q_EMIT writingChanged();
         }
+    }
+}
+
+void StuckNotes::DrawFolded(bool drawn)
+{
+    if (!calledFromDBus()) {
+        return;
+    }
+    const QString caller = message().service();
+    if (!m_holderWatch) {
+        m_holderWatch = new QDBusServiceWatcher(this);
+        m_holderWatch->setConnection(connection());
+        m_holderWatch->setWatchMode(QDBusServiceWatcher::WatchForUnregistration);
+        connect(m_holderWatch, &QDBusServiceWatcher::serviceUnregistered, this, [this](const QString &name) {
+            m_holderWatch->removeWatchedService(name);
+            if (m_dotHolders.remove(name) && m_dotHolders.isEmpty()) {
+                Q_EMIT dotElsewhereChanged();
+            }
+        });
+    }
+    const bool before = dotElsewhere();
+    if (drawn && !m_dotHolders.contains(caller)) {
+        m_dotHolders.insert(caller);
+        m_holderWatch->addWatchedService(caller);
+    } else if (!drawn && m_dotHolders.remove(caller)) {
+        m_holderWatch->removeWatchedService(caller);
+    }
+    if (dotElsewhere() != before) {
+        Q_EMIT dotElsewhereChanged();
     }
 }
 

@@ -13,6 +13,7 @@
 
 #include <functional>
 
+class QDBusServiceWatcher;
 class QQuickWindow;
 
 namespace Gooseberry {
@@ -50,6 +51,9 @@ class StuckNotes : public QObject, protected QDBusContext
     Q_PROPERTY(QString writingText READ writingText NOTIFY writingTextChanged)
     // The notes over the window now are folded into a dot.
     Q_PROPERTY(bool folded READ folded NOTIFY foldedChanged)
+    // Folded notes are drawn elsewhere, as an island in the desktop's panel,
+    // so no dot is left over the window.
+    Q_PROPERTY(bool dotElsewhere READ dotElsewhere NOTIFY dotElsewhereChanged)
 
 public:
     static constexpr uint Version = 1;
@@ -67,6 +71,7 @@ public:
     QString writingId() const { return m_writingId; }
     QString writingText() const;
     bool folded() const { return m_folded; }
+    bool dotElsewhere() const { return !m_dotHolders.isEmpty(); }
 
     // Typing on a note shown over its window, where it stands: its words are
     // kept as the quick note keeps them, from the first letter, through
@@ -113,6 +118,10 @@ public Q_SLOTS:
     // Brings that window's notes up, as Show does, with this note ready to
     // type on where it stands, once the notes are drawn over the window.
     Q_SCRIPTABLE bool Write(const QString &noteId, const QString &windowId, const QString &caption, const QString &app);
+    // The caller draws folded notes itself, as a panel's island does, so
+    // none is left as a dot over its window; false, or the caller leaving
+    // the bus, ends it.
+    Q_SCRIPTABLE void DrawFolded(bool drawn);
 
 Q_SIGNALS:
     Q_SCRIPTABLE void WindowsChanged(const QVariantList &windows);
@@ -120,6 +129,7 @@ Q_SIGNALS:
     void writingChanged();
     void writingTextChanged();
     void foldedChanged();
+    void dotElsewhereChanged();
     // The title bar's + was tapped: a new note stuck to this window.
     void newRequested(const QString &window, const QString &app);
 
@@ -165,6 +175,9 @@ private:
     // the window they were brought up on, however late it is to say so.
     QString m_activeWhenShown;
     bool m_paused = false;
+    // The callers that draw folded notes themselves, by their bus names.
+    QSet<QString> m_dotHolders;
+    QDBusServiceWatcher *m_holderWatch = nullptr;
     bool m_cardOpen = false;
     QVariantList m_shownNotes;
     // The note typed on, the window it is typed on over, and what keeps it.
