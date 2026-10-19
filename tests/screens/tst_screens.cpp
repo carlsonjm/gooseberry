@@ -435,7 +435,7 @@ private Q_SLOTS:
     {
         QQuickItem *page = named(QStringLiteral("page"));
         QVERIFY(page);
-        QCOMPARE(page->property("radius").toReal(), 8.0);
+        QCOMPARE(page->property("radius").toReal(), 10.0);
         const QPointF pageAt = page->mapToItem(note(), QPointF());
         QCOMPARE(pageAt.x(), 12.0);
         QCOMPARE(pageAt.y(), 12.0);
@@ -1024,7 +1024,7 @@ private Q_SLOTS:
         QCOMPARE(card->height(), 471.0);
         QCOMPARE(card->x(), 227.0);
         QCOMPARE(card->y(), 133.0);
-        QCOMPARE(card->property("radius").toReal(), 8.0);
+        QCOMPARE(card->property("radius").toReal(), 10.0);
         QCOMPARE(card->property("border").value<QObject *>()->property("width").toReal(), 1.0);
         auto *quick = window->property("note").value<QQuickItem *>();
         QTRY_VERIFY(quick->property("editor").value<QQuickItem *>()->hasActiveFocus());

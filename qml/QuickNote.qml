@@ -227,7 +227,7 @@ Item {
         focusPolicy: Qt.NoFocus
         Accessible.name: text
         background: Rectangle {
-            radius: 8
+            radius: 10
             color: Qt.alpha(Kirigami.Theme.textColor, menuRow.down ? 0.16 : menuRow.hovered ? 0.12 : 0)
         }
         contentItem: RowLayout {
@@ -279,7 +279,7 @@ Item {
                 Layout.minimumHeight: 96
                 // The page takes whatever room the rest leaves it.
                 implicitHeight: 96
-                radius: 8
+                radius: 10
                 color: "transparent"
                 clip: true
 

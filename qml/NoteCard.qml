@@ -68,7 +68,7 @@ Rectangle {
     objectName: "note-" + noteId
     color: rowTap.pressed ? Qt.alpha(Kirigami.Theme.textColor, 0.12)
          : rowHover.hovered ? Qt.alpha(Kirigami.Theme.textColor, 0.06) : "transparent"
-    radius: 8
+    radius: 10
     implicitHeight: Math.max(wide ? 72 : 56, content.implicitHeight + 24)
     Accessible.role: Accessible.Button
     Accessible.name: text
@@ -119,7 +119,7 @@ Rectangle {
             objectName: "bead"
             implicitWidth: card.wide ? 28 : 24
             implicitHeight: implicitWidth
-            radius: 6
+            radius: 8
             color: card.colourHex
             opacity: card.tucked ? 0.55 : 1
         }
