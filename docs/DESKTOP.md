@@ -14,8 +14,11 @@ on a document, for "next time this opens", and shows reminders through the
 desktop's standard notifications (`org.freedesktop.Notifications` on the
 session bus), so whatever shows notifications on that desktop shows them. Both
 come from Plasma's own window list, which Plasma opens to Gooseberry because
-its desktop file asks for it. Where the desktop says nothing, a note starts
-stuck to nothing, in the workspace's folder or Inbox.
+its desktop file asks for it. Plasma's own shell, its panels, dock and their
+menus, never counts as the window in front: New note from a dock icon's menu
+sticks to the window that was in front before the menu opened. Where the
+desktop says nothing, a note starts stuck to nothing, in the workspace's folder
+or Inbox.
 
 A dock, a panel or Search starts Gooseberry by its desktop file,
 `io.github.carlsonjm.Gooseberry`:
