@@ -18,8 +18,9 @@ class VirtualDesktopInfo;
 namespace Gooseberry {
 
 // What Robin is working on, as the desktop reports it: the last window in
-// front that is not Gooseberry's own, and the current workspace. Where the
-// desktop reports nothing, both stay empty and notes start unstuck.
+// front that is not Gooseberry's own or the desktop shell's, and the current
+// workspace. Where the desktop reports nothing, both stay empty and notes
+// start unstuck.
 class WindowContext : public QObject
 {
     Q_OBJECT

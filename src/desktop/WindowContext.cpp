@@ -17,6 +17,18 @@ namespace Gooseberry {
 
 using TaskManager::AbstractTasksModel;
 
+namespace {
+
+// The desktop's own panels, dock and their menus are never what a note is
+// about. Holding a dock's icon for its menu brings Plasma's shell to the
+// front for a moment, just before New note asks what is there.
+bool isDesktopShell(const QString &appId)
+{
+    return appId == QLatin1String("org.kde.plasmashell");
+}
+
+} // namespace
+
 WindowContext::WindowContext(const QString &ownAppId, QObject *parent)
     : QObject(parent)
     , m_ownAppId(ownAppId)
@@ -82,7 +94,7 @@ void WindowContext::noticeDocuments()
             appId.chop(8);
         }
         const QString title = index.data(Qt::DisplayRole).toString();
-        if (appId == m_ownAppId || title.isEmpty()) {
+        if (appId == m_ownAppId || isDesktopShell(appId) || title.isEmpty()) {
             continue;
         }
         documents.insert({appId, documentName(title, index.data(AbstractTasksModel::AppName).toString())});
@@ -116,9 +128,9 @@ void WindowContext::activeChanged()
         if (appId.endsWith(QLatin1String(".desktop"))) {
             appId.chop(8);
         }
-        // Gooseberry's own board is never what a note is about; the window
-        // before it stays the one in front.
-        if (appId == m_ownAppId) {
+        // Gooseberry's own board is never what a note is about, nor is the
+        // desktop's shell; the window before it stays the one in front.
+        if (appId == m_ownAppId || isDesktopShell(appId)) {
             return;
         }
         if (appId != m_appId || index.data(Qt::DisplayRole).toString() != m_title) {
@@ -173,7 +185,7 @@ QVariantList WindowContext::openWindows() const
             appId.chop(8);
         }
         const QString title = index.data(Qt::DisplayRole).toString();
-        if (appId == m_ownAppId || title.isEmpty()) {
+        if (appId == m_ownAppId || isDesktopShell(appId) || title.isEmpty()) {
             continue;
         }
         const QString appName = index.data(AbstractTasksModel::AppName).toString();
@@ -210,7 +222,7 @@ QList<OpenWindow> WindowContext::windows() const
             window.app.chop(8);
         }
         window.caption = index.data(Qt::DisplayRole).toString();
-        if (window.app == m_ownAppId || window.caption.isEmpty()) {
+        if (window.app == m_ownAppId || isDesktopShell(window.app) || window.caption.isEmpty()) {
             continue;
         }
         window.window = documentName(window.caption, index.data(AbstractTasksModel::AppName).toString());
