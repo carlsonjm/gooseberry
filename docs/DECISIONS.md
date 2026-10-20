@@ -320,7 +320,14 @@ leave: it takes the keyboard with the cursor in the note, and a tap on the work
 around it puts it away. No window is moved. The layer is the one below the
 on-screen keys, so they stay above the card and take their own touches. On a
 desktop without such layers it is an ordinary window kept above the others.
-This is engineering's choice.
+The layer asks to be a utility surface, so the window manager's own animation
+for windows that open and close, which zooms them in from smaller, faded and
+blurred, leaves the card out: it stands at its size from its first frame.
+The card makes its own entrance, as the desktop's search does: already as it
+will rest, it fades in as it rises the last 12 pixels into place over 180 ms,
+counted from its first frame on screen, and fades back down as it is put
+away. Only its opacity and place move, so a display that draws fewer frames
+shows the same motion in fewer steps. This is engineering's choice.
 
 Rejected: an ordinary window, which the window manager places where it
 chooses; a panel widget, which exists only where a panel holds it; and the

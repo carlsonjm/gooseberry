@@ -50,8 +50,25 @@ Window {
     color: "transparent"
     visible: false
 
+    // How far the card has come in as it opens, 0 to 1. It opens in one
+    // motion, as the desktop's search does: the card, already as it will
+    // rest, fades in as it rises the last 12 pixels into place. Only its
+    // opacity and place move, and the motion starts from the window's first
+    // frame on screen, so the time it takes to show is not taken out of it.
+    property real arrival: 1
+    readonly property bool reducedMotion: Kirigami.Units.longDuration <= 1
+
     function open() {
         hideTimer.stop();
+        leaving.stop();
+        if (!visible) {
+            arriving.stop();
+            arrival = 0;
+        }
+        if (arrival < 1) {
+            firstFrame.enabled = true;
+            arrivalWait.restart();
+        }
         visible = true;
         shown = true;
         note.choosingReminder = false;
@@ -65,6 +82,10 @@ Window {
             return;
         }
         shown = false;
+        firstFrame.enabled = false;
+        arrivalWait.stop();
+        arriving.stop();
+        leaving.start();
         Qt.inputMethod.hide();
         hideTimer.restart();
     }
@@ -84,6 +105,45 @@ Window {
         } else {
             shell.capture.finish();
         }
+    }
+
+    function arrive() {
+        firstFrame.enabled = false;
+        arrivalWait.stop();
+        if (!arriving.running && arrival < 1) {
+            arriving.start();
+        }
+    }
+    Connections {
+        id: firstFrame
+        target: root
+        enabled: false
+        function onFrameSwapped() {
+            root.arrive();
+        }
+    }
+    // A window that draws no frame of its own still opens.
+    Timer {
+        id: arrivalWait
+        interval: 120
+        onTriggered: root.arrive()
+    }
+    NumberAnimation {
+        id: arriving
+        target: root
+        property: "arrival"
+        to: 1
+        duration: root.reducedMotion ? 1 : 180
+        easing.type: Easing.OutCubic
+    }
+    // Put away, it fades and settles back the way it came.
+    NumberAnimation {
+        id: leaving
+        target: root
+        property: "arrival"
+        to: 0
+        duration: Kirigami.Units.longDuration
+        easing.type: Easing.OutCubic
     }
 
     Timer {
@@ -159,19 +219,9 @@ Window {
         border.width: 1
         border.color: Qt.alpha(Kirigami.Theme.textColor, 0.15)
         clip: true
-        opacity: root.shown ? 1 : 0
-        scale: root.shown ? 1 : 0.96
-        Behavior on opacity {
-            NumberAnimation {
-                duration: Kirigami.Units.longDuration
-                easing.type: Easing.OutCubic
-            }
-        }
-        Behavior on scale {
-            NumberAnimation {
-                duration: Kirigami.Units.longDuration
-                easing.type: Easing.OutCubic
-            }
+        opacity: root.arrival
+        transform: Translate {
+            y: root.asGuest || root.reducedMotion ? 0 : (1 - root.arrival) * 12
         }
 
         // The way back to whoever opened the note here, as the search's own
