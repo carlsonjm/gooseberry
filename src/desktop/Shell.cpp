@@ -280,7 +280,12 @@ QQuickWindow *Shell::captureWindow()
         layer->setExclusiveZone(-1);
         layer->setKeyboardInteractivity(LayerShellQt::Window::KeyboardInteractivityExclusive);
         layer->setScreenConfiguration(LayerShellQt::Window::ScreenFromCompositor);
-        layer->setScope(QStringLiteral("gooseberry-capture"));
+        // KWin makes a layer surface of a scope it does not know a normal
+        // window, which its open and close animation zooms from four fifths
+        // with a fade and a blur. The card stands at its size from its first
+        // frame, so the surface asks as a utility one, which no such
+        // animation takes.
+        layer->setScope(QStringLiteral("utility"));
         qCDebug(DESKTOP) << "card on the desktop's own surface";
     } else {
         m_captureWindow->setFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::Tool);

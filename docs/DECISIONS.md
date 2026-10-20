@@ -320,6 +320,9 @@ leave: it takes the keyboard with the cursor in the note, and a tap on the work
 around it puts it away. No window is moved. The layer is the one below the
 on-screen keys, so they stay above the card and take their own touches. On a
 desktop without such layers it is an ordinary window kept above the others.
+The layer asks to be a utility surface, so the window manager's own animation
+for windows that open and close, which zooms them in from smaller, faded and
+blurred, leaves the card out: it stands at its size from its first frame.
 This is engineering's choice.
 
 Rejected: an ordinary window, which the window manager places where it
