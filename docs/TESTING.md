@@ -1,6 +1,6 @@
 # Testing
 
-What the automated checks prove, and what only a person on the tablet can.
+What the automated checks prove, and what only a person on a touchscreen can.
 
 ## Automated
 
@@ -15,25 +15,27 @@ session.
 
 | Test | What it proves |
 | --- | --- |
-| `tst_note` | The header is written and read exactly as `FORMAT.md` says; keys from a newer version survive an edit; another program's front matter, and a note opening with a rule, are kept whole as text; a header line that is not a key is kept as written; a file with no header is an Inbox note, stuck to nothing; the first format's Belongs to is read as a window stuck to or a project's folder, and written again in the second without it; the folder is never a header key; a newer note is not changed; the first words are the title; a window's title gives the document's name |
-| `tst_store` | A note is on disk from its first letter, typing after it once the writing pauses and on the way through long typing, and at once on Done or any other change; nothing is kept for an empty note; colour, folder and Stuck to are one change each, a folder chosen first waiting for the first letter, a move keeping the note stuck and unsticking keeping its folder; folders made, refused by name, kept empty, read from disk and from a file manager, renamed with their notes and workspace, and removed with their notes and ink sent to Inbox, the rest to the trash, and undone; a workspace's folder for its new notes; a move on the board never undone by typing waiting on the card; a first-layout folder brought up to date with each project's notes and ink in a folder of its name and their changed times kept; a note put back from the trash into its folder; a note planned on a day keeps its time of day; removing sends the note and its ink to the trash with the record the trash needs, and undo brings them back; tuck away and bring back; the board's places in order, Today, Inbox, the folders even empty, New folder, the windows with stuck notes and Tucked away, with counts and search by words, folder or window; changes made by other programs are read, a note moved in a file manager among them; another device's edit, brought just before typing here is written or while it waits, is kept as a note of its own; a file caught empty or half written never takes an open note's words, and a note emptied elsewhere is not trashed when its card closes; a move, a resize, a colour or a tuck made while typing waits survives the typing; a missing folder is made again; a folder or note from a newer version is left alone |
+| `tst_note` | The header is written and read exactly as `FORMAT.md` says; keys from a newer version survive an edit; another program's front matter, and a note opening with a rule, are kept whole as text; a header line that is not a key is kept as written; Windows line endings and a byte-order mark are read; a header never closed is text; a file with no header is an Inbox note, stuck to nothing; the first format's Belongs to is read as a window stuck to or a project's folder, and written again in the second without it; the folder is never a header key; a newer note is not changed; the first words are the title; a window's title gives the document's name; the five colours and a colour this version does not know |
+| `tst_store` | A note is on disk from its first letter, typing after it once the writing pauses and on the way through long typing, and at once when the note is finished or on any other change; nothing is kept for an empty note; colour, folder and Stuck to are one change each, a folder chosen first waiting for the first letter, a move keeping the note stuck and unsticking keeping its folder; folders made, refused by name, kept empty, read from disk and from a file manager, renamed with their notes and workspace, and removed with their notes and ink sent to Inbox, the rest to the trash, and undone; a workspace's folder for its new notes; a move on the board never undone by typing waiting on the card; a first-layout folder brought up to date with each project's notes and ink in a folder of its name and their changed times kept; a note put back from the trash into its folder; a note planned on a day keeps its time of day; removing sends the note and its ink to the trash with the record the trash needs, and undo brings them back; tuck away and bring back; the board's places in order, Today, Inbox, the folders even empty, New folder, the windows with stuck notes and Tucked away, with counts and search by words, folder or window; changes made by other programs are read, a note moved in a file manager among them; another device's edit, brought just before typing here is written or while it waits, is kept as a note of its own; a file caught empty or half written never takes an open note's words, and a note emptied elsewhere is not trashed when its card closes; a move, a resize, a colour or a tuck made while typing waits survives the typing; a missing folder is made again, and one that cannot be written says so; one note is pinned at a time; other files in the folder are left alone; a folder or note from a newer version is left alone |
 | `tst_keep` | A second copy of the test types a note and is ended as a crash ends a program, after one letter, mid-sentence and after a pause, and as a logout ends it mid-sentence; after a pause or a logout the note is all there, a crash mid-sentence keeps it up to the last pause, nothing half-written is left beside it, and it is back on the board after a restart |
 | `tst_planner` | Reminders, done and checklists kept in the note, read back as written, and a reminder this version cannot read kept as it was; a due reminder is recorded in its note before it is told, then never shown again, through a look at the clock or a restart; one not yet due waits and comes on time, within a second; with nothing to show it, it waits unrecorded; "next time this opens" only for that document in that application, once; In 10 minutes is a new reminder; recording a reminder shown leaves the note's changed time alone; a reminder shown while typing waits for a pause is not lost when the typing is written; on the card, a reminder is kept at once, a new one shown again, and "next time this opens" only for a note written on a window; checklists made from text, ticked, added to, taken back, with their heading; Today holds the notes planned for today and those written today, the planned ones on the planner rather than among the ideas; the planner's day strip, rows in time order with Done and the next one to come, the days ahead, another day chosen; and what Remind offers through the day |
-| `tst_stuck` | From Milestone 3: a note's place on its window is written to three places and read back, left out when never placed, and one this version cannot read kept as written; its size the same way, in whole pixels; only open windows with stuck notes that are not tucked away are told, with their count, the top note's colour and the notes newest first, the ones brought up marked, and those folded into a dot marked as well; a window is found by its id, with or without braces, then by its title without the compositor's ` <2>`, the application choosing between same-titled windows, and a title only one window has found whatever its class; while a note is typed on, the notes keep the order they had |
+| `tst_stuck` | A note's place on its window is written to three places and read back, left out when never placed, and one this version cannot read kept as written; its size the same way, in whole pixels; only open windows with stuck notes that are not tucked away are told, with their count, the top note's colour and the notes newest first, the ones brought up marked, and those folded into a dot marked as well; a window is found by its id, with or without braces, then by its title without the compositor's ` <2>`, the application choosing between same-titled windows, and a title only one window has found whatever its class; while a note is typed on, the notes keep the order they had |
 | `tst_product` | The name the person sees is Notes where Shuffle's Bottom Surface is installed and Gooseberry elsewhere; Shuffle is found by that folder alone; messages from the notes folder use the name, and the folder itself keeps `Gooseberry` |
 | `tst_reminders_bus` | Reminders as the desktop shows them: the real Gooseberry on a bus of the test's own, with the test standing in for the desktop's notifications. With nothing to show notifications a due reminder waits unrecorded, then is shown once something can; the notification carries the note's first words, when and where, Open, Done and In 10 minutes, Gooseberry's own entry, and the desktop's own time on screen; one due while Gooseberry runs is shown on time, once; Done marks the note done and In 10 minutes sets a new reminder ten minutes on; started again, Gooseberry shows nothing it has shown |
-| `tst_quicknote_bus` | The quick note's session-bus interface, used by a client that loads none of Gooseberry's code against the real Gooseberry, on a bus and in a home of the test's own: the version; Start gives an empty note and its choices and keeps nothing; text, colour and Belongs to are on disk when each call returns, and nonsense is refused; from Milestone 2, Folder's choices, SetFolder making a folder and moving the note into it and back to Inbox, SetStuck sticking and unsticking with the note's own window offered, and a bad folder name refused; Start resumes the open note; from Milestone 3, the stuck notes interface's version, no windows told and nothing toggled, shown, started or stuck, and a pause taken, where the desktop reports no windows; a change made to the file elsewhere comes back as Changed; Done, Tuck away, and Remove to the trash with Undo; OpenBoard opens the board and BoardShown follows with the caller's token; from Milestone 1, what Remind offers, a reminder set, refused and taken away, and a checklist made, ticked and turned back, each on disk when the call returns; from Notes 1.1, Edit opening a kept note, OpenOnCard handing a new note with its words, or a kept one, to the card, finishing the one a search had open, and refusing a note that is not there, and one note pinned at a time, told as it changes and unpinned when tucked away |
+| `tst_quicknote_bus` | The quick note's session-bus interface, used by a client that loads none of Gooseberry's code against the real Gooseberry, on a bus and in a home of the test's own: the version; Start gives an empty note and its choices and keeps nothing; text, colour and Belongs to are on disk when each call returns, and nonsense is refused; Folder's choices, SetFolder making a folder and moving the note into it and back to Inbox, SetStuck sticking and unsticking with the note's own window offered, and a bad folder name refused; Start resumes the open note; the stuck notes interface's version, no windows told and nothing toggled, shown, started or stuck, and a pause taken, where the desktop reports no windows; a change made to the file elsewhere comes back as Changed; Done, Tuck away, and Remove to the trash with Undo; OpenBoard opens the board and BoardShown follows with the caller's token; Find looking through every note by its words or its folder's name, tucked away ones included, with its excerpt; what Remind offers, a reminder set, refused and taken away, and a checklist made, ticked and turned back, each on disk when the call returns; Edit opening a kept note, OpenOnCard handing a new note with its words, or a kept one, to the card, finishing the one a search had open, and refusing a note that is not there, and one note pinned at a time, told as it changes and unpinned when tucked away |
 | `tst_spread` | The quick-note card in Kadunce's card workspace, the real card and board against a stand-in Kadunce on a bus of the test's own: without Kadunce, with an older one or a newer protocol, refused the centre, or outside Spread and an Active card, the card stands alone and asks nothing; in Spread it asks only after the version is exactly 1, with its own bus name, object and interface, is drawn at the given place and takes only the presses there; All notes gives the centre back once, opens the board's own window and puts the card away, asking Kadunce neither to grow the card nor to place the board; put away it gives the centre back once; dismissed it closes, keeping the note, and asks nothing back; over an Active card there is no guest, and All notes opens the board's window the same way |
-| `tst_screens` | The quick-note card and the board, drawn off screen and used by tap and keyboard: the card is the size of the desktop's search, centred, and keeps above the on-screen keys, rising only as far as it must and then shortening; its header follows the approved layout, with the application's tile and name, the colours centred and a 30 px All notes pill 14 px from the edge, and the note pad 14 px below; All notes asks for the board's window and leaves the card as it is; a note opened from Search's Notes has ‹ Notes on top, out of the page's way, and it and `Esc` take the way back, while `Esc` on any other note puts the card away; a tap around it puts it away; the cursor is in the note when the card opens; words on the page held with a finger come whole, dragged across with a mouse come as dragged, and copy with Copy and `Ctrl+C`, the note unchanged; on a note stuck over a window, words dragged across with a mouse are selected without moving the note, the surface takes the keys only while they are or the note is typed on, Copy copies them, a tap lets them go and the next types on the note where it stands, the cursor at its end, what is typed handed on to be kept, words changed elsewhere reaching it, and `Esc` ending it, a finger held on a code takes it whole, a finger dragged without a hold still moves the note, and a right-click copies all; folded, the notes are one 44 px dot at the top note's top-right corner, the only place the surface takes presses, and a tap on it opens them; its corner resizes it with a mouse and with a finger, without opening it, the size let go at kept and the words given the room; typing keeps the note; colour is one tap; Folder and Stuck to are filled in, each opening its choices with a tap and choosing with one more, the open windows listed with the one in front first, and Don't stick keeping the folder; a new folder is named once, and a name that cannot be one says why; Done; Pin, Tuck away and Remove show only for a kept note, and Pin to the panel and Unpin from the panel pin it and take it off; the board opens on Today, opens a note, tucks one away and brings it back, and starts a new note in the place shown; the places in one row along the top under Find or start a note, Today first, Inbox first among the folders and New folder last, then the windows and Tucked away; a held note carried to a folder moves there without opening, and one carried to the trash goes there and comes back with Undo; New folder made in one tap, shown with its name selected to type over, and numbered when the name is taken; the workspace's folder chosen; a folder renamed in place, and removed with its notes to Inbox and undone; every target is at least 44 pixels; words no note has and Enter start a note with them in Inbox; from Milestone 1, Remind offers the quick times, next time this opens and Pick a time, a choice is kept and the pill says when, the cross takes it away, and Pick a time steps day, hour and quarter hour, never before now; Checklist turns lines into items under their heading, ticks in place, Enter starts an item, Backspace in an empty one takes it, the line written scrolls into sight, and Checklist again gives the text back; a day named, lines begun with "- " and a #word offer a reminder, a checklist and a folder under the note, each taken with a tap and offered no more; the board's Today as the mock-up draws it, with the day strip and its dots, the planner's rows in order with the next one marked and a done one struck through, the days ahead, the ideas with no date beside it and a checklist as heading and items, a tick marking done and undone, a row opening its note, another day chosen, an idea carried to tomorrow planned at nine, and the strip on its own line in a narrow window |
+| `tst_screens` | The quick-note card and the board, drawn off screen and used by tap and keyboard: the card is the size of the desktop's search, centred, and keeps above the on-screen keys, rising only as far as it must and then shortening; the note's words fill it inside 12 px margins, with the colour a dot beside them and, past a hairline, one 44 px line holding the folder, the window, the controls and All notes, nothing rarely needed laid out at rest; All notes asks for the board's window and leaves the card as it is; a note opened from Search's Notes has ‹ Notes on top, out of the page's way, and it and `Esc` take the way back, while `Esc` on any other note puts the card away; a tap around it puts it away; the cursor is in the note when the card opens; words on the page held with a finger come whole, dragged across with a mouse come as dragged, and copy with Copy and `Ctrl+C`, the note unchanged; on a note stuck over a window, words dragged across with a mouse are selected without moving the note, the surface takes the keys only while they are or the note is typed on, Copy copies them, a tap lets them go and the next types on the note where it stands, the cursor at its end, what is typed handed on to be kept, words changed elsewhere reaching it, and `Esc` ending it, a finger held on a code takes it whole, a finger dragged without a hold still moves the note, and a right-click copies all; folded, the notes are one 44 px dot at the top note's top-right corner, the only place the surface takes presses, and a tap on it opens them; its corner resizes it with a mouse and with a finger, without opening it, the size let go at kept and the words given the room; typing keeps the note; the colour's dot lays out the five colours and one tap chooses; Folder and Stuck to are filled in, each opening its choices with a tap and choosing with one more, the open windows listed with the one in front first, and Don't stick keeping the folder; a new folder is named once, and a name that cannot be one says why; Copy all, Pin, Tuck away and Remove, under More, show only for a kept note, and Pin to the panel and Unpin from the panel pin it and take it off; the board opens on Today, opens a note, tucks one away and brings it back, and starts a new note in the place shown; the places in one row along the top under Find or start a note, Today first, Inbox first among the folders and New folder last, then the windows and Tucked away; a held note carried to a folder moves there without opening, and one carried to the trash goes there and comes back with Undo; New folder made in one tap, shown with its name selected to type over, and numbered when the name is taken; the workspace's folder chosen; a folder renamed in place, and removed with its notes to Inbox and undone; every target is at least 44 pixels; words no note has and Enter start a note with them in Inbox; Remind offers the quick times, next time this opens and Pick a time, a choice is kept and the pill says when, the cross takes it away, and Pick a time steps day, hour and quarter hour, never before now; Checklist turns lines into items under their heading, ticks in place, Enter starts an item, Backspace in an empty one takes it, the line written scrolls into sight, and Checklist again gives the text back; a day named, lines begun with "- " and a #word offer a reminder, a checklist and a folder under the note, each taken with a tap and offered no more; the board's Today as the mock-up draws it, with the day strip and its dots, the planner's rows in order with the next one marked and a done one struck through, the days ahead, the ideas with no date beside it and a checklist as heading and items, a tick marking done and undone, a row opening its note, another day chosen, an idea carried to tomorrow planned at nine, and the strip on its own line in a narrow window |
 
 With `GOOSEBERRY_SCREENSHOTS` set to a folder, `tst_screens` saves a picture of
 each screen there, to compare with the mock-up by eye.
 
-## By hand: Milestone 0
+## By hand
 
-Milestone 0's proof is a week of daily use on the tablet without a lost note,
-with capture fast enough that nothing is written elsewhere instead. Run these
-checks once, after installing; then the week of use.
+Run these after installing, on a touchscreen. The real test is a week of
+daily use: no note lost, and capture fast enough that nothing gets written
+somewhere else instead.
+
+### Capture and keep
 
 1. Over a document, hold Gooseberry and tap New note. The card opens in the
    middle of the screen with the cursor in the note and the on-screen keys up,
@@ -57,31 +59,28 @@ checks once, after installing; then the week of use.
 9. Open the notes folder, `~/Documents/Gooseberry`, in a file manager: one
    Markdown file per note, readable in any editor.
 
-## By hand: in Kadunce
+### In Kadunce
 
-Only the tablet shows whether Kadunce and the card move together. With Kadunce
-installed and set up:
+Only a real session shows whether Kadunce and the card move together. With
+Kadunce installed and set up:
 
 1. Open Spread, hold Gooseberry and tap New note. The card sits in Spread's
    centre, the cards on either side moved in to make room, as with the
    desktop's search; the keys come up and the card stays above them. A tap on a
    card beside it is Spread's.
 2. Write a word, then tap All notes. The card goes and Gooseberry's own window
-   opens as a card of its own, with its title bar, below the Context Panel.
+   opens as a card of its own, with its title bar.
 3. Open Spread, open the card with New note, and put the card away. Spread is
    as it was.
 4. With the card in Spread's centre, open the desktop's search. The card
    closes, its note kept, and the search takes the centre.
 5. Over an Active card, open the card with New note, then tap All notes. The
    card goes and the board's window opens as any other window does there.
-6. Without Kadunce running, steps 1 and 2 behave as in § By hand:
-   Milestone 0.
+6. Without Kadunce running, steps 1 and 2 behave as in § Capture and keep.
 
-## By hand: Milestone 1
+### Reminders and checklists
 
-Milestone 1's proof is a week of the maintainer's days planned in Gooseberry,
-every reminder on time and none shown twice. Run these checks once, after
-installing; then the week of use.
+Every reminder should come on time, and none twice.
 
 1. Write a note and tap Remind. The times offered fit the hour of the day; tap
    one. Remind says when, and the note is on the board's Today planner, or on
@@ -96,7 +95,7 @@ installing; then the week of use.
 4. Set a reminder a few minutes ahead, then log out before it comes, and log
    in after: it is shown once, at login. Restart Gooseberry: nothing is shown
    again.
-5. Set a reminder a few minutes ahead and let the tablet sleep past it. On
+5. Set a reminder a few minutes ahead and let the computer sleep past it. On
    waking, it is shown within half a minute, once.
 6. Over a document, write a note and tap Remind, then Next time this opens.
    Close the document and open it again: the reminder comes then, once.
@@ -108,15 +107,15 @@ installing; then the week of use.
 9. Open a note with a reminder in a text editor: `remind`, `reminded` and
    `done` read plainly, and a checklist is `- [ ]` and `- [x]` lines.
 
-## By hand: Milestone 2
+### Folders
 
-Milestone 2's proof is a project started on the board before its work, and a
-week of notes sorted without opening a menu. Run these checks once, after
-installing over Milestone 1's notes; then the week of use.
+A folder should be easy to start before its work exists, and notes should sort
+themselves without opening a menu.
 
-1. Before installing, note which projects the board shows. After, each is a
-   folder on the board with the same notes, and `~/Documents/Gooseberry` has a
-   folder of each name. Notes that were on a window are under Stuck to windows.
+1. Over a notes folder in the first format (`FORMAT.md` § Versions), note
+   which projects the board shows before installing. After, each is a folder
+   on the board with the same notes, and `~/Documents/Gooseberry` has a folder
+   of each name. Notes that were on a window are under Stuck to windows.
 2. On the board, tap New folder. The empty folder shows with its name ready to
    type over; type one and press Enter. It stays after Gooseberry is restarted.
 3. Under the folder's name, tap New notes on (this workspace) go here. Over a
@@ -133,11 +132,10 @@ installing over Milestone 1's notes; then the week of use.
 7. In a file manager, make a folder inside `~/Documents/Gooseberry` and move a
    note's file into it: the board shows both within moments.
 
-## By hand: Milestone 3
+### Notes on windows
 
-Milestone 3's proof is a week of daily use on Shuffle where notes on windows
-never need putting away by hand. Run these checks first, on Shuffle with
-Kadunce, once Shuffle's title bar with the dot is installed.
+Notes on windows should never need putting away by hand. These need a title
+bar that draws Gooseberry's dot, such as Shuffle's, and Kadunce for Spread.
 
 1. Over a document in an application with Shuffle's title bar, write a quick
    note stuck to it. A dot in the note's colour shows left of minimize; a
@@ -155,7 +153,7 @@ Kadunce, once Shuffle's title bar with the dot is installed.
 4. With the notes up, tap in the window around them: the window takes the
    tap and the notes fold into a dot at the top note's top-right corner, with
    the count when there are several. Tap the dot: they open where they stood,
-   the top note's cursor in it and the keys up on the tablet. Bring another
+   the top note's cursor in it and the keys up on a touchscreen. Bring another
    window to the front: they fold and step aside, and the dot is back when
    this one is in front again. Tap a note: the cursor is in it where it
    stands, and no card opens; type, tap the window, and the notes fold; open

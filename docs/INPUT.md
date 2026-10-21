@@ -18,7 +18,7 @@ below is built.
 | Open a note | Tap the note on the board | None yet |
 | Tuck a note away | Tap Tuck away on the note | None yet |
 | Bring a note back | Tap Tucked away on the board, then the note | None yet |
-| Remove a note | Tap the note on the board, then Remove | None yet |
+| Remove a note | Tap the note on the board, then More, then Remove | None yet |
 | Find a note | Type in Find or start a note on the board | None yet |
 | Bring up a window's notes | Tap the dot in its title bar | None yet |
 | Move a note over a window | Drag it | None yet |
@@ -46,14 +46,14 @@ kept by Gooseberry (`DESKTOP.md`).
 | --- | --- |
 | Tap the work around the card | The card goes away. The note is already kept; there is nothing to confirm. |
 | Go to another window | The same. |
-| Press `Esc` | The same; with the card grown into the board, the first `Esc` brings the note back, and with colours, choices or More open on the note, the first `Esc` closes them. |
+| Press `Esc` | The same; with colours, choices or More open on the note, the first `Esc` closes them. On a note opened from Search's Notes, it goes back there. |
 
 With the on-screen keys up, the card rises only as far as it must to stay
 above them, then shortens; what does not fit scrolls. It returns as the keys go
 down.
 
-The card moves at Plasma's animation speed: rising over the keys, growing into
-the board, and following its place in Spread. With Plasma's animations set to
+The card moves at Plasma's animation speed: rising over the keys, and
+following its place in Spread. With Plasma's animations set to
 Instant, which Plasma also reports as reduced motion, it jumps straight to its
 place.
 
@@ -64,7 +64,7 @@ of its text and closed goes to the desktop's trash.
 
 | Input | What happens |
 | --- | --- |
-| Tap the dot beside the note's words | The five colours lie out beside it; a tap on one colours the note and puts them away. |
+| Tap the dot beside the note's words | The five colours open out beside it; a tap on one colours the note and puts them away. |
 | Tap an offer under the note | What the words asked for is done: a day named sets a reminder at nine that morning (six for tonight), lines begun with "- " become a checklist, a #word keeps the note in that folder, made if new. The offer goes. |
 | Tap the checklist glyph | The lines become a checklist; again, plain text. |
 | Tap the bell | Remind's quick times come up above the line. Once set, the bell says when, with a cross to take it away. |
@@ -196,8 +196,8 @@ today again.
 
 | Input | What happens |
 | --- | --- |
-| Tap the note on the board, then Remove | The note goes to the desktop's trash. Undo, in the message that follows, brings it back. |
-| Tap Remove on the card | The same, for the note being written. |
+| Tap the note on the board, then More, then Remove | The note goes to the desktop's trash. Undo, in the message that follows, brings it back. |
+| Tap More on the card, then Remove | The same, for the note being written. |
 
 ## Find a note
 

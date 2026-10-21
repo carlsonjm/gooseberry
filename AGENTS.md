@@ -23,13 +23,13 @@ and adds no separate protocol.
 
 These hold in every Shuffle repository.
 
-- The maintainer approves product behavior and visual direction before
+- The maintainer approves behavior and visual direction before
   implementation begins. Engineering may present evidence, constraints and
   alternatives; an unapproved proposal does not become a candidate.
 - One implementation owner per repository. A second worker is read-only review or
   a disjoint file set.
 - Reproduce a defect and measure the property controlling it before changing it.
-- Components never depend on private product features. Gooseberry works on any
+- Components never depend on Shuffle's private features. Gooseberry works on any
   KDE Plasma desktop; what Kadunce, Tettegouche or Shuffle add switches on only
   when they are present, and is found at run time.
 

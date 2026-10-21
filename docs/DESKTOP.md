@@ -6,10 +6,10 @@ is complete without either; it looks for each at run time.
 
 ## What Gooseberry offers any desktop
 
-Milestone 0 needs nothing from Kadunce, Tettegouche or Shuffle. On any Plasma
+Gooseberry needs nothing from Kadunce, Tettegouche or Shuffle. On any Plasma
 desktop it reads two things from the desktop itself: the window in front, which
 a new note is stuck to by default, and the current workspace's name, whose
-folder a new note is kept in. From Milestone 1 it also notices a window opening
+folder a new note is kept in. It also notices a window opening
 on a document, for "next time this opens", and shows reminders through the
 desktop's standard notifications (`org.freedesktop.Notifications` on the
 session bus), so whatever shows notifications on that desktop shows them. Both
@@ -30,7 +30,7 @@ A dock, a panel or Search starts Gooseberry by its desktop file,
 
 The quick-note card is not a window: a desktop that waits for an opened
 application's window does not wait for it. A search that hosts the quick note
-itself uses the interface in § Tettegouche instead.
+itself uses the interface in § The quick note in Search instead.
 
 Every start reaches the one running Gooseberry, which comes up with the
 session.
@@ -42,10 +42,10 @@ session.
 Kadunce publishes a versioned, read-only workspace snapshot on the session bus
 (its `docs/TETTEGOUCHE-CONTEXT.md`, version 1): the window in front, every
 application window with its card membership, the Active card and its Stack.
-Gooseberry reads two things from it, to place the quick-note card (below):
-what Kadunce is showing, Spread or an Active card, and which card is selected.
-The window a note is stuck to comes from Plasma's window list, with or without
-Kadunce.
+Gooseberry reads one thing from it, to place the quick-note card (below):
+whether Kadunce is showing Spread. The window a note is stuck to comes from
+Plasma's window list, with or without Kadunce. Kadunce's own terms, such as
+Spread, Active card, Stack and Bento, are defined in its `docs/TERMINOLOGY.md`.
 
 A Stack and a Bento pair are made by hand in Kadunce. Robin can already hold a
 Gooseberry window and let it go on a card to stack them, or drag it to an edge
@@ -79,7 +79,7 @@ notes opens the board as Gooseberry's own window, the one its entry opens, and
 the card goes. Kadunce shows that window as it shows any other, with its title
 bar. The card neither grows nor asks Kadunce to place the board
 (`setLauncherGuestExpanded`, `prepareLauncherGuestLaunch`): a board placed in
-the card's room had no title bar and stood over the Context Panel.
+the card's room had no title bar and stood over Shuffle's top panel.
 
 ### What Kadunce does not offer
 
@@ -100,23 +100,23 @@ the card's room had no title bar and stood over the Context Panel.
 ### What Tettegouche offers today
 
 Search draws only from a closed list of local sources: applications, KDE's file
-index and recent documents, settings, a calculator and unit conversion (its
-`docs/SEARCH-CONTRACT.md`). Notes are plain files, so KDE's file index already
-finds them by name, and by content where indexing allows, and Search lists them
-as files with no extra work. Tettegouche is the bridge that makes them look
+index and recent documents, settings, a calculator, unit conversion and notes
+from a running Gooseberry (its `docs/SEARCH-CONTRACT.md`). Notes are plain
+files, so KDE's file index already finds them by name, and by content where
+indexing allows, and Search lists them as files with no extra work. Tettegouche is the bridge that makes them look
 like notes.
 
-From Milestone 4, Search also asks Gooseberry for the notes with the words
+Search also asks Gooseberry for the notes with the words
 typed (`Find`, below) and lists them among its results, each with its colour
 and its folder or window, opening the note rather than a file.
 
-From Notes 1.1, Search's Notes mode is a board of its own: every note before
+Since 1.1, Search's Notes mode is a board of its own: every note before
 anything is typed and the ones with the words as they are typed (`Find` with no
 words, below). A note chosen there, or started with the words typed, opens on
 Gooseberry's own card and Search closes (`OpenOnCard`). The card then has a
-bar on top, "‹ Notes", leading back to Search's Notes (`Back`). Its panel
-starts a quick note on the card and keeps the pinned note in sight
-(`Pinned`).
+bar on top, "‹ Notes", leading back to Search's Notes (`Back`). Tettegouche's
+quick-note island on the panel starts a quick note on the card and keeps the
+pinned note in sight (`Pinned`; its `docs/AMBIENT-CONTRACT.md` § Quick note).
 
 ### The quick note in Search
 
@@ -133,6 +133,8 @@ loads none of Gooseberry's code.
 - **Version:** `ProtocolVersion()` returns `1`. A caller uses the interface only
   when the number is one it knows. A method or a key added later, which a
   version-1 caller can ignore, keeps the number; any other change raises it.
+  What was added within version 1 is listed under the tables below, so a
+  caller knows what an older Gooseberry may lack.
 
 The quick note in Search is a session of its own, separate from the note on
 Gooseberry's card. Every method that changes the note writes it to the folder
@@ -144,24 +146,24 @@ dictionary of strings to variants:
 | `open` | `b` | A note is open in this session |
 | `id` | `s` | The note's id; empty until it has text and is kept |
 | `kept` | `b` | The note is in the folder |
-| `pinned` | `b` | The note is the pinned one. From Notes 1.1 |
+| `pinned` | `b` | The note is the pinned one. From 1.1 |
 | `text` | `s` | The note's text |
 | `colour` | `s` | Its colour's name |
 | `colours`, `colourHexes` | `as`, `as` | The five colours in order, and their colours as `#RRGGBB` |
-| `folder` | `s` | The folder it is kept in, by name; empty for Inbox. From Milestone 2 |
-| `folderLabel` | `s` | That folder in the words Folder shows on the card. From Milestone 2 |
-| `folders` | `av` | What Folder offers, in the card's order: the workspace's folder, Inbox, then the rest; each a dictionary: `name` (empty for Inbox), `label`, `chosen` (`b`) and `workspace` (`b`, the workspace's own). From Milestone 2 |
-| `stuck` | `b` | The note is stuck to `window`. From Milestone 2 |
-| `windows` | `av` | What Stuck to offers, in the card's order: the note's own window when it is no longer open, then the open windows, the one in front first; each a dictionary: `window`, `app`, `label` (the words to show) and `chosen` (`b`). From Milestone 2 |
-| `window`, `app`, `workspace` | `s` | The window the note was written on or stuck to, its application, and the workspace it was written on. `app` from Milestone 2 |
-| `belongs`, `project`, `choices` | `s`, `s`, `av` | Belongs to, for a caller of Milestone 1: `belongs` is `window` when stuck, else `project` in a folder and `loose` in Inbox; `project` is the folder; `choices` offers the window, then Inbox as `loose` and each folder as a `project`, each a dictionary: `kind`, `label`, `project`, `chosen` (`b`) |
+| `folder` | `s` | The folder it is kept in, by name; empty for Inbox |
+| `folderLabel` | `s` | That folder in the words Folder shows on the card |
+| `folders` | `av` | What Folder offers, in the card's order: the workspace's folder, Inbox, then the rest; each a dictionary: `name` (empty for Inbox), `label`, `chosen` (`b`) and `workspace` (`b`, the workspace's own) |
+| `stuck` | `b` | The note is stuck to `window` |
+| `windows` | `av` | What Stuck to offers, in the card's order: the note's own window when it is no longer open, then the open windows, the one in front first; each a dictionary: `window`, `app`, `label` (the words to show) and `chosen` (`b`) |
+| `window`, `app`, `workspace` | `s` | The window the note was written on or stuck to, its application, and the workspace it was written on |
+| `belongs`, `project`, `choices` | `s`, `s`, `av` | Belongs to, for a caller from before folders: `belongs` is `window` when stuck, else `project` in a folder and `loose` in Inbox; `project` is the folder; `choices` offers the window, then Inbox as `loose` and each folder as a `project`, each a dictionary: `kind`, `label`, `project`, `chosen` (`b`) |
 | `readOnly` | `b` | The note or folder is kept by a newer Gooseberry and is not changed |
 | `problem` | `s` | Why the last change could not be kept; empty when it was |
-| `remind` | `s` | The reminder: an ISO 8601 time with its offset, `opens` for the next time the note's window opens, or empty for none. From Milestone 1 |
-| `remindLabel` | `s` | The reminder in the words Remind shows on the card, such as "Tomorrow 9:00 AM"; empty for none. From Milestone 1 |
-| `remindChoices` | `av` | What Remind offers, in the card's order, each a dictionary: `kind` (`later`, `evening`, `tomorrow`, `opens` or `pick`), `label` (the words to show) and `time` (ISO 8601, for the first three; empty otherwise). `opens` only for a note written on a window; `pick` is for the search's own way to choose a day and time. From Milestone 1 |
-| `checklist` | `b` | The note is a checklist. From Milestone 1 |
-| `lines` | `av` | Every line of the text in order, each a dictionary: `text` (without the box), `item` (`b`, it has a box) and `checked` (`b`). From Milestone 1 |
+| `remind` | `s` | The reminder: an ISO 8601 time with its offset, `opens` for the next time the note's window opens, or empty for none |
+| `remindLabel` | `s` | The reminder in the words Remind shows on the card, such as "Tomorrow 9:00 AM"; empty for none |
+| `remindChoices` | `av` | What Remind offers, in the card's order, each a dictionary: `kind` (`later`, `evening`, `tomorrow`, `opens` or `pick`), `label` (the words to show) and `time` (ISO 8601, for the first three; empty otherwise). `opens` only for a note written on a window; `pick` is for the search's own way to choose a day and time |
+| `checklist` | `b` | The note is a checklist |
+| `lines` | `av` | Every line of the text in order, each a dictionary: `text` (without the box), `item` (`b`, it has a box) and `checked` (`b`) |
 
 | Method | What it does |
 | --- | --- |
@@ -170,32 +172,32 @@ dictionary of strings to variants:
 | `State() → a{sv}` | The note as it is |
 | `SetText(s text) → a{sv}` | Sets the text. Search sends it at each pause, as Gooseberry's card writes; the first text keeps the note |
 | `SetColour(s name) → a{sv}` | One of the five colours; another name is refused |
-| `SetBelongs(s kind, s project) → a{sv}` | Belongs to, for a caller of Milestone 1: `window` sticks the note to its window; `project` keeps it in that folder, made when new, `workspace` in the workspace's folder and `loose` in Inbox, each unsticking it |
-| `SetFolder(s name) → a{sv}` | Keeps the note in that folder, made when new; empty is Inbox. A name that cannot be a folder's is refused. From Milestone 2 |
-| `SetStuck(s window, s app) → a{sv}` | Sticks the note to that window, by its document's name and application, as `windows` gives them; an empty window unsticks it. The folder stays. From Milestone 2 |
-| `SetReminder(s when) → a{sv}` | Sets the reminder: an ISO 8601 time, `opens`, or empty to take it away. A new reminder replaces the old one and is shown once more. `opens` on a note written on no window, and anything else that is not a time, are refused. From Milestone 1 |
-| `SetChecklist(b on) → a{sv}` | Turns the text into a checklist, as Checklist on the card does, or back into plain text. From Milestone 1 |
-| `SetLineChecked(u line, b checked) → a{sv}` | Ticks or unticks the item on that line, counted from 0 as in `lines`; a line that is not an item is refused. From Milestone 1 |
-| `Done() → a{sv}` | Finishes the note, as Done on the card; a note left empty goes to the trash. The next `Start` begins a new one |
+| `SetBelongs(s kind, s project) → a{sv}` | Belongs to, for a caller from before folders: `window` sticks the note to its window; `project` keeps it in that folder, made when new, `workspace` in the workspace's folder and `loose` in Inbox, each unsticking it |
+| `SetFolder(s name) → a{sv}` | Keeps the note in that folder, made when new; empty is Inbox. A name that cannot be a folder's is refused |
+| `SetStuck(s window, s app) → a{sv}` | Sticks the note to that window, by its document's name and application, as `windows` gives them; an empty window unsticks it. The folder stays |
+| `SetReminder(s when) → a{sv}` | Sets the reminder: an ISO 8601 time, `opens`, or empty to take it away. A new reminder replaces the old one and is shown once more. `opens` on a note written on no window, and anything else that is not a time, are refused |
+| `SetChecklist(b on) → a{sv}` | Turns the text into a checklist, as Checklist on the card does, or back into plain text |
+| `SetLineChecked(u line, b checked) → a{sv}` | Ticks or unticks the item on that line, counted from 0 as in `lines`; a line that is not an item is refused |
+| `Done() → a{sv}` | Finishes the note, as putting the card away does; a note left empty goes to the trash. The next `Start` begins a new one |
 | `TuckAway() → a{sv}` | Tucks the note away and finishes it |
 | `Remove() → a{sv}` | Moves the note to the desktop's trash and finishes it |
 | `UndoRemove() → a{sv}` | Brings back the note `Remove` sent to the trash; the reply's `restored` says whether it did |
 | `OpenBoard(s noteId, s requestToken) → b` | Opens the board as an ordinary window, on the place that note sits in, or on Today for an empty id |
-| `Find(s words, u limit) → av` | The notes with those words in their text, their folder's name or the window they are stuck to, as the board's search finds them, tucked away ones included; no words, or only spaces, gives every note; the most recently changed first, and no more than `limit` (0 for all). Each a dictionary: `id`, `title` (the first words), `excerpt` (the line with the words, when they are not in the title; else empty), `colour`, `colourHex`, `folder`, `folderLabel`, `stuck` (`b`), `window` and `app` (when stuck), `tucked` (`b`), `changed` (ISO 8601), and from Notes 1.1 `remind` (as the note's `remind` key) and `done` (`b`, marked done on the planner). It changes nothing and opens nothing. From Milestone 4 |
-| `OpenNote(s noteId) → b` | Opens that note on Gooseberry's own card, as a tap on the board does; false for a note that is not there. From Milestone 4 |
-| `OpenOnCard(a{sv} request) → b` | Opens Gooseberry's own card on the note `id`, as a tap on the board does, or, with no `id`, on a new note holding `text`. With `back`, the card has a bar on top bearing those words; taking it, or Esc, sends `Back` and puts the card away. False for an `id` that is not there. From Notes 1.1 |
-| `Edit(s noteId) → a{sv}` | Makes that note the open one, for the search to write on as on a note `Start` began, finishing the one open before as `Done` does; a note that is not there is refused. From Notes 1.1 |
-| `SetPinned(b on) → a{sv}` | Pins the open note, or unpins it. One note is pinned at a time: pinning another unpins the first. A note not kept yet is refused. From Notes 1.1 |
-| `Pinned() → a{sv}` | The pinned note: `id`, `title`, `colour` and `colourHex`; an empty dictionary when none is. From Notes 1.1 |
+| `Find(s words, u limit) → av` | The notes with those words in their text, their folder's name or the window they are stuck to, as the board's search finds them, tucked away ones included; no words, or only spaces, gives every note; the most recently changed first, and no more than `limit` (0 for all). Each a dictionary: `id`, `title` (the first words), `excerpt` (the line with the words, when they are not in the title; else empty), `colour`, `colourHex`, `folder`, `folderLabel`, `stuck` (`b`), `window` and `app` (when stuck), `tucked` (`b`), `changed` (ISO 8601), and from 1.1 `remind` (as the note's `remind` key) and `done` (`b`, marked done on the planner). It changes nothing and opens nothing |
+| `OpenNote(s noteId) → b` | Opens that note on Gooseberry's own card, as a tap on the board does; false for a note that is not there |
+| `OpenOnCard(a{sv} request) → b` | Opens Gooseberry's own card on the note `id`, as a tap on the board does, or, with no `id`, on a new note holding `text`. With `back`, the card has a bar on top bearing those words; taking it, or Esc, sends `Back` and puts the card away. False for an `id` that is not there. From 1.1 |
+| `Edit(s noteId) → a{sv}` | Makes that note the open one, for the search to write on as on a note `Start` began, finishing the one open before as `Done` does; a note that is not there is refused. From 1.1 |
+| `SetPinned(b on) → a{sv}` | Pins the open note, or unpins it. One note is pinned at a time: pinning another unpins the first. A note not kept yet is refused. From 1.1 |
+| `Pinned() → a{sv}` | The pinned note: `id`, `title`, `colour` and `colourHex`; an empty dictionary when none is. From 1.1 |
 
 | Signal | When |
 | --- | --- |
 | `Changed(a{sv})` | The open note changed other than by a call here: on the board, on Gooseberry's card, or by another program writing its file |
 | `BoardShown(s requestToken)` | The board's window, asked for by `OpenBoard` with that token, has drawn its first frame |
-| `PinnedChanged(a{sv})` | A note was pinned or unpinned, or the pinned note's first words or colour changed, or it was tucked away or removed, which unpins it. It carries what `Pinned()` returns. From Notes 1.1 |
-| `Back()` | The card's way back, which an `OpenOnCard` with `back` asked for, was taken: the caller shows what the note was opened from. From Notes 1.1 |
+| `PinnedChanged(a{sv})` | A note was pinned or unpinned, or the pinned note's first words or colour changed, or it was tucked away or removed, which unpins it. It carries what `Pinned()` returns. From 1.1 |
+| `Back()` | The card's way back, which an `OpenOnCard` with `back` asked for, was taken: the caller shows what the note was opened from. From 1.1 |
 
-**Added in Milestone 1, within version 1.** The keys `remind`,
+**Reminders and checklists, added within version 1.** The keys `remind`,
 `remindLabel`, `remindChoices`, `checklist` and `lines`, and the methods
 `SetReminder`, `SetChecklist` and `SetLineChecked`. A version-1 caller that
 does not know them ignores them and keeps working as before. A search that
@@ -207,22 +209,22 @@ its `- [ ] ` and `- [x] ` markers. Gooseberry shows the reminder itself,
 wherever the note was written. `Changed` also reports a reminder or a tick made
 elsewhere.
 
-**Added in Milestone 2, within version 1.** The keys `folder`,
+**Folders and Stuck to, added within version 1.** The keys `folder`,
 `folderLabel`, `folders`, `stuck`, `windows` and `app`, and the methods
-`SetFolder` and `SetStuck`. A caller of Milestone 1 keeps working: its Belongs
+`SetFolder` and `SetStuck`. A caller from before folders keeps working: its Belongs
 to row now offers the window, Inbox and the folders, and each choice does what
 the row says. A search that offers them shows the card's two chips in place of
 Belongs to: Folder offers `folders` and a field for a new one, sending
 `SetFolder`; Stuck to offers `windows` and "Don't stick to a window", sending
 `SetStuck`.
 
-**Added in Milestone 4, within version 1.** The methods `Find` and
+**Find, added within version 1.** The methods `Find` and
 `OpenNote`. A search lists what `Find` gives among its results as notes, each
 saying its folder or window, and a tap calls `OpenNote`. Since a search asks
 as each letter is typed, it calls `Find` only while Gooseberry is running,
 without starting it, and never waits on the reply.
 
-**Added in Notes 1.1, within version 1.** `Find` with no words, the keys
+**Added in 1.1, within version 1.** `Find` with no words, the keys
 `remind` and `done` on what it gives, the methods `Edit` and `OpenOnCard` and
 the signal `Back`, and the pin: the key `pinned`, the methods `SetPinned` and
 `Pinned` and the signal `PinnedChanged`. A search can then list the notes before
@@ -240,7 +242,7 @@ moment to Kadunce so the window takes the card's place.
 
 ## Stuck notes on the bus
 
-From Milestone 3, Gooseberry tells the desktop which open windows have notes
+Gooseberry tells the desktop which open windows have notes
 stuck to them, and answers a tap on them. A title bar draws the dot from it
 (Shuffle), and Spread draws each card's notes (Kadunce). Neither stores notes;
 each draws what this interface last reported.
@@ -338,8 +340,7 @@ assistant can find notes, read one, and add one when Robin asks, and says when
 it reads one. From a note, "next step" sends only that note, and offers a
 checklist, a reminder or a better home; nothing changes until Robin chooses.
 What Robin keeps from the assistant becomes notes here too (`DECISIONS.md`).
-This waits while Split Rock's own work is on hold. Gooseberry has no assistant
-of its own.
+None of this is built yet. Gooseberry has no assistant of its own.
 
 ## Needs
 
@@ -352,6 +353,6 @@ keeps the pinned note on its panel (`Pinned`).
 
 | Component | Need | Holds up |
 | --- | --- | --- |
-| Kadunce | Accepting a note carried to the top edge: opening Spread and telling Gooseberry which card it was dropped on | Sticking by drag (Milestone 3) |
+| Kadunce | Accepting a note carried to the top edge: opening Spread and telling Gooseberry which card it was dropped on | Sticking a note to a card by carrying it there |
 | Kadunce | A request to stack a window with a card | Stacking without a hand gesture |
-| Split Rock | Use Gooseberry's notes tool where present; on hold while Split Rock's own work is | The notes tool |
+| Split Rock | Use Gooseberry's notes tool where present | The notes tool, not built yet |
