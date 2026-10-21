@@ -73,9 +73,9 @@ Four places, one set of notes.
 | --- | --- | --- |
 | Keeping notes | A folder of plain Markdown files | Other apps, the file index and folder sync can all read them |
 | Reminders | The desktop's standard notifications | Whatever shows notifications on that desktop shows them |
-| Knowing what Robin is working on | Plasma's own window list: the window in front and the workspace's name | Works the same with or without Kadunce. Kadunce's snapshot only reports what Kadunce is showing, which places the quick note (`DESKTOP.md`) |
-| Being found | Tettegouche's Search, where installed | `DESKTOP.md` § Needs |
-| The assistant | Split Rock, where installed and set up, using Gooseberry as a tool | Optional |
+| Knowing what Robin is working on | Plasma's own window list: the window in front and the workspace's name | Works the same with or without Kadunce. From Kadunce, Gooseberry reads only whether Spread is showing, to place the quick-note card (`DESKTOP.md`) |
+| Being found | Tettegouche's Search, where installed | `DESKTOP.md` § Tettegouche: notes in Search |
+| The assistant | Split Rock, where installed and set up, using Gooseberry as a tool | Optional, and not built yet (`DESKTOP.md` § Split Rock) |
 
 ## Risks
 

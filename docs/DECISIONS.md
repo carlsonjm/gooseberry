@@ -6,15 +6,15 @@ Decisions still open are kept privately.
 ## Gooseberry is its own component, under its own name
 
 Gooseberry is a separate program with its own repository and name, and works on
-any KDE Plasma desktop. A product that includes it may give it another name
+any KDE Plasma desktop. A desktop that bundles it may give it another name
 there. (The maintainer, 3 October.) Where Shuffle is installed, the window
 titles, the application's displayed name and its sentences say Notes; elsewhere
 they say Gooseberry. One build decides at start, by whether Shuffle's Bottom
 Surface is installed. Ids, the desktop file, the bus names and the notes folder
 keep Gooseberry's name either way.
 
-Rejected: building notes inside a product's own repository. Notes would only
-exist inside that product, and anyone without it would be left with the
+Rejected: building notes inside one desktop's own repository. Notes would only
+exist inside that desktop, and anyone without it would be left with the
 problem Gooseberry exists to solve.
 
 ## Cards and Search are found, never required
@@ -186,16 +186,16 @@ have tied the core to one desktop.
 
 The six screens in `mockup/` are the approved layout and behaviour: what each
 place holds, its sizes and touch targets, the note colours, and how capture,
-the board and the planner work. An agent builds to them without asking again.
+the board and the planner work. Work builds to them without asking again.
 Where the mock-up and a later ruling disagree, the ruling wins: the rail beside
 the card is superseded by the dot in the title bar (§ A window's notes are a dot
 in its title bar). (The maintainer, 4 October.)
 
-## Milestone 0 is built in one pass
+## The first version is built in one pass
 
-The concept, these decisions and the mock-up are the approval for Milestone 0.
-It is built whole, then handed over for testing against its proof, rather than
-brought back screen by screen. A question the documents do not answer still
+The concept, these decisions and the mock-up are the approval for the first
+version. It is built whole, then handed over for testing against its proof,
+rather than brought back screen by screen. A question the documents do not answer still
 comes to the maintainer before it is guessed. (The maintainer, 4 October.)
 
 Rejected: options before each screen, which the mock-up already settles.
@@ -243,7 +243,7 @@ Notes back; `Esc` does the same. The search's own note page has that way back,
 and the card took the note's place without it. (The maintainer, 17 October.)
 
 Rejected: growing the card into the board, as Apps and Files grow the search.
-The grown card stood over the Context Panel with no title bar, and the board
+The grown card stood over Shuffle's top panel with no title bar, and the board
 there was not the window Gooseberry's own entry opens. (The maintainer,
 17 October.)
 
@@ -350,11 +350,11 @@ placed beside another window, so Gooseberry had no window of its own to work in.
 
 Shuffle's Search hosts the quick note as one of its modes: it draws the note
 pad in its own window, in its own card, and Gooseberry keeps the note, through
-a small, versioned interface on the session bus (`DESKTOP.md` § Tettegouche).
-The search loads none of Gooseberry's code and holds no notes; every change it
+a small, versioned interface on the session bus (`DESKTOP.md` § The quick
+note in Search). The search loads none of Gooseberry's code and holds no notes; every change it
 sends is written before the call returns, as Gooseberry writes its own. Outside
 the search, Gooseberry's own card has the same shape. (The maintainer, 4
-October, approved on the tablet.)
+October.)
 
 Rejected: the search opening Gooseberry's card over itself, which is two
 surfaces for one note, and the search reading or writing the notes folder
@@ -389,8 +389,8 @@ October):
 - **A reminder offers Done and In 10 minutes,** and tapping it opens the note.
   In 10 minutes is a new reminder, shown once like any other.
 
-Checklist and Remind are glyphs on the line under the note (§ The note is the
-page); what Remind offers opens between the page and that line.
+Checklist and Remind are glyphs on the line under the note (§ The quick note
+listens); what Remind offers opens between the page and that line.
 
 Rejected: a day and time picker every time, which costs two or three taps even
 for tomorrow morning; ticked items sinking to the bottom, which makes items
@@ -438,7 +438,7 @@ as a list.
 Gooseberry starts with the session, showing nothing, and keeps running between
 notes; closing the board or the card only puts it away. Every start, from its
 entry or its menu, reaches the one running Gooseberry. This is engineering's choice: speed to the
-cursor is the product, and a program starting from cold takes a moment the
+cursor is the point, and a program starting from cold takes a moment the
 thought may not last.
 
 Rejected: starting Gooseberry afresh on each tap.
@@ -447,13 +447,13 @@ Rejected: starting Gooseberry afresh on each tap.
 
 The first letter makes the note on disk at once; later typing is written when
 the writing pauses for half a second, at least every three seconds while it
-goes on, and at once on any other change, Done, a logout or quitting
-(`FORMAT.md`). This is engineering's choice: writing the whole note on every
+goes on, and at once on any other change, finishing the note, a logout or
+quitting (`FORMAT.md`). This is engineering's choice: writing the whole note on every
 letter cost the disk tens of kilobytes a letter for a note of a few hundred
 bytes, and a crash now loses at most the last moment of typing, never the note.
 
 Rejected: writing on every letter, for the disk and battery it costs; and
-writing only on Done, which a crash would cost the whole note.
+writing only when the note is finished, which a crash would cost the whole note.
 
 ## Another version of a note is kept beside it
 
@@ -498,7 +498,7 @@ maintained by one person and agents.
 
 The icon's tile sits inside the margin icon themes leave around application
 artwork, 42 of 48 in Colloid, so it is the size of the apps beside it in a dock,
-a launcher or Search. (The maintainer, 7 October, for pixel-matched demo videos.)
+a launcher or Search. (The maintainer, 7 October.)
 
 Rejected: the tile drawn to the icon's edges, chosen on 6 October, which reads
 a size larger than every themed app next to it.

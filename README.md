@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <a href="#install">Install</a> · <a href="#controls">Controls</a> · <a href="docs/README.md">Docs</a> · <a href="https://shuffleplasma.com">Part of Shuffle</a>
+  <a href="#install">Install</a> · <a href="#controls">Controls</a> · <a href="docs/README.md">Docs</a> · <a href="#used-in-shuffle">Used in Shuffle</a>
 </p>
 
 <p align="center">
@@ -81,8 +81,8 @@ sight, from the next login.
 KDE Plasma 6.4, Qt 6.9 and KDE Frameworks 6.17 or newer, and their development
 files to build: CMake, Extra CMake Modules, Kirigami, KCoreAddons, KDBusAddons,
 KI18n, KService, KWindowSystem, Layer Shell Qt and Plasma's task manager
-library. Install asks once for a password, unless Shuffle's install key is set
-up.
+library. Install asks once for a password, unless Shuffle's install helper is
+set up.
 
 </details>
 
@@ -116,7 +116,8 @@ its notes folder keeps the name `Gooseberry`.
 
 Read [AGENTS.md](AGENTS.md) before working here. The documentation index is
 [docs/README.md](docs/README.md). Run `./verify.sh` before proposing a change:
-it checks public text, builds, and runs the tests.
+it checks public text and that every on-screen word can be translated, builds,
+and runs the tests.
 
 | Folder | What is in it |
 | --- | --- |
@@ -128,15 +129,15 @@ it checks public text, builds, and runs the tests.
 
 </details>
 
-## Part of Shuffle
+## Used in Shuffle
 
-Gooseberry is one of the open-source pieces of Shuffle, a touch-first desktop
-for KDE Plasma. The others are
+[Shuffle](https://shuffleplasma.com), a touch-first desktop built on KDE
+Plasma, includes Gooseberry as its Notes. Its other open-source components are
 [Kadunce](https://github.com/carlsonjm/kadunce),
 [Tettegouche](https://github.com/carlsonjm/tettegouche),
-[Temperance](https://github.com/carlsonjm/temperance) and
-[Split Rock](https://github.com/carlsonjm/split-rock). Get the whole thing at
-[shuffleplasma.com](https://shuffleplasma.com).
+[Temperance](https://github.com/carlsonjm/temperance),
+[Shuffle Keyboard](https://github.com/carlsonjm/shuffle-keyboard) and
+[Split Rock](https://github.com/carlsonjm/split-rock).
 
 ## License
 

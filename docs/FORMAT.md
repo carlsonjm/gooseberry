@@ -1,12 +1,12 @@
 # Note format
 
 How Gooseberry keeps notes on disk: where the folder is, what is in it, its
-folders, and the header at the top of each note. Other devices reading the
-same folder, the file index, Search and other programs depend on it, so it is
+folders, and the header at the top of each note. The file index, Search, sync
+tools and other programs that read the folder depend on it, so it is
 versioned, and a change that breaks it raises the version.
 
-**Folder format:** 2. **Note format:** 2. Both date from Milestone 2, when notes
-went into folders. Gooseberry still reads version 1 of each and brings it up to
+**Folder format:** 2. **Note format:** 2. Both went to 2 when notes went into
+folders. Gooseberry still reads version 1 of each and brings it up to
 date (§ Versions).
 
 ## Where the folder is
@@ -73,7 +73,7 @@ does, and a folder made, renamed or removed there is seen within moments.
   Inbox first, then the folders in alphabetical order.
 - **`.workspaces`** has a line for each workspace given a folder, the
   workspace's name and the folder's in double quotes as a header writes text:
-  `"Desk": "Shuffle launch"`. A workspace with no line, or whose folder is
+  `"Desk": "Garden"`. A workspace with no line, or whose folder is
   gone, puts new notes in Inbox. Renaming a folder renames it here;
   removing it takes its lines away.
 
@@ -93,8 +93,8 @@ place: 0.712 0.084
 tucked: false
 remind: 2026-10-05T09:00:00-05:00
 ---
-Flick threshold feels short on the Z13. Measure the real velocity before
-touching 1400.
+Flick threshold feels short. Measure the real velocity before touching
+1400.
 ```
 
 The header sits between two lines of `---` at the very top, the way other
@@ -117,10 +117,10 @@ Times are ISO 8601 with their offset from UTC, to the second.
 | `window` | no | The document or window the note was written on, or was stuck to last |
 | `app` | no | That window's application, by its desktop file name |
 | `workspace` | no | The workspace the note was written on |
-| `place` | no | Where the note sits on its window when the window's notes are shown: its top-left corner as two fractions, of the window's width and of its height, each from 0 to 1, to three places. Left out when the note has never been placed there. From Milestone 3 |
+| `place` | no | Where the note sits on its window when the window's notes are shown: its top-left corner as two fractions, of the window's width and of its height, each from 0 to 1, to three places. Left out when the note has never been placed there |
 | `size` | no | How big the note is drawn over its window, as it was last resized there: width and height in the desktop's pixels, whole numbers from 80 to 4000. Left out when it never was |
 | `tucked` | yes | `true` when tucked away, otherwise `false` |
-| `pinned` | no | `true` for the one note a panel keeps in sight; left out otherwise. From Notes 1.1 |
+| `pinned` | no | `true` for the one note a panel keeps in sight; left out otherwise. From 1.1 |
 | `remind` | no | The reminder: a time, which also puts the note on the planner on that day, or `opens` for the next time a window opens on the note's `window` in its `app` |
 | `reminded` | no | When the reminder was shown |
 | `done` | no | When the note was marked done on the planner |
@@ -159,8 +159,8 @@ Times are ISO 8601 with their offset from UTC, to the second.
 - **From the first letter.** A note is written to the folder the moment it
   first has text. Typing after that is written when the writing pauses for half
   a second, and at least every three seconds while it goes on; any other
-  change, Done, a logout and quitting write it at once. A crash loses at most
-  the typing since the last pause, never the note. A quick note closed with nothing
+  change, finishing the note, a logout and quitting write it at once. A crash
+  loses at most the typing since the last pause, never the note. A quick note closed with nothing
   on it leaves nothing behind.
 - **Whole or not at all.** A change is written to a new file beside the note
   and then put in its place in one step, so a crash leaves the note as it was
@@ -193,13 +193,16 @@ Times are ISO 8601 with their offset from UTC, to the second.
   changes nothing: in that note, for a note's version, or anywhere in the
   folder, for the folder's.
 
-| Version | From | What changed |
-| --- | --- | --- |
-| 1 | Milestone 0 | The first format |
-| 1 | Milestone 1 | `remind`, `reminded` and `done` added, and checklists written down; a reader of the first format ignores them, so the version stays |
-| 2 | Milestone 2 | Folders, one level down, with Inbox the notes folder itself, and `.workspaces`. In a note, `stuck` replaces the required `belongs`, and `project` goes, since the folder is the project |
-| 2 | Milestone 3 | `place` added; a reader of Milestone 2 ignores it, so the version stays |
-| 2 | After Milestone 4 | `size` added; an earlier reader keeps it as written, so the version stays |
+In order:
+
+| Version | What changed |
+| --- | --- |
+| 1 | The first format |
+| 1 | `remind`, `reminded` and `done` added, and checklists written down; a reader of the first format ignores them, so the version stays |
+| 2 | Folders, one level down, with Inbox the notes folder itself, and `.workspaces`. In a note, `stuck` replaces the required `belongs`, and `project` goes, since the folder is the project |
+| 2 | `place` added; an earlier reader of version 2 ignores it, so the version stays |
+| 2 | `size` added; an earlier reader keeps it as written, so the version stays |
+| 2 | `pinned` added in 1.1; an earlier reader keeps it as written, so the version stays |
 
 **Bringing the first version up to date.** A folder whose `.gooseberry` says
 `format: 1` is brought up to date when Gooseberry opens it. Each note that
