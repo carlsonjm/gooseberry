@@ -1104,6 +1104,40 @@ private Q_SLOTS:
         QCOMPARE(finished.count(), 2);
     }
 
+    // Opened from a search's Notes, the card comes up as the search goes,
+    // and the desktop may hand the keyboard back to the window under them:
+    // the card asks for it back and stays. Once it has settled, the keyboard
+    // moving elsewhere is the person going back to the work, and it goes.
+    void cardKeepsTheKeyboardAsItOpens()
+    {
+        Places places(m_store.get());
+        PlaceNotes notes(m_store.get());
+        FakeShell shell(m_store.get(), m_capture.get(), &places, &notes);
+        QQmlEngine engine;
+        KLocalization::setupLocalizedContext(&engine);
+        QQmlComponent component(&engine, QStringLiteral("io.github.carlsonjm.gooseberry"), QStringLiteral("CaptureWindow"));
+        std::unique_ptr<QObject> object(component.createWithInitialProperties({{QStringLiteral("shell"), QVariant::fromValue<QObject *>(&shell)}}));
+        QVERIFY2(object, qPrintable(component.errorString()));
+        auto *window = qobject_cast<QQuickWindow *>(object.get());
+        window->resize(1260, 736);
+        QSignalSpy finished(m_capture.get(), &Capture::finished);
+        QMetaObject::invokeMethod(window, "open");
+        QVERIFY(QTest::qWaitForWindowActive(window));
+
+        QWindow work;
+        work.resize(400, 300);
+        work.show();
+        work.requestActivate();
+        QTRY_VERIFY(window->isActive());
+        QCOMPARE(finished.count(), 0);
+        QVERIFY(window->property("shown").toBool());
+
+        QTest::qWait(1100);
+        work.requestActivate();
+        QTRY_COMPARE(finished.count(), 1);
+        QVERIFY(!window->property("shown").toBool());
+    }
+
     void boardGathersAndActs()
     {
         m_capture->setText(QStringLiteral("Flick threshold"));

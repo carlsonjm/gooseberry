@@ -327,7 +327,11 @@ The card makes its own entrance, as the desktop's search does: already as it
 will rest, it fades in as it rises the last 12 pixels into place over 180 ms,
 counted from its first frame on screen, and fades back down as it is put
 away. Only its opacity and place move, so a display that draws fewer frames
-shows the same motion in fewer steps. This is engineering's choice.
+shows the same motion in fewer steps. For its first second the card asks
+for the keyboard back if it loses it: opened from a search's Notes, it comes
+up as the search goes, and the desktop can hand the keyboard to the window
+under them, which would otherwise read as the person going back to the work
+and put the note away before it is seen. This is engineering's choice.
 
 Rejected: an ordinary window, which the window manager places where it
 chooses; a panel widget, which exists only where a panel holds it; and the

@@ -60,6 +60,7 @@ Window {
 
     function open() {
         hideTimer.stop();
+        settling.restart();
         leaving.stop();
         if (!visible) {
             arriving.stop();
@@ -82,6 +83,7 @@ Window {
             return;
         }
         shown = false;
+        settling.stop();
         firstFrame.enabled = false;
         arrivalWait.stop();
         arriving.stop();
@@ -259,10 +261,25 @@ Window {
         }
     }
 
+    // Just opened, the card can lose the keyboard to whatever opened it as
+    // that goes: a search's Notes closes as the note comes up here, and the
+    // desktop hands the keyboard back to the window under it. For that
+    // moment a lost keyboard is asked back rather than taken as the person
+    // going back to the work.
+    Timer {
+        id: settling
+        interval: 1000
+    }
+
     // Where the desktop moves the keyboard elsewhere, the card goes away
     // with it, as when going back to the work.
     onActiveChanged: {
-        if (!active && shown) {
+        if (active || !shown) {
+            return;
+        }
+        if (settling.running) {
+            requestActivate();
+        } else {
             shell.capture.finish();
         }
     }
