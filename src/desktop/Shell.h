@@ -11,6 +11,7 @@ class QQuickWindow;
 
 namespace Gooseberry {
 
+class ContextBar;
 class NoteStore;
 class Notifier;
 class PlaceNotes;
@@ -34,6 +35,8 @@ class Shell : public QObject
     Q_PROPERTY(QObject *guest READ guestObject CONSTANT)
     Q_PROPERTY(QObject *planner READ plannerObject CONSTANT)
     Q_PROPERTY(QObject *stuck READ stuckObject CONSTANT)
+    // Shuffle's Context Bar on the card's display (ContextBar).
+    Q_PROPERTY(QObject *contextBar READ contextBarObject CONSTANT)
     // Words for a bar on the card leading back to whoever opened the note
     // there, such as a search's Notes; empty for none.
     Q_PROPERTY(QString backLabel READ backLabel NOTIFY backLabelChanged)
@@ -105,6 +108,7 @@ private:
     QObject *guestObject() const;
     QObject *plannerObject() const;
     QObject *stuckObject() const;
+    QObject *contextBarObject() const;
     void setBack(const QString &label);
     QQuickWindow *captureWindow();
     QQuickWindow *boardWindow();
@@ -124,6 +128,7 @@ private:
     Reminders *m_reminders;
     Notifier *m_notifier;
     StuckNotes *m_stuck;
+    ContextBar *m_contextBar;
     QString m_backLabel;
 };
 

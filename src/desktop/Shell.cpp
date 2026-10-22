@@ -3,6 +3,7 @@
 
 #include "Board.h"
 #include "Capture.h"
+#include "ContextBar.h"
 #include "NoteStore.h"
 #include "Notifier.h"
 #include "Planner.h"
@@ -54,6 +55,7 @@ Shell::Shell(NoteStore *store, QQmlEngine *engine, QObject *parent)
     , m_stuck(new StuckNotes(store, m_context, [this] {
         return create(QStringLiteral("StuckWindow"));
     }, this))
+    , m_contextBar(new ContextBar(this))
 {
     // The title bar's + starts a note stuck to its window, on the card.
     connect(m_stuck, &StuckNotes::newRequested, this, [this](const QString &window, const QString &app) {
@@ -136,6 +138,11 @@ QObject *Shell::plannerObject() const
 QObject *Shell::stuckObject() const
 {
     return m_stuck;
+}
+
+QObject *Shell::contextBarObject() const
+{
+    return m_contextBar;
 }
 
 void Shell::sleeping(bool goingToSleep)
@@ -262,6 +269,14 @@ QQuickWindow *Shell::captureWindow()
     connect(m_captureWindow, &QWindow::visibleChanged, this, [this](bool visible) {
         if (!visible) {
             m_stuck->setCardOpen(false);
+        } else if (m_captureWindow->screen()) {
+            m_contextBar->read(m_captureWindow->screen()->name());
+        }
+    });
+    // The compositor can place the card on another display once it is shown.
+    connect(m_captureWindow, &QWindow::screenChanged, this, [this](QScreen *screen) {
+        if (screen && m_captureWindow->isVisible()) {
+            m_contextBar->read(screen->name());
         }
     });
     if (QGuiApplication::platformName().startsWith(QLatin1String("wayland"))) {

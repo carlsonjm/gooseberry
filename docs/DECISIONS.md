@@ -338,6 +338,17 @@ chooses; a panel widget, which exists only where a panel holds it; and the
 layer above the keys, where a surface opened after them covers them and takes
 every touch meant for them, as the desktop's search found.
 
+## With the keys up the card stops a gutter below the Context Bar
+
+Raised by tall on-screen keys, the quick-note card stops 10 px below
+Shuffle's Context Bar, the same gutter it keeps above the keys, and shortens
+from there. The bar's height comes from the bar itself on the session bus, as
+the desktop's search reads it, and is 0 where there is none. Engineering's
+choice. Rejected: letting the surface stop at the panels, which would move
+Kadunce's places for the card in Spread, given for the whole display; and a
+fixed allowance for a bar, which would be wrong on a display without one and
+on any other desktop.
+
 ## A tap on the words asks for the keys once the finger lifts
 
 A finger's tap on a note's words, on the quick-note card, a checklist item or a

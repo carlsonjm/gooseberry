@@ -333,6 +333,16 @@ which starts a new note stuck to it (`NewOn`). While the window is behind
 another, while Spread is open and while a note is open on the quick-note card,
 the notes step aside, and they come back with it.
 
+## Shuffle's Context Bar
+
+The quick-note card's surface covers the whole display, so on its own it does
+not know where Shuffle's Context Bar stands along the top. As the card opens,
+Gooseberry reads the bar's height on the card's display from
+`co.goodinput.ContextBar`'s `clockExtent`, as the desktop's search does, and
+with the keys up the card keeps a 10 px gutter below the bar as it keeps one
+above the keys. With no bar on the bus, or one not presenting on that display,
+the height is 0 and the card behaves as on any desktop.
+
 ## Split Rock
 
 Where Split Rock is installed and set up, Gooseberry is one of its tools: the
