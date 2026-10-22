@@ -462,6 +462,13 @@ Window {
                         acceptedButtons: Qt.RightButton
                         onTapped: note.offerCopy = true
                     }
+
+                    // A finger's tap on the words while they are typed on.
+                    KeysOnTap {
+                        objectName: "stuckKeys-" + note.modelData.id
+                        anchors.fill: parent
+                        target: body
+                    }
                 }
             }
 

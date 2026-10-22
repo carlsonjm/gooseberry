@@ -331,6 +331,12 @@ Item {
                             anchors.fill: parent
                             target: area
                         }
+
+                        KeysOnTap {
+                            objectName: "keysOnTap"
+                            anchors.fill: parent
+                            target: area
+                        }
                     }
                 }
 

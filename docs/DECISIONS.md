@@ -338,6 +338,24 @@ chooses; a panel widget, which exists only where a panel holds it; and the
 layer above the keys, where a surface opened after them covers them and takes
 every touch meant for them, as the desktop's search found.
 
+## A tap on the words asks for the keys once the finger lifts
+
+A finger's tap on a note's words, on the quick-note card, a checklist item or a
+note being typed on over its window, asks for the on-screen keys a second time
+once the finger has lifted. Qt's text asks for them as the finger comes down,
+with the cursor still where it was, and moves the cursor under the finger only
+as it lifts. Kadunce tells a tap on the text from a program focusing its own
+field by the line the cursor is on, so it read that first ask as Gooseberry's
+own and kept the keys down whenever the finger landed on another line: a tap
+into a note under Shuffle raised no keys. Asked again, the cursor is on the
+finger's line and the keys come; on a desktop that raised them at the first
+ask, the second changes nothing. This is engineering's choice.
+
+Rejected: putting the cursor under the finger as it comes down, which Qt does
+not offer without taking the press from the text and its scrolling; and asking
+Kadunce to wait for the cursor, which every Qt Quick program would need but is
+Kadunce's own to take up.
+
 ## Opening Gooseberry opens the board, as an ordinary window
 
 Gooseberry's entry, in a launcher, a search or pinned to a dock, opens the board

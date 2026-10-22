@@ -388,10 +388,21 @@ private:
     std::unique_ptr<QQuickView> m_view;
     Words m_words;
 
+    QQuickItem *m_cursorEditor = nullptr;
+    int *m_cursorWhenAsked = nullptr;
+
     QQuickItem *note() const { return m_view->rootObject(); }
     QQuickItem *named(const QString &name) const { return itemNamed(note(), name); }
 
 private Q_SLOTS:
+    // Where the note's cursor stood as the keys were asked for.
+    void noteCursorWhenAsked()
+    {
+        if (m_cursorEditor && m_cursorWhenAsked)
+            *m_cursorWhenAsked = m_cursorEditor->property("cursorPosition").toInt();
+    }
+
+
     void init()
     {
         // A mistake in a screen shows only as a warning; here it fails the test.
@@ -643,6 +654,19 @@ private Q_SLOTS:
         tap(window, words);
         QCOMPARE(stuck.written.size(), 1);
 
+        // While typed on, a finger's tap on the words asks for the keys again
+        // once it lifts, as on the quick note.
+        QQuickItem *keys = itemNamed(window->contentItem(), QStringLiteral("stuckKeys-n1"));
+        QVERIFY(keys);
+        QSignalSpy asked(keys, SIGNAL(asked()));
+        QPointingDevice *finger = QTest::createTouchDevice();
+        const QPoint onTheWords = characterAt(words, 1);
+        QTest::touchEvent(window, finger).press(0, onTheWords, window);
+        QTest::qWait(60);
+        QTest::touchEvent(window, finger).release(0, onTheWords, window);
+        QTRY_COMPARE(asked.count(), 1);
+        QCOMPARE(stuck.written.size(), 1);
+
         words->setProperty("cursorPosition", text.size());
         type(window, QStringLiteral(" ok"));
         QTRY_COMPARE(stuck.typed.constLast(), text + QStringLiteral(" ok"));
@@ -720,6 +744,64 @@ private Q_SLOTS:
             return file.open(QIODevice::ReadOnly) && file.readAll().endsWith("---\nFlick");
         };
         QTRY_VERIFY_WITH_TIMEOUT(written(), Capture::PauseMs * 4);
+    }
+
+    // A finger's tap on the words asks for the on-screen keys again once it
+    // has lifted, with the cursor on the line the finger landed on: the text
+    // asks as the finger comes down, with the cursor still where it was, and
+    // a desktop that reads the cursor's line keeps the keys down for that
+    // ask. A mouse asks for nothing; neither does a checklist item a mouse
+    // clicks, while a finger on one asks the same way.
+    void aTapOnTheWordsAsksForTheKeysWhereItLands()
+    {
+        m_capture->setText(QStringLiteral("Lisbon\nCall the apartment host\nFado night"));
+        auto *editor = note()->property("editor").value<QQuickItem *>();
+        QTRY_VERIFY(editor->hasActiveFocus());
+        editor->setProperty("cursorPosition", editor->property("length"));
+        QQuickItem *keys = named(QStringLiteral("keysOnTap"));
+        QVERIFY(keys);
+        const QString text = m_capture->text();
+        const int lineStart = text.indexOf(QStringLiteral("Call"));
+        const int lineEnd = text.indexOf(QStringLiteral("\nFado"));
+        int cursorWhenAsked = -1;
+        QSignalSpy asked(keys, SIGNAL(asked()));
+        connect(keys, SIGNAL(asked()), this, SLOT(noteCursorWhenAsked()));
+        m_cursorEditor = editor;
+        m_cursorWhenAsked = &cursorWhenAsked;
+
+        QPointingDevice *finger = QTest::createTouchDevice();
+        const QPoint onTheLine = characterAt(editor, lineStart + 5);
+        QTest::touchEvent(m_view.get(), finger).press(0, onTheLine, m_view.get());
+        QTest::qWait(60);
+        QTest::touchEvent(m_view.get(), finger).release(0, onTheLine, m_view.get());
+        QTRY_COMPARE(asked.count(), 1);
+        QVERIFY2(cursorWhenAsked >= lineStart && cursorWhenAsked <= lineEnd, qPrintable(QString::number(cursorWhenAsked)));
+
+        QTest::mouseClick(m_view.get(), Qt::LeftButton, {}, characterAt(editor, 2));
+        QTest::qWait(100);
+        QCOMPARE(asked.count(), 1);
+
+        // A checklist's items are words of their own, asked for the same way.
+        m_view->resize(806, 640);
+        tap(m_view.get(), named(QStringLiteral("checklist")));
+        QVERIFY(m_capture->checklist());
+        QQuickItem *pad = named(QStringLiteral("checklistPad"));
+        QTRY_VERIFY(pad->isVisible());
+        QQuickItem *item = itemNamed(itemNamed(pad, QStringLiteral("line-1")), QStringLiteral("lineText"));
+        QVERIFY(item);
+        QQuickItem *itemKeys = nullptr;
+        for (QQuickItem *child : item->childItems()) {
+            if (QString::fromLatin1(child->metaObject()->className()).startsWith(QStringLiteral("KeysOnTap")))
+                itemKeys = child;
+        }
+        QVERIFY(itemKeys);
+        QSignalSpy itemAsked(itemKeys, SIGNAL(asked()));
+        const QPoint onTheItem = characterAt(item, 3);
+        QTest::touchEvent(m_view.get(), finger).press(0, onTheItem, m_view.get());
+        QTest::qWait(60);
+        QTest::touchEvent(m_view.get(), finger).release(0, onTheItem, m_view.get());
+        QTRY_COMPARE(itemAsked.count(), 1);
+        QVERIFY(item->hasActiveFocus());
     }
 
     void everyTargetIsBigEnoughToTouch()
