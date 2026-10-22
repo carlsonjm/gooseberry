@@ -161,6 +161,10 @@ QQC2.ScrollView {
                             pad.capture.setLineText(row.index, text);
                         }
                     }
+                    KeysOnTap {
+                        anchors.fill: parent
+                        target: input
+                    }
                     Keys.onPressed: event => {
                         // The list changes after the key is answered, so
                         // this row is never taken while it answers.
