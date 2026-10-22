@@ -3,6 +3,7 @@
 // test's own home, and used by tapping and typing as a person would.
 #include "Board.h"
 #include "Capture.h"
+#include "ContextBar.h"
 #include "NoteStore.h"
 #include "Planner.h"
 #include "ReminderWords.h"
@@ -47,6 +48,7 @@ class FakeShell : public QObject
     Q_PROPERTY(QObject *store MEMBER m_store CONSTANT)
     Q_PROPERTY(QObject *planner MEMBER m_planner CONSTANT)
     Q_PROPERTY(QString backLabel MEMBER backLabel NOTIFY backLabelChanged)
+    Q_PROPERTY(QObject *contextBar MEMBER contextBar CONSTANT)
 
 public:
     FakeShell(NoteStore *store, Capture *capture, Places *places, PlaceNotes *notes)
@@ -61,6 +63,7 @@ public:
     QString opened;
     QString newIn;
     QString backLabel;
+    QObject *contextBar = nullptr;
     int boards = 0;
     int wentBack = 0;
 
@@ -91,6 +94,16 @@ private:
     QObject *m_notes;
     QObject *m_store;
     QObject *m_planner;
+};
+
+// Stands in for Shuffle's Context Bar, as the shell gives it to the card.
+class FakeBar : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(int height MEMBER height CONSTANT)
+
+public:
+    int height = 0;
 };
 
 // The words for reminders and the open windows, as the shell gives them to
@@ -1132,6 +1145,57 @@ private Q_SLOTS:
         }
         window->setProperty("keysRect", QRectF());
         QTRY_COMPARE(card->y(), 133.0);
+    }
+
+    // Under Shuffle the card's surface covers the Context Bar too. Keys tall
+    // enough to lift the card to the top leave it a gutter below the bar, as
+    // above the keys, and it shortens rather than reach over the bar.
+    void cardKeepsAGutterBelowTheContextBar()
+    {
+        Places places(m_store.get());
+        PlaceNotes notes(m_store.get());
+        FakeShell shell(m_store.get(), m_capture.get(), &places, &notes);
+        FakeBar bar;
+        bar.height = 32;
+        shell.contextBar = &bar;
+        QQmlEngine engine;
+        KLocalization::setupLocalizedContext(&engine);
+        QQmlComponent component(&engine, QStringLiteral("io.github.carlsonjm.gooseberry"), QStringLiteral("CaptureWindow"));
+        std::unique_ptr<QObject> object(component.createWithInitialProperties({{QStringLiteral("shell"), QVariant::fromValue<QObject *>(&shell)}}));
+        QVERIFY2(object, qPrintable(component.errorString()));
+        auto *window = qobject_cast<QQuickWindow *>(object.get());
+        window->resize(1260, 736);
+        QMetaObject::invokeMethod(window, "open");
+        QVERIFY(QTest::qWaitForWindowExposed(window));
+        auto *card = window->property("card").value<QQuickItem *>();
+        QVERIFY(card);
+        // Without the keys the card rests where it does without a bar.
+        QTRY_COMPARE(card->y(), 133.0);
+        QCOMPARE(card->height(), 471.0);
+        window->setProperty("keysRect", QRectF(0, 436, 1260, 300));
+        QTRY_COMPARE(card->height(), 384.0);
+        QCOMPARE(card->y(), 42.0);
+        QCOMPARE(card->y() + card->height(), 426.0);
+        picture(window, QStringLiteral("card-keys-bar"));
+        window->setProperty("keysRect", QRectF());
+        QTRY_COMPARE(card->y(), 133.0);
+    }
+
+    // The Context Bar's height, from its clock extent; anything but a
+    // presenting bar of the known schema is no bar.
+    void contextBarHeightFromItsExtent()
+    {
+        QCOMPARE(ContextBar::heightFrom(R"({"schema":"co.goodinput.shuffle.clock-extent","version":1,"output":"eDP-1",)"
+                                        R"("presenting":true,"bar":{"height":32}})"),
+                 32);
+        QCOMPARE(ContextBar::heightFrom(R"({"schema":"co.goodinput.shuffle.clock-extent","version":1,)"
+                                        R"("presenting":false,"bar":{"height":32}})"),
+                 0);
+        QCOMPARE(ContextBar::heightFrom(R"({"schema":"co.goodinput.shuffle.clock-extent","version":2,)"
+                                        R"("presenting":true,"bar":{"height":32}})"),
+                 0);
+        QCOMPARE(ContextBar::heightFrom(R"({"schema":"other","version":1,"presenting":true,"bar":{"height":32}})"), 0);
+        QCOMPARE(ContextBar::heightFrom("not json"), 0);
     }
 
     // All notes opens the board as Gooseberry's own window, and the card

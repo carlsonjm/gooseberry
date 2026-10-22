@@ -84,6 +84,7 @@ qt_add_qml_module(gooseberry-screens
 # What the desktop adds around the core: the window in front, the sheet's
 # place on screen, one running copy.
 add_library(gooseberry-desktop STATIC
+    src/desktop/ContextBar.cpp src/desktop/ContextBar.h
     src/desktop/Log.h
     src/desktop/Notifier.cpp src/desktop/Notifier.h
     src/desktop/QuickNoteService.cpp src/desktop/QuickNoteService.h

@@ -18,6 +18,9 @@ Window {
     property bool shown: false
     // Where the card may stand: the whole surface, as the desktop's search.
     property rect area: Qt.rect(0, 0, width, height)
+    // Shuffle's Context Bar along the top, which the card keeps a gutter
+    // below as it keeps one above the keys; 0 without one.
+    readonly property real barHeight: shell.contextBar ? shell.contextBar.height : 0
     // Holding Kadunce's Spread centre, and the place Kadunce gives it.
     readonly property QtObject guest: shell.guest !== undefined ? shell.guest : null
     readonly property bool asGuest: guest !== null && guest.placed
@@ -176,7 +179,7 @@ Window {
         readonly property real keysLine: root.height - root.keysReach
         // In Spread the card keeps the place Kadunce gave it and only shortens.
         readonly property real highest: root.asGuest ? root.guestRect.y
-            : root.area.y + Math.min(10, Math.round((root.area.height - restHeight) / 2))
+            : Math.max(root.area.y, root.barHeight) + Math.min(10, Math.round((root.area.height - restHeight) / 2))
 
         Kirigami.Theme.colorSet: Kirigami.Theme.Window
         Kirigami.Theme.inherit: false
