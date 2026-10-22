@@ -66,8 +66,9 @@ Kadunce installed and set up:
 
 1. Open Spread, hold Gooseberry and tap New note. The card sits in Spread's
    centre, the cards on either side moved in to make room, as with the
-   desktop's search; the keys come up and the card stays above them. A tap on a
-   card beside it is Spread's.
+   desktop's search. A tap on its words brings the keys up, and the card stays
+   above them and a gutter below the Context Bar. A tap on a card beside it is
+   Spread's.
 2. Write a word, then tap All notes. The card goes and Gooseberry's own window
    opens as a card of its own, with its title bar.
 3. Open Spread, open the card with New note, and put the card away. Spread is
@@ -153,7 +154,8 @@ bar that draws Gooseberry's dot, such as Shuffle's, and Kadunce for Spread.
 4. With the notes up, tap in the window around them: the window takes the
    tap and the notes fold into a dot at the top note's top-right corner, with
    the count when there are several. Tap the dot: they open where they stood,
-   the top note's cursor in it and the keys up on a touchscreen. Bring another
+   the top note's cursor in it, and a tap on its words brings the keys up on a
+   touchscreen. Bring another
    window to the front: they fold and step aside, and the dot is back when
    this one is in front again. Tap a note: the cursor is in it where it
    stands, and no card opens; type, tap the window, and the notes fold; open

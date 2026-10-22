@@ -52,6 +52,12 @@ With the on-screen keys up, the card rises only as far as it must to stay
 above them, then shortens; what does not fit scrolls. It returns as the keys go
 down.
 
+A note opens with the cursor in it. On a touch screen under Shuffle, the
+on-screen keys come with a tap on the words, the cursor on the line tapped:
+Cards brings the keys for a tap on text, not for a note that has only opened,
+whether from the board, from + or on a window. On other desktops the keys may
+come up as it opens.
+
 The card moves at Plasma's animation speed: rising over the keys, and
 following its place in Spread. With Plasma's animations set to
 Instant, which Plasma also reports as reduced motion, it jumps straight to its
@@ -216,10 +222,10 @@ and open on the window the same way.
 | Input | What happens |
 | --- | --- |
 | Tap the dot in its title bar | The window's notes come up over it, each where it was last let go there, one never placed at the top-right, the newest on top. They stay up until the dot is tapped again; while they are open they hold the keys, so the next tap or key on the window folds them. |
-| Tap a note | The cursor is in it, where it stands, and the on-screen keys come up on a touch screen. What is typed is kept as on the quick note, from the first letter. |
+| Tap a note | The cursor is in it, where it stands; on a touch screen, a tap on its words brings the on-screen keys. What is typed is kept as on the quick note, from the first letter. |
 | Press `Esc` | The typing ends, kept; the notes stay open. |
 | Tap or click the window around the notes, or go to another window | The window takes it. The typing ends, kept, and the notes fold into a small dot where the top note stands, in its colour, with the count when there are several. |
-| Tap the dot on the window | The notes open where they stood, the top note ready to type, with the on-screen keys up on a touch screen. |
+| Tap the dot on the window | The notes open where they stood, the top note ready to type; on a touch screen, a tap on its words brings the on-screen keys. |
 | Tap the dot in the title bar again | The notes go away, the + with them, whether open or folded. |
 
 In Kadunce's Spread, each note stands on its card where it was let go on the
