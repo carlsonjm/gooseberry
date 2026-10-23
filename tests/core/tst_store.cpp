@@ -100,6 +100,7 @@ private Q_SLOTS:
         const Note welcome = *m_store->note(id);
         QVERIFY(welcome.text.startsWith(QStringLiteral("Welcome to ")));
         QVERIFY(welcome.text.contains(QStringLiteral(" #ideas.")));
+        QVERIFY(welcome.text.contains(QStringLiteral(", like tomorrow, ")));
         QVERIFY(welcome.folder.isEmpty());
         QVERIFY(!welcome.stuck);
         QVERIFY(!welcome.pinned);

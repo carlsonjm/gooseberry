@@ -60,8 +60,8 @@ somewhere else instead.
    Markdown file per note, readable in any editor.
 10. On an account that has never used Gooseberry, start it: the board holds
     one note, "Welcome to Notes" under Shuffle and "Welcome to Gooseberry"
-    elsewhere, in Inbox and stuck to nothing. Open it: Keep in Ideas is
-    offered under it. Remove it, end Gooseberry and start it again: it does
+    elsewhere, in Inbox and stuck to nothing. Open it: a reminder for
+    tomorrow and Keep in Ideas are offered under it. Remove it, end Gooseberry and start it again: it does
     not come back. An account that already had notes never shows it.
 
 ### In Kadunce
