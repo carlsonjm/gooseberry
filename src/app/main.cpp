@@ -4,6 +4,7 @@
 #include "QuickNoteService.h"
 #include "Shell.h"
 #include "StuckNotes.h"
+#include "Welcome.h"
 #include "SpreadGuest.h"
 
 #include <KAboutData>
@@ -67,6 +68,10 @@ int main(int argc, char *argv[])
 
     Gooseberry::NoteStore store(Gooseberry::NoteStore::defaultFolder());
     if (!store.open()) {
+        qWarning().noquote() << store.lastError();
+    } else if (store.fresh() && Gooseberry::welcomeIfFresh(store).isEmpty()) {
+        // A brand new folder starts with the welcome note; one that cannot be
+        // kept leaves the folder empty, as before.
         qWarning().noquote() << store.lastError();
     }
 

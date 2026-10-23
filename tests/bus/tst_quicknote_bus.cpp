@@ -137,6 +137,13 @@ private Q_SLOTS:
         environment.remove(QStringLiteral("DISPLAY"));
         m_gooseberry.setProcessEnvironment(environment);
         m_gooseberry.setProcessChannelMode(QProcess::ForwardedErrorChannel);
+        // A folder already in use, as the checks here expect: a brand new
+        // one would start with the welcome note.
+        QVERIFY(QDir().mkpath(folder()));
+        QFile marker(folder() + QStringLiteral("/.gooseberry"));
+        QVERIFY(marker.open(QIODevice::WriteOnly | QIODevice::Truncate));
+        marker.write("format: 2\n");
+        marker.close();
         m_gooseberry.start(QStringLiteral(GOOSEBERRY_BINARY), {QStringLiteral("--background")});
         QVERIFY(m_gooseberry.waitForStarted());
         QTRY_VERIFY_WITH_TIMEOUT(QDBusConnection::sessionBus().interface()->isServiceRegistered(Service), 15000);

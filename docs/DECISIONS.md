@@ -34,6 +34,21 @@ comes first. (The maintainer, 3 October.)
 Rejected: a title or notebook chosen first, as most notes apps ask. That
 question is where the thought is lost.
 
+## A new notes folder starts with a welcome note
+
+A notes folder Gooseberry makes for the first time starts with one note,
+"Welcome to Gooseberry", or "Welcome to Notes" where Shuffle is installed: a
+few plain paragraphs on what it does, with a day and a #word in them so the
+note shows its own offers of a reminder and a folder. It is an ordinary note, in Inbox, stuck to nothing
+and not pinned. Removed, it goes to the trash like any note and never comes
+back. A folder that already has a format marker or any note, the person's own
+or another program's, gets none, so no one who has written a note is ever
+greeted. (The maintainer, 23 October: plain paragraphs, worded on the
+mock-up.)
+
+Rejected: a checklist of things to try, offered beside the paragraphs; and a
+note shown on screen at the first sign-in, which would take room unasked.
+
 ## A window's notes are a dot in its title bar
 
 A window with stuck notes shows a small dot in its title bar, left of

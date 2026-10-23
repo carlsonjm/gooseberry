@@ -948,11 +948,11 @@ private Q_SLOTS:
     }
 
     // The note listens: a day offers a reminder, lines begun with "- " a
-    // checklist and a #word a folder, each taken with a tap, after which it
-    // is offered no more.
+    // checklist and a #word a folder, the full stop after it left out, each
+    // taken with a tap, after which it is offered no more.
     void wordsOffer()
     {
-        m_capture->setText(QStringLiteral("Call Sam tomorrow\n- parking\n- deposit\n#cabin"));
+        m_capture->setText(QStringLiteral("Call Sam tomorrow\n- parking\n- deposit\nKeep it in #cabin."));
         QTRY_VERIFY(named(QStringLiteral("offers"))->isVisible());
         QVERIFY(!named(QStringLiteral("listensHint"))->isVisible());
         QQuickItem *remind = named(QStringLiteral("offer-remind"));
@@ -1170,8 +1170,9 @@ private Q_SLOTS:
         auto *card = window->property("card").value<QQuickItem *>();
         QVERIFY(card);
         // Without the keys the card rests where it does without a bar.
+        // The card's place and height settle on frames of their own.
         QTRY_COMPARE(card->y(), 133.0);
-        QCOMPARE(card->height(), 471.0);
+        QTRY_COMPARE(card->height(), 471.0);
         window->setProperty("keysRect", QRectF(0, 436, 1260, 300));
         QTRY_COMPARE(card->height(), 384.0);
         QCOMPARE(card->y(), 42.0);

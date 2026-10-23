@@ -65,7 +65,7 @@ of its text and closed goes to the desktop's trash.
 | Input | What happens |
 | --- | --- |
 | Tap the dot beside the note's words | The five colours open out beside it; a tap on one colours the note and puts them away. |
-| Tap an offer under the note | What the words asked for is done: a day named sets a reminder at nine that morning (six for tonight), lines begun with "- " become a checklist, a #word keeps the note in that folder, made if new. The offer goes. |
+| Tap an offer under the note | What the words asked for is done: a day named sets a reminder at nine that morning (six for tonight), lines begun with "- " become a checklist, a #word keeps the note in that folder, made if new, a full stop or comma after the word left out of its name. The offer goes. |
 | Tap the checklist glyph | The lines become a checklist; again, plain text. |
 | Tap the bell | Remind's quick times come up above the line. Once set, the bell says when, with a cross to take it away. |
 | Tap ⋯ (More) | Copy all, Pin, Tuck away and Remove, over the note. Shown once the note is kept. Pin to the panel, or to the Actions Panel where Shuffle is installed, keeps the note in sight there, where the panel offers that, unpinning the note pinned before; Unpin, on the pinned note, takes it off. |

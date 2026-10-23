@@ -3,6 +3,7 @@
 #include "Capture.h"
 #include "NoteStore.h"
 #include "TestHome.h"
+#include "Welcome.h"
 
 #include <QCoreApplication>
 #include <QDirIterator>
@@ -87,6 +88,45 @@ private Q_SLOTS:
         QVERIFY(QFileInfo(m_folder).isDir());
         QCOMPARE(readFile(m_folder + QStringLiteral("/.gooseberry")), QByteArray("format: 2\n"));
         QVERIFY(noteFiles(m_folder).isEmpty());
+    }
+
+    // A brand new folder starts with the welcome note, once; a folder that
+    // was already there, with notes or without, never gets one.
+    void welcomeOnlyInAFreshFolder()
+    {
+        QVERIFY(m_store->fresh());
+        const QString id = welcomeIfFresh(*m_store);
+        QVERIFY2(!id.isEmpty(), qPrintable(m_store->lastError()));
+        const Note welcome = *m_store->note(id);
+        QVERIFY(welcome.text.startsWith(QStringLiteral("Welcome to ")));
+        QVERIFY(welcome.text.contains(QStringLiteral(" #ideas.")));
+        QVERIFY(welcome.text.contains(QStringLiteral(", like tomorrow, ")));
+        QVERIFY(welcome.folder.isEmpty());
+        QVERIFY(!welcome.stuck);
+        QVERIFY(!welcome.pinned);
+        QCOMPARE(noteFiles(m_folder), QStringList{id + QStringLiteral(".md")});
+
+        // Opened again, the folder is no longer fresh, even once the welcome
+        // note has gone to the trash.
+        m_store = std::make_unique<NoteStore>(m_folder);
+        QVERIFY(m_store->open());
+        QVERIFY(!m_store->fresh());
+        QVERIFY(m_store->trash(id));
+        m_store = std::make_unique<NoteStore>(m_folder);
+        QVERIFY(m_store->open());
+        QVERIFY(!m_store->fresh());
+        QVERIFY(welcomeIfFresh(*m_store).isEmpty());
+        QVERIFY(noteFiles(m_folder).isEmpty());
+
+        // Notes another program left in a folder Gooseberry never opened are
+        // the person's own: no welcome joins them.
+        const QString theirs = m_home->path() + QStringLiteral("/theirs");
+        QVERIFY(QDir().mkpath(theirs));
+        writeFile(theirs + QStringLiteral("/list.md"), "milk\n");
+        NoteStore found(theirs);
+        QVERIFY(found.open());
+        QVERIFY(!found.fresh());
+        QVERIFY(welcomeIfFresh(found).isEmpty());
     }
 
     void keptFromTheFirstLetter()

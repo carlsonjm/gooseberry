@@ -159,7 +159,8 @@ Item {
         if (!capture.checklist && /^\s*[-*] /m.test(text)) {
             found.push({ kind: "checklist", label: i18n("Make the lines a checklist") });
         }
-        const tag = text.match(/(?:^|\s)#([^\s#]+)/);
+        // Punctuation closing the sentence is not part of the folder's name.
+        const tag = text.match(/(?:^|\s)#([^\s#]*[^\s#.,;:!?)\]])/);
         if (tag) {
             const name = tag[1].charAt(0).toUpperCase() + tag[1].slice(1);
             if (capture.folder !== name) {

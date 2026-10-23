@@ -118,6 +118,7 @@ bool NoteStore::open()
     m_watcher.addPath(m_folder);
     readWorkspaces();
     rescan();
+    m_fresh = format == 0 && m_notes.isEmpty();
     if (format == 1) {
         bringUpToDate();
     }
