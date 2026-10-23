@@ -1170,8 +1170,9 @@ private Q_SLOTS:
         auto *card = window->property("card").value<QQuickItem *>();
         QVERIFY(card);
         // Without the keys the card rests where it does without a bar.
+        // The card's place and height settle on frames of their own.
         QTRY_COMPARE(card->y(), 133.0);
-        QCOMPARE(card->height(), 471.0);
+        QTRY_COMPARE(card->height(), 471.0);
         window->setProperty("keysRect", QRectF(0, 436, 1260, 300));
         QTRY_COMPARE(card->height(), 384.0);
         QCOMPARE(card->y(), 42.0);
