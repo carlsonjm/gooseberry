@@ -948,11 +948,11 @@ private Q_SLOTS:
     }
 
     // The note listens: a day offers a reminder, lines begun with "- " a
-    // checklist and a #word a folder, each taken with a tap, after which it
-    // is offered no more.
+    // checklist and a #word a folder, the full stop after it left out, each
+    // taken with a tap, after which it is offered no more.
     void wordsOffer()
     {
-        m_capture->setText(QStringLiteral("Call Sam tomorrow\n- parking\n- deposit\n#cabin"));
+        m_capture->setText(QStringLiteral("Call Sam tomorrow\n- parking\n- deposit\nKeep it in #cabin."));
         QTRY_VERIFY(named(QStringLiteral("offers"))->isVisible());
         QVERIFY(!named(QStringLiteral("listensHint"))->isVisible());
         QQuickItem *remind = named(QStringLiteral("offer-remind"));

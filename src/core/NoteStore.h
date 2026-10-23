@@ -39,6 +39,10 @@ public:
     // True when the folder was laid out by a newer version: notes are shown,
     // and nothing in the folder is changed.
     bool readOnly() const { return m_readOnly; }
+    // True when open() found no folder of notes before it: no format marker
+    // and no note. Only a brand new folder is fresh, so nothing written
+    // before is ever met by a welcome.
+    bool fresh() const { return m_fresh; }
 
     QList<Note> notes() const { return m_notes.values(); }
 
@@ -147,6 +151,7 @@ private:
     QString m_folder;
     QString m_lastError;
     bool m_readOnly = false;
+    bool m_fresh = false;
     QHash<QString, Note> m_notes;
     QStringList m_folders;
     // Workspace name to folder name.

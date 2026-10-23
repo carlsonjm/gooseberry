@@ -14,7 +14,9 @@ date (§ Versions).
 Gooseberry keeps its notes in a folder named `Gooseberry` in the person's
 Documents folder: the desktop's own Documents folder where one is set, which is
 `~/Documents/Gooseberry` on most systems. Gooseberry makes the folder the
-first time it keeps a note, and makes it again if it is gone.
+first time it keeps a note, and makes it again if it is gone. A folder it makes
+new, with no format marker and no note in it, starts with one welcome note
+(`DECISIONS.md`).
 
 Engineering chose this place because:
 

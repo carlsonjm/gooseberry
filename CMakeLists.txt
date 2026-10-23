@@ -37,6 +37,7 @@ add_library(gooseberry-core STATIC
     src/core/Board.cpp src/core/Board.h
     src/core/StuckWindows.cpp src/core/StuckWindows.h
     src/core/Trash.cpp src/core/Trash.h
+    src/core/Welcome.cpp src/core/Welcome.h
 )
 target_include_directories(gooseberry-core PUBLIC src/core)
 target_link_libraries(gooseberry-core PUBLIC Qt6::Core KF6::I18n)
