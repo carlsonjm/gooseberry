@@ -22,9 +22,6 @@ down in one tap, keep it beside the work it belongs to, or put it on the
 planner when it has a time. Nothing asks for a title, a folder or a save first.
 </p>
 
-<p align="center"><img src="assets/readme/showcase.webp" alt="Sticky notes standing over windows on a KDE Plasma desktop" width="100%"></p>
-<p align="center"><sub>Notes stuck to the window they belong to, folded away until you want them.</sub></p>
-
 ## What you get
 
 <table>
