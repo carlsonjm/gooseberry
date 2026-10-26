@@ -22,6 +22,12 @@ down in one tap, keep it beside the work it belongs to, or put it on the
 planner when it has a time. Nothing asks for a title, a folder or a save first.
 </p>
 
+
+
+https://github.com/user-attachments/assets/492e9fef-372f-434d-ab93-b7b324e6898b
+
+
+
 ## What you get
 
 <table>
