@@ -5,8 +5,12 @@ name: Arch current
 # a device.
 on:
   pull_request:
+    # A Markdown-only change runs no build.
+    paths-ignore: ['**.md']
   push:
     branches: [main]
+    # A Markdown-only change runs no build.
+    paths-ignore: ['**.md']
   schedule:
     - cron: "37 9 * * *"
   workflow_dispatch:
