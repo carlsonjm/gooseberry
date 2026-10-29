@@ -122,8 +122,7 @@ cd gooseberry
 ./install.sh
 ```
 
-The installer checks the code, builds it and runs every test, which takes a
-few minutes. Then it asks for your password in Konsole (nothing shows as you
+The installer checks the code, builds it and runs every test. Then it asks for your password in Konsole (nothing shows as you
 type) to install Gooseberry for every account on the computer. It ends with
 **Gooseberry installed**.
 
