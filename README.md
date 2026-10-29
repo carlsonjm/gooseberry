@@ -70,33 +70,90 @@ Every tap and key, and what happens, is in [docs/INPUT.md](docs/INPUT.md).
 
 ## Install
 
-```sh
+These steps are for Arch Linux or CachyOS running KDE Plasma 6.4 or newer.
+Gooseberry is built on your computer from this page's code, so you type a few
+commands into **Konsole**, Plasma's terminal. Open it from the application
+launcher.
+
+### 1. What you need
+
+Check your Plasma version. It must say 6.4 or higher:
+
+```bash
+plasmashell --version
+```
+
+Bring the computer up to date, then restart it, so Gooseberry is built
+against the Plasma you are running:
+
+```bash
+sudo pacman -Syu
+```
+
+After the restart, open Konsole again and install what the build needs. Type
+your password when asked, and answer `Y`:
+
+```bash
+sudo pacman -S --needed base-devel git cmake extra-cmake-modules python dbus qt6-base qt6-declarative kcoreaddons kdbusaddons ki18n kservice kwindowsystem kirigami layer-shell-qt plasma-workspace
+```
+
+### 2. Download
+
+This puts the code in a folder called `gooseberry` in your home folder. Use
+`git`, not GitHub's Download ZIP: the installer's checks read the download's
+history.
+
+```bash
+cd ~
+git clone https://github.com/carlsonjm/gooseberry.git
+cd gooseberry
+```
+
+### 3. Install
+
+```bash
 ./install.sh
 ```
 
-It builds Gooseberry, runs every check, and installs it for every account on
-the computer. Gooseberry is then in the launcher, and starts by itself, out of
-sight, from the next login.
+The installer checks the code, builds it and runs every test, which takes a
+few minutes. Then it asks for your password in Konsole (nothing shows as you
+type) to install Gooseberry for every account on the computer. It ends with
+**Gooseberry installed**.
 
-<details>
-<summary>Requirements</summary>
+### 4. Finish
 
-KDE Plasma 6.4, Qt 6.9 and KDE Frameworks 6.17 or newer, and their development
-files to build: CMake, Extra CMake Modules, Kirigami, KCoreAddons, KDBusAddons,
-KI18n, KService, KWindowSystem, Layer Shell Qt and Plasma's task manager
-library. Install asks once for a password, unless Shuffle's install helper is
-set up.
+There is nothing to turn on. Gooseberry is in the application launcher now,
+and from your next sign-in it starts by itself, out of sight.
 
-</details>
+### 5. Check it worked
 
-<details>
-<summary>Where notes are kept, and uninstalling</summary>
+1. Open the application launcher, type **Gooseberry** and open it. The board
+   of notes opens.
+2. Tap **New note** and type a line. It is kept as you type; there is no save.
+3. Open **Documents** in Dolphin: a `Gooseberry` folder holds the note as a
+   Markdown file.
 
-Notes are kept in `Gooseberry` in your Documents folder, one Markdown file
-each ([docs/FORMAT.md](docs/FORMAT.md)). `./uninstall.sh` removes the program
-again; notes stay.
+### 6. Update
 
-</details>
+To get a newer Gooseberry:
+
+```bash
+cd ~/gooseberry
+git pull
+./install.sh
+```
+
+### 7. Uninstall
+
+```bash
+cd ~/gooseberry
+./uninstall.sh
+```
+
+It asks for your password and ends with **Gooseberry removed**. A Gooseberry
+already running keeps running until you sign out. Your notes stay in
+Documents › Gooseberry; delete that folder yourself if you want them gone. To
+delete the download too, run `rm -rf ~/gooseberry`.
 
 <details>
 <summary>With cards and Search</summary>
