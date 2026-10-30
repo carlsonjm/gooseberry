@@ -142,7 +142,9 @@ int slipCost(const QString &typed, const QString &meant)
 QStringList closest(const QString &word, const QStringList &guesses, const std::function<bool(const QString &)> &knows, int most)
 {
     // What one slip of the fingers would have turned a known word into: a
-    // key too many, two swapped, a neighbour's key, or a missed space.
+    // key too many, two swapped or a neighbour's key. A missed space is
+    // offered only as the dictionary guesses it: it knows odd pieces such as
+    // "th" and "ier", which a split of its own would offer.
     QStringList slips;
     for (qsizetype i = 0; i < word.size(); ++i) {
         slips.append(QString(word).remove(i, 1));
@@ -159,9 +161,6 @@ QStringList closest(const QString &word, const QStringList &guesses, const std::
                 slips.append(QString(word).replace(i, 1, word[i].isUpper() ? letter.toUpper() : letter));
             }
         }
-    }
-    for (qsizetype i = 1; i < word.size(); ++i) {
-        slips.append(word.left(i) + QLatin1Char(' ') + word.mid(i));
     }
 
     // A word of one letter is only "a" or "I". A guess in parts is offered

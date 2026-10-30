@@ -302,7 +302,8 @@ to drop it on, and the paper page with nothing offered.
 A word the desktop's spell checker (Sonnet, as in Kate) does not know has a
 red line under it. With the cursor in that word, what it was most likely
 meant to be is offered under the note: of the spell checker's guesses and the
-words one slip of the fingers away, the nearest first, a stray extra key, two
+words one slip of the fingers away (a word split in two only as the spell
+checker guesses it), the nearest first, a stray extra key, two
 keys swapped or a missed space counting least, a key's neighbour or a missed
 key more, and another letter most, then only others as near, three at most, where a day or a #word already offers
 something, then a quiet Add to dictionary; a tap puts the word in place and the
