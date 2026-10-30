@@ -13,6 +13,10 @@ QQC2.ScrollView {
     required property QtObject capture
     readonly property color ink: Kirigami.Theme.textColor
     readonly property var lines: capture.lines
+    // The line being written in, and its spelling, for the note to offer
+    // what a word there might have been.
+    property Item editing: null
+    readonly property QtObject spelling: editing ? editing.spelling : null
     onLinesChanged: sync()
     Component.onCompleted: sync()
 
@@ -151,9 +155,13 @@ QQC2.ScrollView {
                     font.weight: row.line.item ? Font.Medium : Font.Bold
                     font.strikeout: row.line.checked
                     Accessible.name: row.line.text
+                    readonly property alias spelling: lineSpelling
                     onActiveFocusChanged: {
                         if (activeFocus) {
+                            pad.editing = input;
                             Qt.callLater(pad.reveal, row);
+                        } else if (pad.editing === input) {
+                            pad.editing = null;
                         }
                     }
                     onTextChanged: {
@@ -164,6 +172,13 @@ QQC2.ScrollView {
                     KeysOnTap {
                         anchors.fill: parent
                         target: input
+                    }
+                    Spelling {
+                        id: lineSpelling
+                        document: input.textDocument
+                        cursorPosition: input.cursorPosition
+                        active: !pad.capture.readOnly && !row.line.checked
+                        color: Kirigami.Theme.negativeTextColor
                     }
                     Keys.onPressed: event => {
                         // The list changes after the key is answered, so

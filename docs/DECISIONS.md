@@ -297,6 +297,35 @@ for can be offered from them rather than sought among controls.
 Rejected: the note on its own over the work with the folders as paper stacks
 to drop it on, and the paper page with nothing offered.
 
+## Spelling is the desktop's own, offered as the note listens
+
+A word the desktop's spell checker (Sonnet, as in Kate) does not know has a
+red line under it. With the cursor in that word, what it was most likely
+meant to be is offered under the note: of the spell checker's guesses and the
+words one slip of the fingers away (a word split in two only as the spell
+checker guesses it), the nearest first, a stray extra key, two
+keys swapped or a missed space counting least, a key's neighbour or a missed
+key more, and another letter most, then only others as near, three at most, where a day or a #word already offers
+something, then a quiet Add to dictionary; a tap puts the word in place and the
+note is kept as typing keeps it. A checklist's lines are checked the same way.
+On a note stuck over a window, the line and the fixes show only while it is
+typed on, along its foot as Copy is. The word still being typed is left alone
+until the cursor leaves it; nothing is offered where a note opens, at the end
+of its words; a word with a digit, a capital past its first letter or an
+underscore, and a word in a link, an address, a path or a #folder, are left as
+they are written. The language and the dictionary's added words are the
+desktop's, shared with every KDE program. (The maintainer, 30 October, from the
+approved mock-up.)
+
+It holds because a note is written fast, mid-task, and a slip should be one
+tap to mend without a menu; and because a person's dictionary and language are
+set once, for the whole desktop.
+
+Rejected: the right-click menu as the only way to a fix, which a finger
+cannot reach; a spell checker of Gooseberry's own, with its own word list;
+and Sonnet's own QML highlighter, whose absence would keep the note from
+opening, and which offers nothing to a finger.
+
 ## The board is a search
 
 The board opens as a search of every note: Find or start a note along its top,

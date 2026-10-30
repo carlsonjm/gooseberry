@@ -35,7 +35,7 @@ jobs:
           pacman -Syu --noconfirm --needed \
             base-devel cmake extra-cmake-modules git python dbus \
             qt6-base qt6-declarative \
-            kcoreaddons kdbusaddons ki18n kservice kwindowsystem kirigami \
+            kcoreaddons kdbusaddons ki18n kservice sonnet hunspell hunspell-en_us kwindowsystem kirigami \
             layer-shell-qt plasma-workspace
 
       - uses: actions/checkout@v5

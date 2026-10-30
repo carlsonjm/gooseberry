@@ -23,6 +23,10 @@ Item {
     signal boardRequested()
 
     readonly property alias editor: area
+    // The spelling of the words being written, on the page or a checklist's
+    // line.
+    readonly property QtObject spelling: capture.checklist ? checklistPad.spelling : pageSpelling
+    readonly property Item spellingEditor: capture.checklist ? checklistPad.editing : area
     property bool choosingFolder: false
     property bool choosingWindow: false
     // The open windows Stuck to offers, read as it opens.
@@ -149,6 +153,15 @@ Item {
         if (capture.readOnly) {
             return found;
         }
+        // A word the dictionary does not know, with the cursor in it: what it
+        // might have been, then keeping it as it is.
+        const spell = quick.spelling;
+        if (spell && spell.word.length > 0) {
+            for (const fix of spell.suggestions) {
+                found.push({ kind: "spell", label: fix, word: fix });
+            }
+            found.push({ kind: "learn", label: i18n("Add to dictionary"), quiet: true });
+        }
         const day = text.match(/\b(tonight|tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/i);
         if (day && !capture.hasReminder) {
             const at = quick.dayFor(day[1].toLowerCase());
@@ -191,6 +204,19 @@ Item {
     }
 
     function take(offer) {
+        // The cursor stays in the word, where the writing was.
+        if (offer.kind === "spell") {
+            const editor = spellingEditor;
+            const end = spelling.replace(offer.word);
+            if (editor && end >= 0) {
+                editor.cursorPosition = end;
+            }
+            return;
+        }
+        if (offer.kind === "learn") {
+            spelling.learn();
+            return;
+        }
         if (offer.kind === "remind") {
             capture.setRemindAt(offer.at);
         } else if (offer.kind === "checklist") {
@@ -338,6 +364,14 @@ Item {
                             anchors.fill: parent
                             target: area
                         }
+
+                        Spelling {
+                            id: pageSpelling
+                            document: area.textDocument
+                            cursorPosition: area.cursorPosition
+                            active: !quick.capture.readOnly
+                            color: Kirigami.Theme.negativeTextColor
+                        }
                     }
                 }
 
@@ -444,6 +478,7 @@ Item {
                         required property var modelData
                         objectName: "offer-" + modelData.kind
                         text: modelData.label
+                        quiet: modelData.quiet === true
                         onClicked: quick.take(modelData)
                     }
                 }

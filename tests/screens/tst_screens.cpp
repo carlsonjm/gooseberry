@@ -7,10 +7,12 @@
 #include "NoteStore.h"
 #include "Planner.h"
 #include "ReminderWords.h"
+#include "Spelling.h"
 #include "TestHome.h"
 
 #include <KLocalizedQmlContext>
 #include <KLocalizedString>
+#include <Sonnet/Speller>
 
 #include <QClipboard>
 #include <algorithm>
@@ -24,6 +26,10 @@
 #include <QQmlEngine>
 #include <QStyleHints>
 #include <QQuickItem>
+#include <QQuickTextDocument>
+#include <QTextBlock>
+#include <QTextDocument>
+#include <QTextLayout>
 #include <QQuickView>
 #include <QQuickWindow>
 #include <QSignalSpy>
@@ -325,6 +331,25 @@ QPoint characterAt(QQuickItem *text, int position)
     QRectF rect;
     QMetaObject::invokeMethod(text, "positionToRectangle", Q_RETURN_ARG(QRectF, rect), Q_ARG(int, position));
     return text->mapToScene(QPointF(rect.x() + 2, rect.center().y())).toPoint();
+}
+
+// Whether the character at that place in a piece of text has a line under it.
+bool underlined(QQuickItem *text, int position)
+{
+    auto *document = text->property("textDocument").value<QQuickTextDocument *>();
+    if (!document) {
+        return false;
+    }
+    const QTextBlock block = document->textDocument()->findBlock(position);
+    const int at = position - block.position();
+    const auto formats = block.layout()->formats();
+    for (const QTextLayout::FormatRange &range : formats) {
+        if (at >= range.start && at < range.start + range.length
+            && range.format.underlineStyle() != QTextCharFormat::NoUnderline) {
+            return true;
+        }
+    }
+    return false;
 }
 
 // A finger held still on a point until it counts as a hold, then lifted.
@@ -695,6 +720,164 @@ private Q_SLOTS:
         QTRY_VERIFY(stuck.stopped >= 1);
         QTRY_COMPARE(stuck.keys, (QList<bool>{true, false}));
         QTRY_VERIFY(words->property("readOnly").toBool());
+    }
+
+    // The words spelling looks at: a name or a code, a link, an address, a
+    // path and a #folder are left as they are written, and quotes around a
+    // word are not part of it.
+    void spellingLeavesNamesAndCodes()
+    {
+        const QString line = QStringLiteral("Ask 'thier' NASA iPhone x2 snake_case www.kde.org a@b.co ~/notes #cabin don't");
+        QStringList words;
+        for (const WordSpan &word : wordsToCheck(line)) {
+            words.append(line.mid(word.start, word.length));
+        }
+        QCOMPARE(words, (QStringList{QStringLiteral("Ask"), QStringLiteral("thier"), QStringLiteral("don't")}));
+    }
+
+    // What a word was most likely meant to be: a stray key, two keys swapped
+    // or a missed space first, from the dictionary's guesses and from the
+    // words one slip away, and only others as near; a guess in parts only
+    // when the dictionary made it and each part is a common word.
+    void spellingOffersTheLikeliestSlip()
+    {
+        const QStringList known{QStringLiteral("him"), QStringLiteral("his"), QStringLiteral("hums"), QStringLiteral("hins"),
+                                QStringLiteral("the"), QStringLiteral("he"), QStringLiteral("hate"), QStringLiteral("a"),
+                                QStringLiteral("lot"), QStringLiteral("alto"), QStringLiteral("of"), QStringLiteral("their"),
+                                QStringLiteral("thief"), QStringLiteral("occur"), QStringLiteral("occurred"), QStringLiteral("keys"),
+                                // Known to the dictionary, but no part of a word split in two.
+                                QStringLiteral("hi"), QStringLiteral("ms"), QStringLiteral("ed"), QStringLiteral("th"), QStringLiteral("ier")};
+        const auto knows = [&known](const QString &word) { return known.contains(word.toLower()); };
+        // A stray key comes out before a word with a letter changed.
+        QCOMPARE(closest(QStringLiteral("hims"), {QStringLiteral("hums"), QStringLiteral("hins"), QStringLiteral("him")}, knows),
+                 (QStringList{QStringLiteral("him"), QStringLiteral("his")}));
+        QCOMPARE(closest(QStringLiteral("definately"),
+                         {QStringLiteral("definitely"), QStringLiteral("determinately"), QStringLiteral("effeminately"), QStringLiteral("definably")},
+                         knows),
+                 QStringList{QStringLiteral("definitely")});
+        QCOMPARE(closest(QStringLiteral("occured"),
+                         {QStringLiteral("occurred"), QStringLiteral("occur ed"), QStringLiteral("occur-ed"), QStringLiteral("occur"), QStringLiteral("recurred")},
+                         knows),
+                 QStringList{QStringLiteral("occurred")});
+        QCOMPARE(closest(QStringLiteral("alot"), {QStringLiteral("alto"), QStringLiteral("a lot")}, knows), QStringList{QStringLiteral("a lot")});
+        QCOMPARE(closest(QStringLiteral("hte"), {QStringLiteral("the"), QStringLiteral("hate")}, knows), QStringList{QStringLiteral("the")});
+        QCOMPARE(closest(QStringLiteral("thier"), {QStringLiteral("their"), QStringLiteral("thief")}, knows), QStringList{QStringLiteral("their")});
+        QCOMPARE(closest(QStringLiteral("ofthe"), {QStringLiteral("of the")}, knows), QStringList{QStringLiteral("of the")});
+        // A word is never split where the dictionary did not guess it.
+        QCOMPARE(closest(QStringLiteral("hims"), {QStringLiteral("him")}, knows), (QStringList{QStringLiteral("him"), QStringLiteral("his")}));
+        QCOMPARE(closest(QStringLiteral("kets"), {QStringLiteral("keys")}, knows), QStringList{QStringLiteral("keys")});
+        QCOMPARE(closest(QStringLiteral("qqqq"), {}, knows), QStringList());
+    }
+
+    // A word the dictionary does not know has a red line under it; with the
+    // cursor in it, what it might have been is offered under the note, and a
+    // tap puts it in place, the cursor after it and the note kept.
+    void misspeltWordOffersItsFixes()
+    {
+        if (!Spelling().available()) {
+            QSKIP("No dictionary for en_US: install hunspell-en_us.");
+        }
+        QQuickItem *page = note()->property("editor").value<QQuickItem *>();
+        m_capture->setText(QStringLiteral("Pick up thier keys"));
+        QTRY_COMPARE(page->property("text").toString(), QStringLiteral("Pick up thier keys"));
+        QTRY_VERIFY(underlined(page, 9));
+        QVERIFY(!underlined(page, 1));
+        QVERIFY(!named(QStringLiteral("offer-spell")));
+
+        page->setProperty("cursorPosition", 10);
+        QTRY_VERIFY(named(QStringLiteral("offer-spell")));
+        QCOMPARE(named(QStringLiteral("offer-spell"))->property("text").toString(), QStringLiteral("their"));
+        QVERIFY(named(QStringLiteral("offer-learn"))->property("quiet").toBool());
+        picture(m_view.get(), QStringLiteral("note-spelling"));
+
+        tap(m_view.get(), named(QStringLiteral("offer-spell")));
+        QTRY_COMPARE(m_capture->text(), QStringLiteral("Pick up their keys"));
+        QCOMPARE(page->property("cursorPosition").toInt(), 13);
+        QTRY_VERIFY(!named(QStringLiteral("offer-spell")));
+        QVERIFY(!underlined(page, 9));
+    }
+
+    // The word still being typed has no line and offers nothing; once the
+    // cursor leaves it, it has its line.
+    void wordBeingTypedIsLeftAlone()
+    {
+        if (!Spelling().available()) {
+            QSKIP("No dictionary for en_US: install hunspell-en_us.");
+        }
+        QQuickItem *page = note()->property("editor").value<QQuickItem *>();
+        type(m_view.get(), QStringLiteral("a recie"));
+        QTRY_COMPARE(m_capture->text(), QStringLiteral("a recie"));
+        QVERIFY(!underlined(page, 3));
+        QVERIFY(!named(QStringLiteral("offer-spell")));
+        type(m_view.get(), QStringLiteral(" "));
+        QTRY_VERIFY(underlined(page, 3));
+    }
+
+    // Add to dictionary keeps the word as it is written, and no page marks
+    // it again.
+    void addToDictionaryKeepsTheWord()
+    {
+        if (!Spelling().available()) {
+            QSKIP("No dictionary for en_US: install hunspell-en_us.");
+        }
+        QQuickItem *page = note()->property("editor").value<QQuickItem *>();
+        m_capture->setText(QStringLiteral("Feed the zorbleflax today"));
+        QTRY_VERIFY(underlined(page, 10));
+        page->setProperty("cursorPosition", 12);
+        QTRY_VERIFY(named(QStringLiteral("offer-learn")));
+        tap(m_view.get(), named(QStringLiteral("offer-learn")));
+        QTRY_VERIFY(!underlined(page, 10));
+        QVERIFY(!named(QStringLiteral("offer-learn")));
+        QCOMPARE(m_capture->text(), QStringLiteral("Feed the zorbleflax today"));
+        QVERIFY(Spelling::knows(QStringLiteral("zorbleflax")));
+    }
+
+    // On a note stuck over a window, red lines and fixes only while it is
+    // typed on; a fix tapped is handed on to be kept.
+    void stuckNoteSpellingWhileTypedOn()
+    {
+        if (!Spelling().available()) {
+            QSKIP("No dictionary for en_US: install hunspell-en_us.");
+        }
+        FakeStuck stuck;
+        FakeStuckShell shell(&stuck);
+        QQmlComponent component(m_view->engine(), QStringLiteral("io.github.carlsonjm.gooseberry"), QStringLiteral("StuckWindow"));
+        std::unique_ptr<QQuickWindow> surface(qobject_cast<QQuickWindow *>(
+            component.createWithInitialProperties({{QStringLiteral("shell"), QVariant::fromValue<QObject *>(&shell)}})));
+        QVERIFY2(surface, qPrintable(component.errorString()));
+        surface->resize(800, 600);
+        surface->setVisible(true);
+        QVERIFY(QTest::qWaitForWindowExposed(surface.get()));
+        QQuickWindow *window = surface.get();
+        window->requestActivate();
+        QVERIFY(QTest::qWaitForWindowActive(window));
+        QQuickItem *words = itemNamed(window->contentItem(), QStringLiteral("stuckWords-n1"));
+        QVERIFY(words);
+        const QString text = words->property("text").toString();
+        // "ghijk" at the end is no word, but resting on its window the note
+        // shows no line under it.
+        QVERIFY(!underlined(words, text.size() - 2));
+        QTest::qWait(50);
+
+        tap(window, words);
+        QTRY_VERIFY(words->hasActiveFocus());
+        QTRY_VERIFY(underlined(words, text.size() - 2));
+        // The cursor where the note opens offers nothing.
+        QQuickItem *fixes = itemNamed(window->contentItem(), QStringLiteral("stuckFixes-n1"));
+        QVERIFY(fixes);
+        QVERIFY(!fixes->isVisible());
+
+        type(window, QStringLiteral(" recieved "));
+        QTRY_COMPARE(stuck.typed.constLast(), text + QStringLiteral(" recieved "));
+        words->setProperty("cursorPosition", text.size() + 3);
+        QTRY_VERIFY(fixes->isVisible());
+        QQuickItem *fix = itemNamed(fixes, QStringLiteral("stuck-fix"));
+        QVERIFY(fix);
+        // Laid out along the foot, below the words, before it is tapped.
+        QTRY_VERIFY(fix->mapToScene(QPointF(0, 0)).y() >= words->mapToScene(QPointF(0, words->height())).y());
+        tap(window, fix);
+        QTRY_COMPARE(stuck.typed.constLast(), text + QStringLiteral(" received "));
+        QTRY_VERIFY(!fixes->isVisible());
     }
 
     // Folded, the notes are one dot at the top note's top-right corner, a
@@ -1694,6 +1877,9 @@ int main(int argc, char *argv[])
     qputenv("QT_QUICK_CONTROLS_HOVER_ENABLED", "0");
     QGuiApplication app(argc, argv);
     KLocalizedString::setApplicationDomain("gooseberry");
+    // Spelling in English, in the test's own settings, whatever language the
+    // machine running the tests is set to.
+    Sonnet::Speller().setDefaultLanguage(QStringLiteral("en_US"));
     QGuiApplication::setApplicationDisplayName(QStringLiteral("Gooseberry"));
     // The desktop names the icon theme and where themes are; off screen,
     // Breeze from the system's icon folders stands in for it.
