@@ -37,6 +37,7 @@ modules:
       - type: git
         url: https://invent.kde.org/plasma/layer-shell-qt.git
         tag: v6.5.5
+        commit: 76fbe5deb9d9545be98d1900b5d0df868616759e
 
   - name: gooseberry
     buildsystem: cmake-ninja

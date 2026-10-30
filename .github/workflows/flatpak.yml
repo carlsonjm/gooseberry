@@ -36,12 +36,6 @@ jobs:
           cache-key: flatpak-builder-${{ github.sha }}
           upload-artifact: true
 
-      - name: Record the bundled libraries' exact commits, for the Flathub copy
-        run: |
-          for mirror in .flatpak-builder/git/*; do
-            git -C "$mirror" for-each-ref --format='%(refname:short) %(*objectname)%(objectname)' refs/tags | sed "s|^|$(basename "$mirror") |"
-          done
-
       - name: Check the manifest with Flathub's linter
         run: |
           flatpak install -y --noninteractive flathub org.flatpak.Builder
