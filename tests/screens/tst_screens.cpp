@@ -839,7 +839,9 @@ private Q_SLOTS:
         QTRY_VERIFY(fixes->isVisible());
         QQuickItem *fix = itemNamed(fixes, QStringLiteral("stuck-fix"));
         QVERIFY(fix);
-        QTest::mouseClick(window, Qt::LeftButton, {}, fix->mapToScene(QPointF(fix->width() / 2, fix->height() / 2)).toPoint());
+        // Laid out along the foot, below the words, before it is tapped.
+        QTRY_VERIFY(fix->mapToScene(QPointF(0, 0)).y() >= words->mapToScene(QPointF(0, words->height())).y());
+        tap(window, fix);
         QTRY_COMPARE(stuck.typed.constLast(), text + QStringLiteral(" received "));
         QTRY_VERIFY(!fixes->isVisible());
     }
