@@ -166,6 +166,20 @@ October.)
 Rejected: Split Rock reading Gooseberry's folder directly, which would make the
 folder's layout a contract and hide from the person what was read.
 
+## The notes tool adds to the quick note's interface, at version 1
+
+The notes tool's two calls, `Read` and `Create`, join the quick note's bus
+interface and leave its version at 1. `Create` keeps a note of its own in one
+call, never through the note a search has open, and never makes a folder: a
+name that is not a folder's is refused, so the assistant cannot scatter new
+folders over the board. A broker knows the calls are there from the tool file
+installed with them. (Engineering, for the Notes spike, 30 October.)
+
+Rejected: raising the version to 2, which Tettegouche's quick note and panel
+island, asking for version 1 exactly, would read as a Gooseberry they cannot
+use; and adding through `Start`, `SetText`, `SetFolder` and `Done`, which
+would finish the quick note open in Search.
+
 ## What the assistant keeps becomes notes, where Gooseberry is installed
 
 Where Gooseberry is installed, what the person keeps from Split Rock, and the

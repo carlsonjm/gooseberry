@@ -12,6 +12,9 @@
 #include <QDateTime>
 #include <QDir>
 #include <QFile>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QProcess>
 #include <QRegularExpression>
 #include <QSignalSpy>
@@ -591,6 +594,140 @@ private Q_SLOTS:
         QVERIFY(asMap(told.last().value(0)).isEmpty());
         QVERIFY(call(QStringLiteral("Pinned")).isEmpty());
         QVERIFY(!readNote(pathOf(second)).header.contains(QStringLiteral("pinned")));
+    }
+
+    // For the assistant's notes tool: Read gives the whole of one note and
+    // changes nothing; Create keeps a new note in one call, apart from the
+    // quick note open in this session, and makes no folder.
+    void readAndCreateForTheAssistant()
+    {
+        call(QStringLiteral("Start"));
+        const QString kept = call(QStringLiteral("SetText"), {QStringLiteral("Testing notes\nstep one\n\n- [ ] step two")}).value(QStringLiteral("id")).toString();
+        call(QStringLiteral("SetFolder"), {QStringLiteral("Home")});
+        call(QStringLiteral("Done"));
+        const QByteArray before = [this, &kept] {
+            QFile file(pathOf(kept));
+            return file.open(QIODevice::ReadOnly) ? file.readAll() : QByteArray();
+        }();
+
+        QVariantMap note = call(QStringLiteral("Read"), {kept});
+        QCOMPARE(note.value(QStringLiteral("id")).toString(), kept);
+        QCOMPARE(note.value(QStringLiteral("title")).toString(), QStringLiteral("Testing notes"));
+        QCOMPARE(note.value(QStringLiteral("text")).toString(), QStringLiteral("Testing notes\nstep one\n\n- [ ] step two"));
+        QCOMPARE(note.value(QStringLiteral("folder")).toString(), QStringLiteral("Home"));
+        QCOMPARE(note.value(QStringLiteral("folderLabel")).toString(), QStringLiteral("Home"));
+        QVERIFY(QDateTime::fromString(note.value(QStringLiteral("changed")).toString(), Qt::ISODate).isValid());
+        // Read opens nothing and changes nothing.
+        QVERIFY(!call(QStringLiteral("State")).value(QStringLiteral("open")).toBool());
+        QFile file(pathOf(kept));
+        QVERIFY(file.open(QIODevice::ReadOnly));
+        QCOMPARE(file.readAll(), before);
+        file.close();
+
+        // An id that is not a note's gives an empty dictionary, not an error.
+        for (const QString &missing : {QStringLiteral("no-such-note"), QStringLiteral("../.gooseberry"), QString()}) {
+            const QDBusMessage reply = m_note->call(QStringLiteral("Read"), missing);
+            QCOMPARE(reply.type(), QDBusMessage::ReplyMessage);
+            QVERIFY(asMap(reply.arguments().value(0)).isEmpty());
+        }
+
+        // A quick note open in Search, mid-sentence, stays as it is.
+        const QVariantMap open = call(QStringLiteral("Start"));
+        const QString drafting = call(QStringLiteral("SetText"), {QStringLiteral("Half a thought")}).value(QStringLiteral("id")).toString();
+        QVERIFY(!drafting.isEmpty());
+        QSignalSpy changed(m_note.get(), SIGNAL(Changed(QVariantMap)));
+
+        // No folder is Inbox.
+        QVariantMap made = call(QStringLiteral("Create"), {QStringLiteral("Ask about the lease\nbefore Friday"), QString()});
+        const QString inInbox = made.value(QStringLiteral("id")).toString();
+        QVERIFY2(!inInbox.isEmpty(), qPrintable(made.value(QStringLiteral("problem")).toString()));
+        QVERIFY(inInbox != drafting);
+        QCOMPARE(made.value(QStringLiteral("title")).toString(), QStringLiteral("Ask about the lease"));
+        QVERIFY(!made.contains(QStringLiteral("problem")));
+        QCOMPARE(pathOf(inInbox), folder() + QLatin1Char('/') + inInbox + QStringLiteral(".md"));
+        NoteFile file1 = readNote(pathOf(inInbox));
+        QVERIFY(file1.exists);
+        QCOMPARE(file1.text, QStringLiteral("Ask about the lease\nbefore Friday"));
+        QVERIFY(!file1.header.contains(QStringLiteral("window")));
+        QCOMPARE(call(QStringLiteral("Read"), {inInbox}).value(QStringLiteral("folderLabel")).toString(), QStringLiteral("Inbox"));
+
+        // A folder by name, in any case.
+        made = call(QStringLiteral("Create"), {QStringLiteral("Seed potatoes"), QStringLiteral(" home ")});
+        const QString inHome = made.value(QStringLiteral("id")).toString();
+        QVERIFY2(!inHome.isEmpty(), qPrintable(made.value(QStringLiteral("problem")).toString()));
+        QCOMPARE(pathOf(inHome), folder() + QStringLiteral("/Home/") + inHome + QStringLiteral(".md"));
+        QCOMPARE(readNote(pathOf(inHome)).text, QStringLiteral("Seed potatoes"));
+        // "Inbox" by name is Inbox too.
+        made = call(QStringLiteral("Create"), {QStringLiteral("Return the drill"), QStringLiteral("Inbox")});
+        QCOMPARE(call(QStringLiteral("Read"), {made.value(QStringLiteral("id")).toString()}).value(QStringLiteral("folder")).toString(), QString());
+
+        // A folder that is not there is not made, and nothing is kept.
+        const QStringList notesBefore = QDir(folder()).entryList({QStringLiteral("*.md")}, QDir::Files);
+        const QStringList foldersBefore = QDir(folder()).entryList(QDir::Dirs | QDir::NoDotAndDotDot);
+        made = call(QStringLiteral("Create"), {QStringLiteral("Lost words"), QStringLiteral("Garden")});
+        QVERIFY(!made.contains(QStringLiteral("id")));
+        QVERIFY(!made.value(QStringLiteral("problem")).toString().isEmpty());
+        // So are words that are only spaces.
+        made = call(QStringLiteral("Create"), {QStringLiteral("  \n "), QString()});
+        QVERIFY(!made.contains(QStringLiteral("id")));
+        QVERIFY(!made.value(QStringLiteral("problem")).toString().isEmpty());
+        QCOMPARE(QDir(folder()).entryList({QStringLiteral("*.md")}, QDir::Files), notesBefore);
+        QCOMPARE(QDir(folder()).entryList(QDir::Dirs | QDir::NoDotAndDotDot), foldersBefore);
+        QVERIFY(asList(m_note->call(QStringLiteral("Find"), QStringLiteral("Lost words"), uint(0)).arguments().value(0)).isEmpty());
+
+        // The open quick note is the same note, with the same words, still
+        // open, and was not told of a change.
+        const QVariantMap state = call(QStringLiteral("State"));
+        QVERIFY(state.value(QStringLiteral("open")).toBool());
+        QCOMPARE(state.value(QStringLiteral("id")).toString(), drafting);
+        QCOMPARE(state.value(QStringLiteral("text")).toString(), QStringLiteral("Half a thought"));
+        QCOMPARE(state.value(QStringLiteral("folder")).toString(), open.value(QStringLiteral("folder")).toString());
+        QCOMPARE(readNote(pathOf(drafting)).text, QStringLiteral("Half a thought"));
+        QTest::qWait(100);
+        QCOMPARE(changed.count(), 0);
+        // Writing on goes on writing the same note.
+        call(QStringLiteral("SetText"), {QStringLiteral("Half a thought, finished")});
+        QCOMPARE(readNote(pathOf(drafting)).text, QStringLiteral("Half a thought, finished"));
+        QCOMPARE(readNote(pathOf(inInbox)).text, QStringLiteral("Ask about the lease\nbefore Friday"));
+        call(QStringLiteral("Done"));
+    }
+
+    // The tool file names only calls this interface answers, with the
+    // arguments each takes, in order.
+    void toolFileMatchesTheInterface()
+    {
+        QFile file(QStringLiteral(GOOSEBERRY_CAPABILITIES));
+        QVERIFY(file.open(QIODevice::ReadOnly));
+        const QJsonObject tools = QJsonDocument::fromJson(file.readAll()).object();
+        QCOMPARE(tools.value(QStringLiteral("app")).toString(), QStringLiteral("notes"));
+        const QJsonObject bus = tools.value(QStringLiteral("bus")).toObject();
+        QCOMPARE(bus.value(QStringLiteral("service")).toString(), Service);
+        QCOMPARE(bus.value(QStringLiteral("path")).toString(), Path);
+        QCOMPARE(bus.value(QStringLiteral("interface")).toString(), Interface);
+
+        QDBusInterface introspectable(Service, Path, QStringLiteral("org.freedesktop.DBus.Introspectable"));
+        const QDBusReply<QString> xml = introspectable.call(QStringLiteral("Introspect"));
+        QVERIFY(xml.isValid());
+        const QJsonArray list = tools.value(QStringLiteral("tools")).toArray();
+        QCOMPARE(list.size(), 3);
+        for (const QJsonValue &each : list) {
+            const QJsonObject tool = each.toObject();
+            QString signature;
+            for (const QJsonValue &argument : tool.value(QStringLiteral("args")).toArray()) {
+                signature += argument.toObject().value(QStringLiteral("type")).toString();
+            }
+            const QString method = tool.value(QStringLiteral("method")).toString();
+            const QRegularExpression found(QStringLiteral("<method name=\"%1\">(.*?)</method>").arg(method),
+                                           QRegularExpression::DotMatchesEverythingOption);
+            const QRegularExpressionMatch match = found.match(xml.value());
+            QVERIFY2(match.hasMatch(), qPrintable(method));
+            QString given;
+            const QRegularExpression in(QStringLiteral("<arg[^>]*type=\"([^\"]+)\"[^>]*direction=\"in\""));
+            for (auto it = in.globalMatch(match.captured(1)); it.hasNext();) {
+                given += it.next().captured(1);
+            }
+            QCOMPARE(given, signature);
+        }
     }
 
     // Gooseberry still running and well after all of it.

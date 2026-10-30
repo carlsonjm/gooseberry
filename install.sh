@@ -17,9 +17,16 @@ if [[ -x "${install_key}" ]] \
     # An earlier install with sudo left this list owned by root.
     rm -f -- "${build_dir}/install_manifest.txt"
     DESTDIR="${stage}" cmake --install "${build_dir}" >/dev/null
-    tar -C "${stage}" -cf - . | sudo -n "${install_key}" gooseberry install
-    # The list then names where each file landed, as an install with sudo does.
-    sed -i "s|^${stage}||" "${build_dir}/install_manifest.txt"
+    if tar -C "${stage}" -cf - . | sudo -n "${install_key}" gooseberry install; then
+        # The list then names where each file landed, as an install with sudo does.
+        sed -i "s|^${stage}||" "${build_dir}/install_manifest.txt"
+    else
+        # An install key set up before one of these files existed, such as
+        # Notes' tool file, refuses the whole set and places nothing.
+        echo "The install key does not take every file of this build; installing with sudo." >&2
+        rm -f -- "${build_dir}/install_manifest.txt"
+        sudo cmake --install "${build_dir}"
+    fi
 else
     sudo cmake --install "${build_dir}"
 fi

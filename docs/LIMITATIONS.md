@@ -7,8 +7,8 @@ What Gooseberry does not do yet, and what it will not do.
 - A note carried to the top edge does not open Spread or stick to the card it
   is dropped on. Kadunce does not accept a carried note (`DESKTOP.md`
   § Needs).
-- Split Rock cannot use Gooseberry's notes yet: the notes tool it would call
-  is not built (`DESKTOP.md` § Split Rock).
+- Split Rock does not use Gooseberry's notes yet: the notes tool is offered,
+  and Split Rock has still to call it (`DESKTOP.md` § Split Rock).
 - Gooseberry is ready for translation, but has no translations yet.
 
 ## Not planned

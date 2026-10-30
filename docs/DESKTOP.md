@@ -189,6 +189,8 @@ dictionary of strings to variants:
 | `Edit(s noteId) → a{sv}` | Makes that note the open one, for the search to write on as on a note `Start` began, finishing the one open before as `Done` does; a note that is not there is refused. From 1.1 |
 | `SetPinned(b on) → a{sv}` | Pins the open note, or unpins it. One note is pinned at a time: pinning another unpins the first. A note not kept yet is refused. From 1.1 |
 | `Pinned() → a{sv}` | The pinned note: `id`, `title`, `colour` and `colourHex`; an empty dictionary when none is. From 1.1 |
+| `Read(s noteId) → a{sv}` | The whole of that note: `id`, `title` (the first words), `text` (all of it, as Markdown), `folder`, `folderLabel` and `changed` (ISO 8601). It changes nothing and opens nothing; an empty dictionary for a note that is not there. For the notes tool |
+| `Create(s text, s folder) → a{sv}` | Keeps a new note with that text in one call, in that folder, found by its name in any case, or in Inbox for an empty name or `Inbox`. It is a note of its own, stuck to nothing; the note open with `Start` or `Edit`, and the one on Gooseberry's card, are left as they are and told nothing. Returns `id` and `title`, or `problem`, in plain words, when nothing was kept: no words, a folder that is not there (which is never made), or notes kept by a newer Gooseberry. For the notes tool |
 
 | Signal | When |
 | --- | --- |
@@ -234,6 +236,14 @@ back to its Notes; a panel can keep the pinned note in sight. `OpenNote` and
 `OpenOnCard` finish a note a search had open with `Start` or `Edit`, as the
 card takes over. A caller that does not
 know them keeps working as before.
+
+**The notes tool, added within version 1.** The methods `Read` and `Create`,
+which an assistant broker calls for its `notes.read` and `notes.create` tools
+(§ Split Rock). They add to the interface and change nothing a search uses, so
+the number stays `1`, as Tettegouche's quick note and panel island ask for
+exactly. A caller that needs them knows they are there from the tool file
+installed with them; an older Gooseberry answers either with an unknown-method
+error.
 
 For All notes, Search calls `OpenBoard` with a token of its own and waits for
 `BoardShown` with that token: from then the board's window, whose application
@@ -350,7 +360,18 @@ assistant can find notes, read one, and add one when Robin asks, and says when
 it reads one. From a note, "next step" sends only that note, and offers a
 checklist, a reminder or a better home; nothing changes until Robin chooses.
 What Robin keeps from the assistant becomes notes here too (`DECISIONS.md`).
-None of this is built yet. Gooseberry has no assistant of its own.
+Gooseberry has no assistant of its own.
+
+Gooseberry describes its notes tool in a file a broker reads,
+`notes.json`, installed in `good-input/capabilities` under the system's data
+folder (`/usr/share` for a package) and removed with Gooseberry. It names the
+quick note's bus service and three tools, each one of its calls: `notes.search`
+is `Find`, `notes.read` is `Read`, and `notes.create` is `Create`, the last
+marked as a change, which the broker makes only once Robin says so. The file's
+layout is Split Rock's to keep; Gooseberry keeps it matching its calls, and a
+bus test checks that every tool names a call it answers, with the arguments in
+order. What the assistant says about a note it read, and the card that asks
+Robin before a note is added, are Split Rock's.
 
 ## Needs
 
@@ -365,4 +386,4 @@ keeps the pinned note on its panel (`Pinned`).
 | --- | --- | --- |
 | Kadunce | Accepting a note carried to the top edge: opening Spread and telling Gooseberry which card it was dropped on | Sticking a note to a card by carrying it there |
 | Kadunce | A request to stack a window with a card | Stacking without a hand gesture |
-| Split Rock | Use Gooseberry's notes tool where present | The notes tool, not built yet |
+| Split Rock | Use Gooseberry's notes tool where present | The assistant finding, reading and adding notes |

@@ -78,6 +78,14 @@ public Q_SLOTS:
     // other, or unpins it; and the pinned note, for a panel to keep in sight.
     Q_SCRIPTABLE QVariantMap SetPinned(bool on);
     Q_SCRIPTABLE QVariantMap Pinned() const;
+    // Added in version 1, for the assistant's notes tool (DECISIONS.md §
+    // Notes are a tool for the assistant). The whole of one note, changing
+    // and opening nothing; an empty dictionary for an id that is not there.
+    Q_SCRIPTABLE QVariantMap Read(const QString &noteId) const;
+    // Keeps a new note with that text in that folder, empty for Inbox, in
+    // one call and apart from the note this session has open. A folder that
+    // is not there is not made: nothing is kept and "problem" says why.
+    Q_SCRIPTABLE QVariantMap Create(const QString &text, const QString &folder);
 
 Q_SIGNALS:
     // The note changed by something other than a call here: the board, the

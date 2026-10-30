@@ -129,6 +129,9 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${GOOSEBERRY_APP_ID}.desktop DESTINATI
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${GOOSEBERRY_APP_ID}-autostart.desktop
     DESTINATION ${KDE_INSTALL_AUTOSTARTDIR} RENAME ${GOOSEBERRY_APP_ID}.desktop)
 install(FILES data/${GOOSEBERRY_APP_ID}.svg DESTINATION ${KDE_INSTALL_FULL_ICONDIR}/hicolor/scalable/apps)
+# The notes tool an assistant broker offers, beside the bus service it calls
+# (DESKTOP.md § Split Rock: the notes tool). Removing Gooseberry removes it.
+install(FILES data/notes.json DESTINATION ${KDE_INSTALL_DATADIR}/good-input/capabilities)
 
 if(BUILD_TESTING)
     add_subdirectory(tests)

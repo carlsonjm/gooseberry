@@ -54,6 +54,12 @@ QString excerpt(const Note &note, const QString &words)
     return {};
 }
 
+// A time as ISO 8601 with its offset, as every time on the bus is given.
+QString isoTime(const QDateTime &time)
+{
+    return time.toOffsetFromUtc(time.offsetFromUtc()).toString(Qt::ISODate);
+}
+
 // Marks a call from the bus, so the changes it makes are not told back as
 // changes from elsewhere.
 struct Calling {
@@ -441,6 +447,69 @@ QVariantMap QuickNoteService::Pinned() const
         {QStringLiteral("title"), note->title()},
         {QStringLiteral("colour"), note->colour},
         {QStringLiteral("colourHex"), colourHex(note->colour)},
+    };
+}
+
+QVariantMap QuickNoteService::Read(const QString &noteId) const
+{
+    const auto note = m_store->note(noteId);
+    if (!note) {
+        return {};
+    }
+    return {
+        {QStringLiteral("id"), note->id},
+        {QStringLiteral("title"), note->title()},
+        {QStringLiteral("text"), note->text},
+        {QStringLiteral("folder"), note->folder},
+        {QStringLiteral("folderLabel"), note->placeLabel()},
+        {QStringLiteral("changed"), isoTime(note->changed)},
+    };
+}
+
+QVariantMap QuickNoteService::Create(const QString &text, const QString &folder)
+{
+    auto problem = [](const QString &words) {
+        return QVariantMap{{QStringLiteral("problem"), words}};
+    };
+    if (text.trimmed().isEmpty()) {
+        return problem(i18n("A note needs some words."));
+    }
+    if (m_store->readOnly()) {
+        return problem(i18n("These notes were kept by a newer Gooseberry, so nothing is added to them."));
+    }
+    // A folder is found by its name as the board shows it, in any case, so
+    // "inbox" or "groceries" from the assistant lands where the person
+    // expects. Nothing is made: a name that is not a folder is refused.
+    const QString wanted = folder.simplified();
+    QString found;
+    if (!wanted.isEmpty() && wanted.compare(inboxLabel(), Qt::CaseInsensitive) != 0) {
+        if (m_store->hasFolder(wanted)) {
+            found = wanted;
+        } else {
+            const QStringList folders = m_store->folders();
+            for (const QString &name : folders) {
+                if (name.compare(wanted, Qt::CaseInsensitive) == 0) {
+                    found = name;
+                    break;
+                }
+            }
+        }
+        if (found.isEmpty()) {
+            return problem(i18n("There is no folder called %1.", wanted));
+        }
+    }
+    // A note of its own, never the one open in this session or on the card:
+    // in its folder, stuck to nothing.
+    Note note;
+    note.text = text;
+    note.folder = found;
+    const QString id = m_store->create(note);
+    if (id.isEmpty()) {
+        return problem(m_store->lastError());
+    }
+    return {
+        {QStringLiteral("id"), id},
+        {QStringLiteral("title"), m_store->note(id)->title()},
     };
 }
 
