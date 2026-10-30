@@ -11,6 +11,7 @@ installed=(
     /usr/share/dbus-1/services/io.github.carlsonjm.gooseberry.service
     /etc/xdg/autostart/io.github.carlsonjm.Gooseberry.desktop
     /usr/share/icons/hicolor/scalable/apps/io.github.carlsonjm.Gooseberry.svg
+    /usr/share/good-input/capabilities/notes.json
 )
 shopt -s nullglob
 installed+=(/usr/share/locale/*/LC_MESSAGES/gooseberry.mo)
@@ -27,12 +28,23 @@ install_key=/usr/local/libexec/shuffle/install-step
 if [[ -x "${install_key}" ]] \
         && sudo -n -l "${install_key}" gooseberry remove >/dev/null 2>&1; then
     sudo -n "${install_key}" gooseberry remove
+    # An install key set up before Notes had a tool file leaves it behind.
+    capabilities=/usr/share/good-input/capabilities/notes.json
+    if [[ -f $capabilities || -L $capabilities ]]; then
+        sudo rm -f -- "${capabilities}"
+    fi
 elif ((${#present[@]} == 0)); then
     echo "Nothing to remove: Gooseberry is not installed." >&2
     exit 1
 else
     sudo rm -f -- "${present[@]}"
 fi
+# The tools folder is shared with other apps, so it goes only when empty.
+for folder in /usr/share/good-input/capabilities /usr/share/good-input; do
+    if [[ -d $folder ]] && [[ -z "$(ls -A -- "${folder}")" ]]; then
+        sudo rmdir -- "${folder}"
+    fi
+done
 kbuildsycoca6 >/dev/null 2>&1 || true
 
 echo "Gooseberry removed. Notes stay in their folder."

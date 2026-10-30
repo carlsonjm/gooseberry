@@ -76,7 +76,7 @@ Four places, one set of notes.
 | Spelling | The desktop's spell checker, Sonnet, with a Hunspell dictionary | The same language and added words as every KDE program; with no dictionary, nothing is marked |
 | Knowing what Robin is working on | Plasma's own window list: the window in front and the workspace's name | Works the same with or without Kadunce. From Kadunce, Gooseberry reads only whether Spread is showing, to place the quick-note card (`DESKTOP.md`) |
 | Being found | Tettegouche's Search, where installed | `DESKTOP.md` § Tettegouche: notes in Search |
-| The assistant | Split Rock, where installed and set up, using Gooseberry as a tool | Optional, and not built yet (`DESKTOP.md` § Split Rock) |
+| The assistant | Split Rock, where installed and set up, using Gooseberry as a tool | Optional; Gooseberry offers the tool (`DESKTOP.md` § Split Rock) |
 
 ## Risks
 

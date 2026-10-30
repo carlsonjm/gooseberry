@@ -32,7 +32,8 @@ set_target_properties(tst_screens PROPERTIES QT_QML_MODULE_NO_IMPORT_SCAN ON)
 find_program(DBUS_RUN_SESSION dbus-run-session REQUIRED)
 add_executable(tst_quicknote_bus bus/tst_quicknote_bus.cpp)
 target_link_libraries(tst_quicknote_bus PRIVATE Qt6::DBus Qt6::Test)
-target_compile_definitions(tst_quicknote_bus PRIVATE GOOSEBERRY_BINARY="$<TARGET_FILE:gooseberry>")
+target_compile_definitions(tst_quicknote_bus PRIVATE GOOSEBERRY_BINARY="$<TARGET_FILE:gooseberry>"
+    GOOSEBERRY_CAPABILITIES="${PROJECT_SOURCE_DIR}/data/notes.json")
 add_dependencies(tst_quicknote_bus gooseberry)
 add_test(NAME tst_quicknote_bus COMMAND ${DBUS_RUN_SESSION}
     --config-file=${CMAKE_CURRENT_SOURCE_DIR}/bus/private-bus.conf -- $<TARGET_FILE:tst_quicknote_bus>)
@@ -67,3 +68,9 @@ set_tests_properties(tst_reminders_bus PROPERTIES
     ENVIRONMENT "GOOSEBERRY_PRIVATE_BUS=1"
     SKIP_RETURN_CODE 77
     TIMEOUT 120)
+
+# The notes tool an install puts in place, and uninstall.sh taking it away.
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+add_test(NAME tst_install COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/install/check-install.py
+    ${PROJECT_BINARY_DIR} ${PROJECT_SOURCE_DIR})
+set_tests_properties(tst_install PROPERTIES TIMEOUT 120)
