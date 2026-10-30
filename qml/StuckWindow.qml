@@ -227,6 +227,19 @@ Window {
             // press itself could let go of them.
             property bool heldWords: false
 
+            // A fix put in place, the cursor after it, or the word kept as
+            // it is. Here rather than on the fix, which goes as it is taken.
+            function takeFix(fix) {
+                if (fix.name === "fix") {
+                    const end = bodySpelling.replace(fix.label);
+                    if (end >= 0) {
+                        body.cursorPosition = end;
+                    }
+                } else {
+                    bodySpelling.learn();
+                }
+            }
+
             function pressedWith(pressed) {
                 if (pressed) {
                     heldWords = selecting || offerCopy;
@@ -643,16 +656,7 @@ Window {
                             anchors.fill: parent
                             anchors.topMargin: -7
                             anchors.bottomMargin: -7
-                            onClicked: {
-                                if (parent.modelData.name === "fix") {
-                                    const end = bodySpelling.replace(parent.modelData.label);
-                                    if (end >= 0) {
-                                        body.cursorPosition = end;
-                                    }
-                                } else {
-                                    bodySpelling.learn();
-                                }
-                            }
+                            onClicked: note.takeFix(parent.modelData)
                         }
                     }
                 }
