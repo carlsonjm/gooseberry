@@ -1,0 +1,569 @@
+# Spanish translation of gooseberry.
+# Machine-made first translation; corrections from native speakers are welcome.
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: gooseberry\n"
+"Report-Msgid-Bugs-To: https://github.com/carlsonjm/gooseberry/issues\n"
+"POT-Creation-Date: 2026-10-30 14:21+0000\n"
+"PO-Revision-Date: 2026-10-30 00:00+0000\n"
+"Last-Translator: Claude\n"
+"Language-Team: Spanish\n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: qml/BoardView.qml
+msgid "%1 note"
+msgid_plural "%1 notes"
+msgstr[0] "%1 nota"
+msgstr[1] "%1 notas"
+
+#: qml/BoardView.qml
+msgid "%1 removed; its notes are in Inbox"
+msgstr "%1 eliminada; sus notas están en la Bandeja de entrada"
+
+#: qml/BoardView.qml
+msgid "+ New folder"
+msgstr "+ Nueva carpeta"
+
+#: qml/BoardView.qml
+msgid "A note lands here when no folder is chosen."
+msgstr "Una nota llega aquí cuando no se elige ninguna carpeta."
+
+#: qml/BoardView.qml
+msgid "Back in %1"
+msgstr "De vuelta en %1"
+
+#: qml/BoardView.qml
+msgid "Bring back"
+msgstr "Recuperar"
+
+#: qml/BoardView.qml
+msgid "Find or start a note"
+msgstr "Busca o empieza una nota"
+
+#: qml/BoardView.qml
+msgid "Folder"
+msgstr "Carpeta"
+
+#: qml/BoardView.qml
+msgid "Folder name"
+msgstr "Nombre de la carpeta"
+
+#: qml/BoardView.qml
+msgid "Folders"
+msgstr "Carpetas"
+
+#: qml/BoardView.qml
+msgid "Hold a note anywhere on the board and drop it here, or tap New note."
+msgstr "Mantén pulsada una nota en cualquier lugar del tablero y suéltala aquí, o toca Nueva nota."
+
+#: qml/BoardView.qml
+msgid "Ideas · no date needed"
+msgstr "Ideas · sin fecha"
+
+#: qml/BoardView.qml
+msgid "Inbox is empty"
+msgstr "La Bandeja de entrada está vacía"
+
+#: qml/BoardView.qml
+msgid "Keep the name"
+msgstr "Mantener el nombre"
+
+#: qml/BoardView.qml
+msgid "Moved to %1"
+msgstr "Movida a %1"
+
+#: qml/BoardView.qml
+msgid "Moved to the trash"
+msgstr "Movida a la papelera"
+
+#: qml/BoardView.qml qml/QuickNote.qml
+msgid "New folder"
+msgstr "Nueva carpeta"
+
+#: qml/BoardView.qml
+msgctxt "a new folder's name, numbered"
+msgid "New folder %1"
+msgstr "Nueva carpeta %1"
+
+#: qml/BoardView.qml
+msgid "New note"
+msgstr "Nueva nota"
+
+#: qml/BoardView.qml
+msgid "New notes on %1 go here"
+msgstr "Las notas nuevas del %1 van aquí"
+
+#: qml/BoardView.qml
+msgid "No note has those words"
+msgstr "Ninguna nota tiene esas palabras"
+
+#: qml/BoardView.qml
+msgid "No notes here"
+msgstr "No hay notas aquí"
+
+#: qml/BoardView.qml
+msgid "Nothing tucked away"
+msgstr "Nada guardado"
+
+#: qml/BoardView.qml
+msgid "Nothing written today yet"
+msgstr "Aún no has escrito nada hoy"
+
+#: qml/BoardView.qml
+msgid "Planned for %1"
+msgstr "Planeada para %1"
+
+#: qml/BoardView.qml
+msgid "Remove folder"
+msgstr "Eliminar carpeta"
+
+#: qml/BoardView.qml
+msgid "Rename"
+msgstr "Cambiar nombre"
+
+#: qml/BoardView.qml
+msgid "Search"
+msgstr "Buscar"
+
+#: qml/BoardView.qml
+msgid "Stuck to"
+msgstr "Pegada a"
+
+#: qml/BoardView.qml
+msgid "Stuck to windows"
+msgstr "Pegadas a ventanas"
+
+#: qml/BoardView.qml
+msgid "Tap New note, or %1's button, to write one."
+msgstr "Toca Nueva nota, o el botón de %1, para escribir una."
+
+#: qml/BoardView.qml
+msgid "Trash"
+msgstr "Papelera"
+
+#: qml/BoardView.qml
+msgid "Tuck a note away to keep it here, out of sight. Tap it to bring it back."
+msgstr "Guarda una nota para tenerla aquí, fuera de la vista. Tócala para recuperarla."
+
+#: qml/BoardView.qml
+msgid "Tucked away"
+msgstr "Guardadas"
+
+#: qml/BoardView.qml
+msgid "Undo"
+msgstr "Deshacer"
+
+#: qml/NoteCard.qml qml/QuickNote.qml
+msgid "Stuck to %1"
+msgstr "Pegada a %1"
+
+#: qml/NoteCard.qml qml/QuickNote.qml
+msgid "Tuck away"
+msgstr "Guardar"
+
+#: qml/NoteCard.qml
+msgid "Yesterday"
+msgstr "Ayer"
+
+#: qml/PlannerColumn.qml src/desktop/Notifier.cpp
+msgid "Done"
+msgstr "Hecho"
+
+#: qml/PlannerColumn.qml
+msgid "Planner · %1"
+msgstr "Agenda · %1"
+
+#: qml/PlannerColumn.qml qml/TimePicker.qml
+msgid "Today"
+msgstr "Hoy"
+
+#: qml/QuickNote.qml src/desktop/QuickNoteService.cpp
+msgctxt "application · document"
+msgid "%1 · %2"
+msgstr "%1 · %2"
+
+#: qml/QuickNote.qml
+msgid "%1 · in front"
+msgstr "%1 · al frente"
+
+#: qml/QuickNote.qml
+msgid "%1 · this workspace"
+msgstr "%1 · este espacio de trabajo"
+
+#: qml/QuickNote.qml qml/StuckWindow.qml
+msgid "Add to dictionary"
+msgstr "Añadir al diccionario"
+
+#: qml/QuickNote.qml
+msgid "All notes"
+msgstr "Todas las notas"
+
+#: qml/QuickNote.qml
+msgid "Checklist"
+msgstr "Lista de verificación"
+
+#: qml/QuickNote.qml
+msgid "Colour"
+msgstr "Color"
+
+#: qml/QuickNote.qml qml/StuckWindow.qml
+msgid "Copy"
+msgstr "Copiar"
+
+#: qml/QuickNote.qml qml/StuckWindow.qml
+msgid "Copy all"
+msgstr "Copiar todo"
+
+#: qml/QuickNote.qml
+msgid "Don't stick to a window"
+msgstr "No pegar a una ventana"
+
+#: qml/QuickNote.qml
+msgid "Folder: %1"
+msgstr "Carpeta: %1"
+
+#: qml/QuickNote.qml
+msgid "Keep in %1"
+msgstr "Guardar en %1"
+
+#: qml/QuickNote.qml
+msgid "Kept by a newer %1: read only"
+msgstr "Guardada por una versión más reciente de %1: solo lectura"
+
+#: qml/QuickNote.qml
+msgid "Make the lines a checklist"
+msgstr "Convertir las líneas en lista de verificación"
+
+#: qml/QuickNote.qml
+msgid "More"
+msgstr "Más"
+
+#: qml/QuickNote.qml
+msgid "No reminder"
+msgstr "Sin recordatorio"
+
+#: qml/QuickNote.qml
+msgid "Not kept yet: %1"
+msgstr "Aún no guardada: %1"
+
+#: qml/QuickNote.qml
+msgid "Not stuck"
+msgstr "Sin pegar"
+
+#: qml/QuickNote.qml
+msgid "Not stuck to a window"
+msgstr "No pegada a una ventana"
+
+#: qml/QuickNote.qml
+msgid "Note"
+msgstr "Nota"
+
+#: qml/QuickNote.qml
+msgid "Pin to the Actions Panel"
+msgstr "Fijar en el panel de acciones"
+
+#: qml/QuickNote.qml
+msgid "Pin to the panel"
+msgstr "Fijar en el panel"
+
+#: qml/QuickNote.qml
+msgid "Remind"
+msgstr "Recordar"
+
+#: qml/QuickNote.qml
+msgctxt "offer to remind at a time"
+msgid "Remind %1"
+msgstr "Recordar %1"
+
+#: qml/QuickNote.qml
+msgid "Remove"
+msgstr "Eliminar"
+
+#: qml/QuickNote.qml
+msgid "Saved as you go"
+msgstr "Se guarda mientras escribes"
+
+#: qml/QuickNote.qml
+msgid "Unpin from the Actions Panel"
+msgstr "Quitar del panel de acciones"
+
+#: qml/QuickNote.qml
+msgid "Unpin from the panel"
+msgstr "Quitar del panel"
+
+#: qml/QuickNote.qml
+msgid "Words that ask for something offer it"
+msgstr "Las palabras que piden algo lo ofrecen"
+
+#: qml/QuickNote.qml
+msgid "Write it down…"
+msgstr "Escríbelo…"
+
+#: qml/StuckWindow.qml
+msgctxt "more than nine notes"
+msgid "9+"
+msgstr "9+"
+
+#: qml/StuckWindow.qml
+msgid "Copied"
+msgstr "Copiado"
+
+#: qml/StuckWindow.qml
+msgid "Resize"
+msgstr "Cambiar tamaño"
+
+#: qml/StuckWindow.qml
+msgid "Select all"
+msgstr "Seleccionar todo"
+
+#: qml/StuckWindow.qml
+msgid "Show the note"
+msgid_plural "Show the %1 notes"
+msgstr[0] "Mostrar la nota"
+msgstr[1] "Mostrar las %1 notas"
+
+#: qml/TimePicker.qml
+msgid "A day earlier"
+msgstr "Un día antes"
+
+#: qml/TimePicker.qml
+msgid "A day later"
+msgstr "Un día después"
+
+#: qml/TimePicker.qml
+msgid "A quarter hour earlier"
+msgstr "Un cuarto de hora antes"
+
+#: qml/TimePicker.qml
+msgid "A quarter hour later"
+msgstr "Un cuarto de hora después"
+
+#: qml/TimePicker.qml
+msgid "An hour earlier"
+msgstr "Una hora antes"
+
+#: qml/TimePicker.qml
+msgid "An hour later"
+msgstr "Una hora después"
+
+#: qml/TimePicker.qml
+msgid "Set"
+msgstr "Fijar"
+
+#: qml/TimePicker.qml
+msgid "Tomorrow"
+msgstr "Mañana"
+
+#: src/app/main.cpp
+msgid "Notes, stickies and a planner"
+msgstr "Notas, notas adhesivas y una agenda"
+
+#: src/core/Board.cpp
+msgctxt "@title a place on the board"
+msgid "Today"
+msgstr "Hoy"
+
+#: src/core/Board.cpp
+msgctxt "@action a place on the board"
+msgid "New folder"
+msgstr "Nueva carpeta"
+
+#: src/core/Board.cpp
+msgctxt "@title notes put out of sight"
+msgid "Tucked away"
+msgstr "Guardadas"
+
+#: src/core/Note.cpp
+msgctxt "@title the folder that holds loose notes"
+msgid "Inbox"
+msgstr "Bandeja de entrada"
+
+#: src/core/NoteStore.cpp
+msgid "The notes folder %1 could not be made."
+msgstr "No se pudo crear la carpeta de notas %1."
+
+#: src/core/NoteStore.cpp
+msgid "The notes folder %1 could not be written to."
+msgstr "No se pudo escribir en la carpeta de notas %1."
+
+#: src/core/NoteStore.cpp
+msgid "The notes folder's format file could not be read."
+msgstr "No se pudo leer el archivo de formato de la carpeta de notas."
+
+#: src/core/NoteStore.cpp
+msgid "This folder was laid out by a newer %1, so nothing in it is changed here."
+msgstr "Esta carpeta la organizó una versión más reciente de %1, así que aquí no se cambia nada en ella."
+
+#: src/core/NoteStore.cpp
+msgid "A folder needs a name."
+msgstr "Una carpeta necesita un nombre."
+
+#: src/core/NoteStore.cpp
+msgid "A folder's name cannot have a slash in it."
+msgstr "El nombre de una carpeta no puede contener una barra."
+
+#: src/core/NoteStore.cpp
+msgid "A folder's name cannot start with a dot."
+msgstr "El nombre de una carpeta no puede empezar por un punto."
+
+#: src/core/NoteStore.cpp
+msgctxt "%1 is the folder that holds loose notes"
+msgid "%1 is already there."
+msgstr "%1 ya existe."
+
+#: src/core/NoteStore.cpp
+msgid "That name is too long for a folder."
+msgstr "Ese nombre es demasiado largo para una carpeta."
+
+#: src/core/NoteStore.cpp
+msgid "There is already a folder called %1."
+msgstr "Ya hay una carpeta llamada %1."
+
+#: src/core/NoteStore.cpp
+msgid "The folder %1 could not be made."
+msgstr "No se pudo crear la carpeta %1."
+
+#: src/core/NoteStore.cpp
+msgid "That folder is no longer there."
+msgstr "Esa carpeta ya no existe."
+
+#: src/core/NoteStore.cpp
+msgid "The folder %1 could not be renamed."
+msgstr "No se pudo cambiar el nombre de la carpeta %1."
+
+#: src/core/NoteStore.cpp
+msgctxt "%2 is the folder that holds loose notes"
+msgid "The folder %1 could not be removed; its notes are in %2."
+msgstr "No se pudo eliminar la carpeta %1; sus notas están en %2."
+
+#: src/core/NoteStore.cpp
+msgid "That note is no longer in the folder."
+msgstr "Esa nota ya no está en la carpeta."
+
+#: src/core/NoteStore.cpp
+msgid "The folder %1 is no longer there."
+msgstr "La carpeta %1 ya no existe."
+
+#: src/core/NoteStore.cpp
+msgid "This note was kept by a newer %1, so it is not changed here."
+msgstr "Esta nota la guardó una versión más reciente de %1, así que aquí no se cambia."
+
+#: src/core/NoteStore.cpp
+msgid "The note could not be moved to %1."
+msgstr "No se pudo mover la nota a %1."
+
+#: src/core/NoteStore.cpp
+msgid "The workspace's folder could not be kept."
+msgstr "No se pudo guardar la carpeta del espacio de trabajo."
+
+#: src/core/NoteStore.cpp
+msgid "This folder was kept by a newer %1, so nothing in it is changed here."
+msgstr "Esta carpeta la guardó una versión más reciente de %1, así que aquí no se cambia nada en ella."
+
+#: src/core/NoteStore.cpp
+msgid "The note could not be moved to the trash."
+msgstr "No se pudo mover la nota a la papelera."
+
+#: src/core/NoteStore.cpp
+msgid "The note could not be brought back from the trash."
+msgstr "No se pudo recuperar la nota de la papelera."
+
+#: src/core/Welcome.cpp
+msgctxt "@info welcome note's first line, its title"
+msgid "Welcome to %1"
+msgstr "Te damos la bienvenida a %1"
+
+#: src/core/Welcome.cpp
+msgctxt "@info welcome note"
+msgid "Write anything here. It's kept as you type, with nothing to save."
+msgstr "Escribe aquí lo que quieras. Se guarda mientras escribes, sin nada que guardar."
+
+#: src/core/Welcome.cpp
+msgctxt "@info welcome note"
+msgid "A new note sticks to the window you were using, like a sticky on a page. Tap the dot on that window's title bar to bring it back."
+msgstr "Una nota nueva se pega a la ventana que estabas usando, como una nota adhesiva en una página. Toca el punto de la barra de título de esa ventana para recuperarla."
+
+#: src/core/Welcome.cpp
+msgctxt "@info welcome note; keep the # and the word after it as one word, which becomes a folder's name, and use the word for the next day that the note listens for"
+msgid "Name a day, like tomorrow, and the note offers to remind you. Put # before a word to keep a note in that folder: #ideas. Lines that start with a dash become a checklist."
+msgstr "Menciona un día, como mañana, y la nota se ofrece a recordártelo. Pon # delante de una palabra para guardar una nota en esa carpeta: #ideas. Las líneas que empiezan con un guion se convierten en una lista de verificación."
+
+#: src/core/Welcome.cpp
+msgctxt "@info welcome note"
+msgid "Tap the grid below to see all your notes. When you're done with this one, tap More, then Remove."
+msgstr "Toca la cuadrícula de abajo para ver todas tus notas. Cuando termines con esta, toca Más y luego Eliminar."
+
+#: src/desktop/Notifier.cpp
+msgid "A note"
+msgstr "Una nota"
+
+#: src/desktop/Notifier.cpp
+msgctxt "when · where"
+msgid "%1 · %2"
+msgstr "%1 · %2"
+
+#: src/desktop/Notifier.cpp
+msgid "Open"
+msgstr "Abrir"
+
+#: src/desktop/Notifier.cpp
+msgid "In 10 minutes"
+msgstr "En 10 minutos"
+
+#: src/desktop/QuickNoteService.cpp
+msgid "This window · %1"
+msgstr "Esta ventana · %1"
+
+#: src/desktop/QuickNoteService.cpp
+msgid "Inbox"
+msgstr "Bandeja de entrada"
+
+#: src/desktop/ReminderWords.cpp
+msgid "Next time this opens"
+msgstr "La próxima vez que se abra"
+
+#: src/desktop/ReminderWords.cpp
+msgctxt "a reminder's day and time"
+msgid "Today %1"
+msgstr "Hoy %1"
+
+#: src/desktop/ReminderWords.cpp
+msgctxt "a reminder's day and time"
+msgid "Tomorrow %1"
+msgstr "Mañana %1"
+
+#: src/desktop/ReminderWords.cpp
+msgctxt "a reminder's day and time"
+msgid "Yesterday %1"
+msgstr "Ayer %1"
+
+#: src/desktop/ReminderWords.cpp
+msgctxt "a reminder's weekday and time"
+msgid "%1 %2"
+msgstr "%1 %2"
+
+#: src/desktop/ReminderWords.cpp
+msgctxt "a reminder's date and time"
+msgid "%1 %2"
+msgstr "%1 %2"
+
+#: src/desktop/ReminderWords.cpp
+msgid "Later today · %1"
+msgstr "Más tarde hoy · %1"
+
+#: src/desktop/ReminderWords.cpp
+msgid "This evening · %1"
+msgstr "Esta tarde · %1"
+
+#: src/desktop/ReminderWords.cpp
+msgid "Tomorrow · %1"
+msgstr "Mañana · %1"
+
+#: src/desktop/ReminderWords.cpp
+msgid "Pick a time…"
+msgstr "Elegir una hora…"
