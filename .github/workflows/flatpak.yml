@@ -1,0 +1,45 @@
+name: Flatpak
+
+# Builds Gooseberry as a Flatpak against KDE's Flathub runtime, checks it with
+# Flathub's own linter, and keeps the bundle so it can be installed and tried.
+on:
+  pull_request:
+    paths: ['flatpak/**', 'data/**', 'CMakeLists.txt', 'src/**', 'qml/**', '.github/workflows/flatpak.yml']
+  push:
+    branches: [main]
+    paths: ['flatpak/**', 'data/**', 'CMakeLists.txt', 'src/**', 'qml/**', '.github/workflows/flatpak.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: flatpak-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  flatpak:
+    name: Flatpak
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/flathub-infra/flatpak-github-actions:kde-6.10
+      options: --privileged
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Build the Flatpak
+        uses: flathub-infra/flatpak-github-actions/flatpak-builder@master
+        with:
+          bundle: gooseberry.flatpak
+          manifest-path: flatpak/co.goodinput.Notes.yml
+          cache-key: flatpak-builder-${{ github.sha }}
+          upload-artifact: true
+
+      - name: Check the manifest with Flathub's linter
+        run: |
+          flatpak install -y --noninteractive flathub org.flatpak.Builder
+          flatpak run --command=flatpak-builder-lint org.flatpak.Builder manifest flatpak/co.goodinput.Notes.yml || true
+
+      - name: Check the built repository with Flathub's linter
+        run: flatpak run --command=flatpak-builder-lint org.flatpak.Builder repo repo || true

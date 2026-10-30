@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SPDX-License-Identifier: CC0-1.0 -->
+<component type="desktop-application">
+  <id>@GOOSEBERRY_APP_ID@</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-2.0-or-later</project_license>
+  <name>Gooseberry</name>
+  <summary>Write a thought down in one tap</summary>
+  <developer id="co.goodinput">
+    <name>Good Input</name>
+  </developer>
+  <description>
+    <p>
+      Notes, stickies and a planner for a touchscreen Linux desktop. Write a
+      thought down in one tap, or put it on the planner when it has a time.
+      Nothing asks for a title, a folder or a save first.
+    </p>
+    <ul>
+      <li>New note opens a page with the cursor already in it, saved as you type from the first letter</li>
+      <li>Each note is kept in a folder, Inbox unless you choose</li>
+      <li>A note with a time goes on the planner and reminds you; everything else waits without a date</li>
+      <li>Search the board for any note</li>
+      <li>A removed note goes to the desktop's trash, and Undo brings it back</li>
+    </ul>
+    <p>
+      Notes are plain files in the Gooseberry folder inside Documents, so they can
+      be read, copied and backed up like any other file.
+    </p>
+  </description>
+  <launchable type="desktop-id">@GOOSEBERRY_APP_ID@.desktop</launchable>
+  <provides>
+    <binary>gooseberry</binary>
+  </provides>
+  <url type="homepage">https://github.com/carlsonjm/gooseberry</url>
+  <url type="bugtracker">https://github.com/carlsonjm/gooseberry/issues</url>
+  <url type="vcs-browser">https://github.com/carlsonjm/gooseberry</url>
+  <categories>
+    <category>Utility</category>
+    <category>Office</category>
+  </categories>
+  <keywords>
+    <keyword>note</keyword>
+    <keyword>notes</keyword>
+    <keyword>sticky</keyword>
+    <keyword>planner</keyword>
+    <keyword>memo</keyword>
+  </keywords>
+  <recommends>
+    <control>touch</control>
+  </recommends>
+  <supports>
+    <control>pointing</control>
+    <control>keyboard</control>
+  </supports>
+  <requires>
+    <display_length compare="ge">768</display_length>
+  </requires>
+  <branding>
+    <color type="primary" scheme_preference="light">#F8F8FF</color>
+    <color type="primary" scheme_preference="dark">#141414</color>
+  </branding>
+  <screenshots>
+    <screenshot type="default">
+      <caption>Notes, stickies and a planner</caption>
+      <image>https://raw.githubusercontent.com/carlsonjm/gooseberry/main/assets/readme/banner-light.png</image>
+    </screenshot>
+  </screenshots>
+  <content_rating type="oars-1.1"/>
+  <releases>
+    <release version="1.1.0" date="2026-11-06">
+      <description>
+        <p>Notes checks spelling with the desktop's own spell checker.</p>
+      </description>
+    </release>
+  </releases>
+</component>

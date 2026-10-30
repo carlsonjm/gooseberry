@@ -579,3 +579,16 @@ a launcher or Search. (The maintainer, 7 October.)
 
 Rejected: the tile drawn to the icon's edges, chosen on 6 October, which reads
 a size larger than every themed app next to it.
+
+## The Flatpak is plain notes until the sandbox shows otherwise
+
+Gooseberry builds as a Flatpak, `co.goodinput.Notes`, for Flathub. Inside the
+sandbox it leaves out Plasma's window list, so every note starts unstuck in
+its folder, and a removed note still goes to the person's own trash. An
+install outside Flatpak keeps everything it does now, under its own id.
+Whether a sandboxed Gooseberry can be given the window list is settled by
+trying it on a device, not assumed.
+
+Rejected: bundling Plasma's window list library into the Flatpak, which
+brings much of Plasma's workspace with it and may still be refused the window
+list by a compositor that keeps it from sandboxed programs.

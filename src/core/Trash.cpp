@@ -23,6 +23,16 @@ QString infoPathFor(const QString &pathInTrash)
 
 QString homeTrash()
 {
+    // Inside a Flatpak the data folder is the sandbox's own, and a note put
+    // there would never reach the desktop's trash; the person's own is the
+    // one the sandbox was given (HOST_XDG_DATA_HOME, else the default place).
+    if (qEnvironmentVariableIsSet("FLATPAK_ID")) {
+        QString data = qEnvironmentVariable("HOST_XDG_DATA_HOME");
+        if (data.isEmpty()) {
+            data = QDir::homePath() + QStringLiteral("/.local/share");
+        }
+        return data + QStringLiteral("/Trash");
+    }
     return QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + QStringLiteral("/Trash");
 }
 
