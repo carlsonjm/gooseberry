@@ -98,7 +98,7 @@ Then install what the build needs. Type your password when asked, and answer
 `Y`:
 
 ```bash
-sudo pacman -S --needed base-devel git cmake extra-cmake-modules python dbus qt6-base qt6-declarative kcoreaddons kdbusaddons ki18n kservice kwindowsystem kirigami layer-shell-qt plasma-workspace
+sudo pacman -S --needed base-devel git cmake extra-cmake-modules python dbus qt6-base qt6-declarative kcoreaddons kdbusaddons ki18n kservice sonnet hunspell hunspell-en_us kwindowsystem kirigami layer-shell-qt plasma-workspace
 ```
 
 If pacman says a package **is up to date -- skipping**, or **there is nothing

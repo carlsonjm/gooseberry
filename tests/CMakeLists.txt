@@ -24,7 +24,7 @@ gooseberry_test(tst_planner core/tst_planner.cpp)
 gooseberry_test(tst_stuck core/tst_stuck.cpp)
 gooseberry_test(tst_product core/tst_product.cpp)
 gooseberry_test(tst_screens screens/tst_screens.cpp
-    gooseberry-desktop gooseberry-screensplugin Qt6::Gui Qt6::Quick KF6::I18n KF6::I18nQml)
+    gooseberry-desktop gooseberry-screens gooseberry-screensplugin Qt6::Gui Qt6::Quick KF6::I18n KF6::I18nQml KF6::SonnetCore)
 set_target_properties(tst_screens PROPERTIES QT_QML_MODULE_NO_IMPORT_SCAN ON)
 
 # The quick note's bus interface, driven by a client that loads none of

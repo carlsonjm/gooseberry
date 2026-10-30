@@ -166,7 +166,10 @@ Window {
             // Resized by its corner, a note keeps that size; otherwise it is
             // as wide as every note and as tall as its words.
             readonly property bool sized: modelData.width > 0 && modelData.height > 0
-            readonly property real toolsRoom: tools.visible ? tools.height + 6 : 0
+            readonly property real toolsRoom: tools.visible ? tools.height + 6 : fixes.visible ? fixes.height + 6 : 0
+            // Typed on, with the cursor in a word the dictionary does not
+            // know: what it might have been is offered along its foot.
+            readonly property bool fixing: writing && bodySpelling.word.length > 0 && !selecting && !offerCopy
             readonly property real fitHeight: Math.min(root.noteWidth, body.implicitHeight + 28) + toolsRoom
             // The size while the corner is held, and as it was let go until
             // the note comes back with it kept.
@@ -469,6 +472,16 @@ Window {
                         anchors.fill: parent
                         target: body
                     }
+
+                    // Only while typed on: a note resting on its window shows
+                    // no red lines.
+                    Spelling {
+                        id: bodySpelling
+                        document: body.textDocument
+                        cursorPosition: body.cursorPosition
+                        active: note.writing
+                        color: "#B3261E"
+                    }
                 }
             }
 
@@ -579,6 +592,65 @@ Window {
                                 } else {
                                     body.selectAll();
                                     note.offerCopy = true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // What a word the dictionary does not know might have been, then
+            // keeping it as it is, along the note's foot as Copy is.
+            Flow {
+                id: fixes
+                objectName: "stuckFixes-" + note.modelData.id
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
+                anchors.leftMargin: 14
+                anchors.rightMargin: 26
+                anchors.bottomMargin: 6
+                spacing: 4
+                visible: note.fixing
+
+                Repeater {
+                    model: note.fixing ? bodySpelling.suggestions.map(fix => ({ name: "fix", label: fix }))
+                                             .concat([{ name: "learn", label: i18n("Add to dictionary") }])
+                                       : []
+                    delegate: Rectangle {
+                        required property var modelData
+                        objectName: "stuck-" + modelData.name
+                        width: Math.max(44, fixWord.implicitWidth + 20)
+                        height: 30
+                        radius: 15
+                        color: modelData.name === "learn" ? (fixPress.pressed ? Qt.rgba(0, 0, 0, 0.16) : "transparent")
+                             : fixPress.pressed ? "#3A3A3A" : "#1A1A1A"
+                        Accessible.role: Accessible.Button
+                        Accessible.name: modelData.label
+
+                        Text {
+                            id: fixWord
+                            anchors.centerIn: parent
+                            text: parent.modelData.label
+                            color: parent.modelData.name === "learn" ? Qt.rgba(0.1, 0.1, 0.1, 0.7) : "#FFFFFF"
+                            font.pixelSize: 12
+                            font.weight: Font.DemiBold
+                        }
+
+                        // Taller than drawn, for a finger.
+                        MouseArea {
+                            id: fixPress
+                            anchors.fill: parent
+                            anchors.topMargin: -7
+                            anchors.bottomMargin: -7
+                            onClicked: {
+                                if (parent.modelData.name === "fix") {
+                                    const end = bodySpelling.replace(parent.modelData.label);
+                                    if (end >= 0) {
+                                        body.cursorPosition = end;
+                                    }
+                                } else {
+                                    bodySpelling.learn();
                                 }
                             }
                         }

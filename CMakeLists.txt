@@ -17,7 +17,7 @@ include(KDECMakeSettings)
 include(KDECompilerSettings NO_POLICY_SCOPE)
 
 find_package(Qt6 6.9 REQUIRED COMPONENTS Core DBus Gui Qml Quick QuickControls2 Widgets Test)
-find_package(KF6 6.17 REQUIRED COMPONENTS CoreAddons DBusAddons I18n Service WindowSystem)
+find_package(KF6 6.17 REQUIRED COMPONENTS CoreAddons DBusAddons I18n Service Sonnet WindowSystem)
 find_package(KF6Kirigami 6.17 REQUIRED)
 find_package(LayerShellQt 6.4 REQUIRED)
 find_package(LibTaskManager 6.4 REQUIRED)
@@ -49,6 +49,8 @@ qt_add_qml_module(gooseberry-screens
     URI io.github.carlsonjm.gooseberry
     VERSION 1.0
     OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/qml/io/github/carlsonjm/gooseberry
+    SOURCES
+        src/screens/Spelling.cpp src/screens/Spelling.h
     QML_FILES
         qml/BoardView.qml
         qml/BoardWindow.qml
@@ -81,6 +83,9 @@ qt_add_qml_module(gooseberry-screens
         qml/icons/lucide/triangle-alert.svg
         qml/icons/lucide/x.svg
 )
+target_include_directories(gooseberry-screens PUBLIC src/screens)
+# Spelling, as the desktop's own spell checker sees it.
+target_link_libraries(gooseberry-screens PUBLIC Qt6::Gui Qt6::Quick KF6::SonnetCore)
 
 # What the desktop adds around the core: the window in front, the sheet's
 # place on screen, one running copy.
