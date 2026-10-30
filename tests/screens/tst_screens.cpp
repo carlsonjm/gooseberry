@@ -744,7 +744,9 @@ private Q_SLOTS:
         const QStringList known{QStringLiteral("him"), QStringLiteral("his"), QStringLiteral("hums"), QStringLiteral("hins"),
                                 QStringLiteral("the"), QStringLiteral("he"), QStringLiteral("hate"), QStringLiteral("a"),
                                 QStringLiteral("lot"), QStringLiteral("alto"), QStringLiteral("of"), QStringLiteral("their"),
-                                QStringLiteral("thief"), QStringLiteral("occur"), QStringLiteral("occurred"), QStringLiteral("keys")};
+                                QStringLiteral("thief"), QStringLiteral("occur"), QStringLiteral("occurred"), QStringLiteral("keys"),
+                                // Known to the dictionary, but no part of a word split in two.
+                                QStringLiteral("hi"), QStringLiteral("ms"), QStringLiteral("ed")};
         const auto knows = [&known](const QString &word) { return known.contains(word.toLower()); };
         // A stray key comes out before a word with a letter changed.
         QCOMPARE(closest(QStringLiteral("hims"), {QStringLiteral("hums"), QStringLiteral("hins"), QStringLiteral("him")}, knows),

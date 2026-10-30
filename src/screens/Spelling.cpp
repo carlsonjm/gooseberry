@@ -164,11 +164,17 @@ QStringList closest(const QString &word, const QStringList &guesses, const std::
         slips.append(word.left(i) + QLatin1Char(' ') + word.mid(i));
     }
 
-    // A word of one letter is only "a" or "I"; a guess in parts is offered
-    // only when each part is a word.
+    // A word of one letter is only "a" or "I". A guess in parts is offered
+    // only when each part is a word, and a part of two letters only when it
+    // is a common one: the dictionary also knows "ms" and "ed".
     const auto isWord = [&knows](const QString &part) {
         const bool letterWord = part.compare(QLatin1String("a"), Qt::CaseInsensitive) == 0 || part == QLatin1String("I");
         return (part.size() > 1 || letterWord) && knows(part);
+    };
+    static const QStringList twoLetterWords = QStringLiteral("am an as at be by do go he if in is it me my no of on or so to up us we")
+                                                  .split(QLatin1Char(' '));
+    const auto isPart = [&isWord](const QString &part) {
+        return isWord(part) && (part.size() != 2 || twoLetterWords.contains(part.toLower()));
     };
     QStringList candidates;
     const QStringList all = guesses + slips;
@@ -179,7 +185,7 @@ QStringList closest(const QString &word, const QStringList &guesses, const std::
         const bool parts = candidate.contains(QLatin1Char(' ')) || candidate.contains(QLatin1Char('-'));
         if (parts) {
             const auto pieces = candidate.split(QRegularExpression(QStringLiteral("[ -]")));
-            if (!std::all_of(pieces.begin(), pieces.end(), isWord)) {
+            if (!std::all_of(pieces.begin(), pieces.end(), isPart)) {
                 continue;
             }
         } else if (!guesses.contains(candidate) && !isWord(candidate)) {
