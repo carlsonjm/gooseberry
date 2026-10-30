@@ -22,7 +22,7 @@ jobs:
     name: Flatpak
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/flathub-infra/flatpak-github-actions:kde-6.10
+      image: ghcr.io/flathub-infra/flatpak-github-actions:kde-6.11
       options: --privileged
     timeout-minutes: 60
     steps:
@@ -35,6 +35,12 @@ jobs:
           manifest-path: flatpak/co.goodinput.Notes.yml
           cache-key: flatpak-builder-${{ github.sha }}
           upload-artifact: true
+
+      - name: Record the bundled libraries' exact commits, for the Flathub copy
+        run: |
+          for mirror in .flatpak-builder/git/*; do
+            git -C "$mirror" for-each-ref --format='%(refname:short) %(*objectname)%(objectname)' refs/tags | sed "s|^|$(basename "$mirror") |"
+          done
 
       - name: Check the manifest with Flathub's linter
         run: |
