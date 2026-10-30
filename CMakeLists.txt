@@ -6,7 +6,17 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-set(GOOSEBERRY_APP_ID "io.github.carlsonjm.Gooseberry")
+# The name the desktop knows Gooseberry by: its launcher, icon, metadata and
+# windows. A package may give its own, as the Flatpak does.
+set(GOOSEBERRY_APP_ID "io.github.carlsonjm.Gooseberry" CACHE STRING "Application id")
+# Plasma's window list, which notes are stuck to windows by. Without it every
+# note starts unstuck in its folder; the Flatpak leaves it out, since the
+# sandbox keeps other programs' windows out of sight.
+option(GOOSEBERRY_WINDOW_LIST "Read the desktop's window list with Plasma's LibTaskManager" ON)
+# What software centres such as Discover and Flathub show. Off for an install
+# from this checkout, whose installer and uninstaller keep a fixed list of
+# files; the Flatpak turns it on.
+option(GOOSEBERRY_METAINFO "Install the software centre's description" OFF)
 
 find_package(ECM 6.17 REQUIRED NO_MODULE)
 set(CMAKE_MODULE_PATH ${ECM_MODULE_PATH})
@@ -20,7 +30,9 @@ find_package(Qt6 6.9 REQUIRED COMPONENTS Core DBus Gui Qml Quick QuickControls2 
 find_package(KF6 6.17 REQUIRED COMPONENTS CoreAddons DBusAddons I18n Service Sonnet WindowSystem)
 find_package(KF6Kirigami 6.17 REQUIRED)
 find_package(LayerShellQt 6.4 REQUIRED)
-find_package(LibTaskManager 6.4 REQUIRED)
+if(GOOSEBERRY_WINDOW_LIST)
+    find_package(LibTaskManager 6.4 REQUIRED)
+endif()
 
 qt_standard_project_setup(REQUIRES 6.9)
 
@@ -98,12 +110,18 @@ add_library(gooseberry-desktop STATIC
     src/desktop/Shell.cpp src/desktop/Shell.h
     src/desktop/SpreadGuest.cpp src/desktop/SpreadGuest.h
     src/desktop/StuckNotes.cpp src/desktop/StuckNotes.h
-    src/desktop/WindowContext.cpp src/desktop/WindowContext.h
+    src/desktop/WindowContext.h
 )
 target_include_directories(gooseberry-desktop PUBLIC src/desktop)
 target_link_libraries(gooseberry-desktop PUBLIC
     gooseberry-core Qt6::DBus Qt6::Gui Qt6::Qml Qt6::Quick
-    KF6::I18n KF6::Service KF6::WindowSystem LayerShellQt::Interface PW::LibTaskManager)
+    KF6::I18n KF6::Service KF6::WindowSystem LayerShellQt::Interface)
+if(GOOSEBERRY_WINDOW_LIST)
+    target_sources(gooseberry-desktop PRIVATE src/desktop/WindowContext.cpp)
+    target_link_libraries(gooseberry-desktop PUBLIC PW::LibTaskManager)
+else()
+    target_sources(gooseberry-desktop PRIVATE src/desktop/WindowContextNone.cpp)
+endif()
 
 qt_add_executable(gooseberry src/app/main.cpp)
 # Qt's own QML plugins load at run time; nothing needs linking in statically.
@@ -120,15 +138,21 @@ install(TARGETS gooseberry ${KDE_INSTALL_TARGETS_DEFAULT_ARGS})
 # Translations, as po/<language>/gooseberry.po; python3 tools/messages.py
 # --templates po makes the template.
 ki18n_install(po)
-configure_file(data/${GOOSEBERRY_APP_ID}.desktop.in ${GOOSEBERRY_APP_ID}.desktop @ONLY)
-configure_file(data/${GOOSEBERRY_APP_ID}-autostart.desktop.in ${GOOSEBERRY_APP_ID}-autostart.desktop @ONLY)
+# The templates keep the original name; what they make takes the package's.
+configure_file(data/io.github.carlsonjm.Gooseberry.desktop.in ${GOOSEBERRY_APP_ID}.desktop @ONLY)
+configure_file(data/io.github.carlsonjm.Gooseberry-autostart.desktop.in ${GOOSEBERRY_APP_ID}-autostart.desktop @ONLY)
+configure_file(data/io.github.carlsonjm.Gooseberry.metainfo.xml.in ${GOOSEBERRY_APP_ID}.metainfo.xml @ONLY)
 configure_file(data/io.github.carlsonjm.gooseberry.service.in io.github.carlsonjm.gooseberry.service @ONLY)
 # A search that calls the quick note before Gooseberry has started starts it.
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/io.github.carlsonjm.gooseberry.service DESTINATION ${KDE_INSTALL_DBUSSERVICEDIR})
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${GOOSEBERRY_APP_ID}.desktop DESTINATION ${KDE_INSTALL_APPDIR})
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${GOOSEBERRY_APP_ID}-autostart.desktop
     DESTINATION ${KDE_INSTALL_AUTOSTARTDIR} RENAME ${GOOSEBERRY_APP_ID}.desktop)
-install(FILES data/${GOOSEBERRY_APP_ID}.svg DESTINATION ${KDE_INSTALL_FULL_ICONDIR}/hicolor/scalable/apps)
+if(GOOSEBERRY_METAINFO)
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${GOOSEBERRY_APP_ID}.metainfo.xml DESTINATION ${KDE_INSTALL_METAINFODIR})
+endif()
+install(FILES data/io.github.carlsonjm.Gooseberry.svg DESTINATION ${KDE_INSTALL_FULL_ICONDIR}/hicolor/scalable/apps
+    RENAME ${GOOSEBERRY_APP_ID}.svg)
 
 if(BUILD_TESTING)
     add_subdirectory(tests)
