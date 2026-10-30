@@ -10,7 +10,7 @@ Paths are from the repository root.
 | `TRADEMARKS.md` | What the licence does not cover: the names and marks |
 | `docs/CONCEPT.md` | Who Gooseberry is for, what it does, its rules, and what it relies on |
 | `docs/DESKTOP.md` | What Kadunce's cards and Tettegouche's Search add, what Gooseberry reads from them, and what it would need |
-| `docs/mockup/` | The approved mock-up: six screens as design source, and how far each still applies |
+| `docs/mockup/` | The approved mock-up: four screens as design source, and how far each still applies |
 | `docs/DECISIONS.md` | Each settled decision and what it turned down |
 | `docs/FORMAT.md` | The note format: where the folder is, what is in it, each note's header, and its version |
 | `docs/TESTING.md` | What the automated checks prove, and the checks to run by hand after installing |
