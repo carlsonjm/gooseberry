@@ -9,7 +9,8 @@ What Gooseberry does not do yet, and what it will not do.
   § Needs).
 - Split Rock does not use Gooseberry's notes yet: the notes tool is offered,
   and Split Rock has still to call it (`DESKTOP.md` § Split Rock).
-- Gooseberry is ready for translation, but has no translations yet.
+- Gooseberry's translations into German, French, Spanish and Brazilian Portuguese are
+  machine-made, and native speakers have not checked them yet.
 
 ## Not planned
 

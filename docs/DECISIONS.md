@@ -213,7 +213,7 @@ have tied the core to one desktop.
 
 ## The mock-up is the approved visual direction
 
-The six screens in `mockup/` are the approved layout and behaviour: what each
+The screens in `mockup/` are the approved layout and behaviour: what each
 place holds, its sizes and touch targets, the note colours, and how capture,
 the board and the planner work. Work builds to them without asking again.
 Where the mock-up and a later ruling disagree, the ruling wins: the rail beside
