@@ -9,6 +9,8 @@
 #include <QQuickTextDocument>
 #include <QStringList>
 
+#include <functional>
+
 class QTextDocument;
 
 namespace Gooseberry {
@@ -27,10 +29,17 @@ struct WordSpan {
 // a link, an address, a path or a #folder is left as it is written.
 QList<WordSpan> wordsToCheck(const QString &line);
 
-// Of the dictionary's guesses for a word, the first, then only the others as
-// near to the word as it is: a slip is a letter or two, so a far-off word is
-// no help. A guess that only splits the word in two is kept only as the first.
-QStringList closest(const QString &word, const QStringList &guesses, int most = 3);
+// What it costs, in tenths of an edit, for fingers meaning one word to type
+// the other: a stray extra key, two keys swapped or a missed space cost
+// least, then a key's neighbour or a missed key, and another letter most.
+int slipCost(const QString &typed, const QString &meant);
+
+// What a word the dictionary does not know was most likely meant to be, from
+// the dictionary's guesses and from the words one slip of the fingers away
+// (a key too many, two swapped, a neighbour's key, a missed space): the
+// nearest, then only others as near, three at most.
+QStringList closest(const QString &word, const QStringList &guesses,
+                    const std::function<bool(const QString &)> &knows, int most = 3);
 
 // Spelling on a page of text, as the desktop's own spell checker sees it: a
 // red line under each word it does not know, and for the word the cursor

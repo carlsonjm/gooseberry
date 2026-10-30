@@ -4,7 +4,11 @@
 #include <Sonnet/Speller>
 
 #include <algorithm>
+#include <cmath>
+#include <cstdlib>
+#include <cstring>
 
+#include <QRegularExpression>
 #include <QSyntaxHighlighter>
 #include <QTextBlock>
 #include <QTextBoundaryFinder>
@@ -66,48 +70,141 @@ bool isNameOrCode(QStringView word)
     return false;
 }
 
-// Edits from one word to the other, a swap of two letters counting as one.
-int distance(const QString &from, const QString &to)
+// What each slip costs, in tenths of an edit. Touch typing slips most by a
+// stray extra key, two keys swapped or a missed space, then by a key's
+// neighbour or a missed key; another letter altogether is a different word.
+constexpr int strayKey = 5;
+constexpr int swappedKeys = 4;
+constexpr int neighbourKey = 8;
+constexpr int missedKey = 9;
+constexpr int otherKey = 10;
+constexpr int missedSpace = 3;
+// A guess further than this is offered only when it is the only one.
+constexpr int farOff = 12;
+
+// Where a letter sits on a QWERTY keyboard: its row, and across, each row
+// set half a key further right than the one above.
+bool keyAt(QChar c, int &row, qreal &across)
 {
-    const QString a = from.toLower();
-    const QString b = to.toLower();
-    QList<QList<int>> rows{QList<int>(b.size() + 1)};
-    for (int j = 0; j <= b.size(); ++j) {
-        rows[0][j] = j;
-    }
-    for (int i = 1; i <= a.size(); ++i) {
-        QList<int> row(b.size() + 1);
-        row[0] = i;
-        for (int j = 1; j <= b.size(); ++j) {
-            row[j] = std::min({rows[i - 1][j] + 1, row[j - 1] + 1, rows[i - 1][j - 1] + (a[i - 1] != b[j - 1] ? 1 : 0)});
-            if (i > 1 && j > 1 && a[i - 1] == b[j - 2] && a[i - 2] == b[j - 1]) {
-                row[j] = std::min(row[j], rows[i - 2][j - 2] + 1);
-            }
+    static const char *const rows[] = {"qwertyuiop", "asdfghjkl", "zxcvbnm"};
+    const char letter = c.toLower().toLatin1();
+    for (int r = 0; r < 3; ++r) {
+        if (const char *at = letter ? std::strchr(rows[r], letter) : nullptr) {
+            row = r;
+            across = (at - rows[r]) + 0.5 * r;
+            return true;
         }
-        rows.append(row);
     }
-    return rows.constLast().constLast();
+    return false;
+}
+
+bool neighbours(QChar a, QChar b)
+{
+    int rowA = 0;
+    int rowB = 0;
+    qreal acrossA = 0;
+    qreal acrossB = 0;
+    return a.toLower() != b.toLower() && keyAt(a, rowA, acrossA) && keyAt(b, rowB, acrossB)
+        && std::abs(rowA - rowB) <= 1 && std::abs(acrossA - acrossB) <= 1.0;
+}
+
+bool isGap(QChar c)
+{
+    return c == QLatin1Char(' ') || c == QLatin1Char('-');
 }
 
 } // namespace
 
-QStringList closest(const QString &word, const QStringList &guesses, int most)
+int slipCost(const QString &typed, const QString &meant)
 {
-    if (guesses.isEmpty()) {
+    const QString a = typed.toLower();
+    const QString b = meant.toLower();
+    const auto missed = [&b](int j) { return isGap(b[j - 1]) ? missedSpace : missedKey; };
+    QList<QList<int>> rows(a.size() + 1, QList<int>(b.size() + 1, 0));
+    for (int i = 1; i <= a.size(); ++i) {
+        rows[i][0] = rows[i - 1][0] + strayKey;
+    }
+    for (int j = 1; j <= b.size(); ++j) {
+        rows[0][j] = rows[0][j - 1] + missed(j);
+    }
+    for (int i = 1; i <= a.size(); ++i) {
+        for (int j = 1; j <= b.size(); ++j) {
+            const int key = a[i - 1] == b[j - 1] ? 0 : neighbours(a[i - 1], b[j - 1]) ? neighbourKey : otherKey;
+            rows[i][j] = std::min({rows[i - 1][j] + strayKey, rows[i][j - 1] + missed(j), rows[i - 1][j - 1] + key});
+            if (i > 1 && j > 1 && a[i - 1] != a[i - 2] && a[i - 1] == b[j - 2] && a[i - 2] == b[j - 1]) {
+                rows[i][j] = std::min(rows[i][j], rows[i - 2][j - 2] + swappedKeys);
+            }
+        }
+    }
+    return rows.constLast().constLast();
+}
+
+QStringList closest(const QString &word, const QStringList &guesses, const std::function<bool(const QString &)> &knows, int most)
+{
+    // What one slip of the fingers would have turned a known word into: a
+    // key too many, two swapped, a neighbour's key, or a missed space.
+    QStringList slips;
+    for (qsizetype i = 0; i < word.size(); ++i) {
+        slips.append(QString(word).remove(i, 1));
+    }
+    for (qsizetype i = 0; i + 1 < word.size(); ++i) {
+        QString swapped = word;
+        std::swap(swapped[i], swapped[i + 1]);
+        slips.append(swapped);
+    }
+    static const QString letters = QStringLiteral("abcdefghijklmnopqrstuvwxyz");
+    for (qsizetype i = 0; i < word.size(); ++i) {
+        for (const QChar letter : letters) {
+            if (neighbours(word[i], letter)) {
+                slips.append(QString(word).replace(i, 1, word[i].isUpper() ? letter.toUpper() : letter));
+            }
+        }
+    }
+    for (qsizetype i = 1; i < word.size(); ++i) {
+        slips.append(word.left(i) + QLatin1Char(' ') + word.mid(i));
+    }
+
+    // A word of one letter is only "a" or "I"; a guess in parts is offered
+    // only when each part is a word.
+    const auto isWord = [&knows](const QString &part) {
+        const bool letterWord = part.compare(QLatin1String("a"), Qt::CaseInsensitive) == 0 || part == QLatin1String("I");
+        return (part.size() > 1 || letterWord) && knows(part);
+    };
+    QStringList candidates;
+    const QStringList all = guesses + slips;
+    for (const QString &candidate : all) {
+        if (candidate == word || candidates.contains(candidate)) {
+            continue;
+        }
+        const bool parts = candidate.contains(QLatin1Char(' ')) || candidate.contains(QLatin1Char('-'));
+        if (parts) {
+            const auto pieces = candidate.split(QRegularExpression(QStringLiteral("[ -]")));
+            if (!std::all_of(pieces.begin(), pieces.end(), isWord)) {
+                continue;
+            }
+        } else if (!guesses.contains(candidate) && !isWord(candidate)) {
+            continue;
+        }
+        candidates.append(candidate);
+    }
+    if (candidates.isEmpty()) {
         return {};
     }
-    const QString &best = guesses.first();
-    const int near = std::min(distance(word, best), 2);
-    QStringList kept{best};
-    for (qsizetype i = 1; i < guesses.size() && kept.size() < most; ++i) {
-        const QString &guess = guesses.at(i);
-        QString joined = guess;
-        joined.remove(QLatin1Char(' ')).remove(QLatin1Char('-'));
-        const bool split = joined == word;
-        if (!split && guess.size() >= 3 && guess.left(1).toLower() == word.left(1).toLower()
-            && distance(word, guess) <= near) {
-            kept.append(guess);
+
+    // The nearest first, the dictionary's own order between equals; then
+    // only those as near as the nearest.
+    QList<std::pair<int, qsizetype>> ranked;
+    for (qsizetype i = 0; i < candidates.size(); ++i) {
+        ranked.append({slipCost(word, candidates.at(i)), i});
+    }
+    std::sort(ranked.begin(), ranked.end());
+    const int nearest = ranked.first().first;
+    QStringList kept;
+    for (const auto &[cost, at] : std::as_const(ranked)) {
+        if (kept.size() >= most || (!kept.isEmpty() && (cost > nearest || cost > farOff))) {
+            break;
         }
+        kept.append(candidates.at(at));
     }
     return kept;
 }
@@ -324,7 +421,7 @@ void Spelling::findWord()
     }
     m_word = word;
     m_wordStart = wordStart;
-    m_suggestions = word.isEmpty() ? QStringList() : closest(word, speller().suggest(word));
+    m_suggestions = word.isEmpty() ? QStringList() : closest(word, speller().suggest(word), [](const QString &part) { return speller().isCorrect(part); });
     Q_EMIT wordChanged();
 }
 

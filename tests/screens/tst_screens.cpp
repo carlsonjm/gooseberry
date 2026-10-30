@@ -735,21 +735,34 @@ private Q_SLOTS:
         QCOMPARE(words, (QStringList{QStringLiteral("Ask"), QStringLiteral("thier"), QStringLiteral("don't")}));
     }
 
-    // Of the dictionary's guesses, the first always, then only those as near
-    // to the word as it is; a guess that only splits the word never more.
-    void spellingOffersOnlyNearGuesses()
+    // What a word was most likely meant to be: a stray key, two keys swapped
+    // or a missed space first, from the dictionary's guesses and from the
+    // words one slip away, and only others as near; a guess in parts only
+    // when each part is a word.
+    void spellingOffersTheLikeliestSlip()
     {
+        const QStringList known{QStringLiteral("him"), QStringLiteral("his"), QStringLiteral("hums"), QStringLiteral("hins"),
+                                QStringLiteral("the"), QStringLiteral("he"), QStringLiteral("hate"), QStringLiteral("a"),
+                                QStringLiteral("lot"), QStringLiteral("alto"), QStringLiteral("of"), QStringLiteral("their"),
+                                QStringLiteral("thief"), QStringLiteral("occur"), QStringLiteral("occurred"), QStringLiteral("keys")};
+        const auto knows = [&known](const QString &word) { return known.contains(word.toLower()); };
+        // A stray key comes out before a word with a letter changed.
+        QCOMPARE(closest(QStringLiteral("hims"), {QStringLiteral("hums"), QStringLiteral("hins"), QStringLiteral("him")}, knows),
+                 (QStringList{QStringLiteral("him"), QStringLiteral("his")}));
         QCOMPARE(closest(QStringLiteral("definately"),
-                         {QStringLiteral("definitely"), QStringLiteral("determinately"), QStringLiteral("effeminately"), QStringLiteral("definably")}),
+                         {QStringLiteral("definitely"), QStringLiteral("determinately"), QStringLiteral("effeminately"), QStringLiteral("definably")},
+                         knows),
                  QStringList{QStringLiteral("definitely")});
         QCOMPARE(closest(QStringLiteral("occured"),
-                         {QStringLiteral("occurred"), QStringLiteral("occur ed"), QStringLiteral("occur-ed"), QStringLiteral("occur"), QStringLiteral("recurred")}),
+                         {QStringLiteral("occurred"), QStringLiteral("occur ed"), QStringLiteral("occur-ed"), QStringLiteral("occur"), QStringLiteral("recurred")},
+                         knows),
                  QStringList{QStringLiteral("occurred")});
-        QCOMPARE(closest(QStringLiteral("alot"), {QStringLiteral("a lot"), QStringLiteral("alto")}),
-                 (QStringList{QStringLiteral("a lot"), QStringLiteral("alto")}));
-        QCOMPARE(closest(QStringLiteral("hte"), {QStringLiteral("the"), QStringLiteral("ht"), QStringLiteral("he"), QStringLiteral("hate")}),
-                 (QStringList{QStringLiteral("the"), QStringLiteral("hate")}));
-        QCOMPARE(closest(QStringLiteral("x"), {}), QStringList());
+        QCOMPARE(closest(QStringLiteral("alot"), {QStringLiteral("alto")}, knows), QStringList{QStringLiteral("a lot")});
+        QCOMPARE(closest(QStringLiteral("hte"), {QStringLiteral("the"), QStringLiteral("hate")}, knows), QStringList{QStringLiteral("the")});
+        QCOMPARE(closest(QStringLiteral("thier"), {QStringLiteral("their"), QStringLiteral("thief")}, knows), QStringList{QStringLiteral("their")});
+        QCOMPARE(closest(QStringLiteral("ofthe"), {}, knows), QStringList{QStringLiteral("of the")});
+        QCOMPARE(closest(QStringLiteral("kets"), {QStringLiteral("keys")}, knows), QStringList{QStringLiteral("keys")});
+        QCOMPARE(closest(QStringLiteral("qqqq"), {}, knows), QStringList());
     }
 
     // A word the dictionary does not know has a red line under it; with the
