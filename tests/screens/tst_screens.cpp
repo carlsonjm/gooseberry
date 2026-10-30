@@ -735,6 +735,23 @@ private Q_SLOTS:
         QCOMPARE(words, (QStringList{QStringLiteral("Ask"), QStringLiteral("thier"), QStringLiteral("don't")}));
     }
 
+    // Of the dictionary's guesses, the first always, then only those as near
+    // to the word as it is; a guess that only splits the word never more.
+    void spellingOffersOnlyNearGuesses()
+    {
+        QCOMPARE(closest(QStringLiteral("definately"),
+                         {QStringLiteral("definitely"), QStringLiteral("determinately"), QStringLiteral("effeminately"), QStringLiteral("definably")}),
+                 QStringList{QStringLiteral("definitely")});
+        QCOMPARE(closest(QStringLiteral("occured"),
+                         {QStringLiteral("occurred"), QStringLiteral("occur ed"), QStringLiteral("occur-ed"), QStringLiteral("occur"), QStringLiteral("recurred")}),
+                 QStringList{QStringLiteral("occurred")});
+        QCOMPARE(closest(QStringLiteral("alot"), {QStringLiteral("a lot"), QStringLiteral("alto")}),
+                 (QStringList{QStringLiteral("a lot"), QStringLiteral("alto")}));
+        QCOMPARE(closest(QStringLiteral("hte"), {QStringLiteral("the"), QStringLiteral("ht"), QStringLiteral("he"), QStringLiteral("hate")}),
+                 (QStringList{QStringLiteral("the"), QStringLiteral("hate")}));
+        QCOMPARE(closest(QStringLiteral("x"), {}), QStringList());
+    }
+
     // A word the dictionary does not know has a red line under it; with the
     // cursor in it, what it might have been is offered under the note, and a
     // tap puts it in place, the cursor after it and the note kept.

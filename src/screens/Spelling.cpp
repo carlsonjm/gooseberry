@@ -3,6 +3,8 @@
 
 #include <Sonnet/Speller>
 
+#include <algorithm>
+
 #include <QSyntaxHighlighter>
 #include <QTextBlock>
 #include <QTextBoundaryFinder>
@@ -64,7 +66,51 @@ bool isNameOrCode(QStringView word)
     return false;
 }
 
+// Edits from one word to the other, a swap of two letters counting as one.
+int distance(const QString &from, const QString &to)
+{
+    const QString a = from.toLower();
+    const QString b = to.toLower();
+    QList<QList<int>> rows{QList<int>(b.size() + 1)};
+    for (int j = 0; j <= b.size(); ++j) {
+        rows[0][j] = j;
+    }
+    for (int i = 1; i <= a.size(); ++i) {
+        QList<int> row(b.size() + 1);
+        row[0] = i;
+        for (int j = 1; j <= b.size(); ++j) {
+            row[j] = std::min({rows[i - 1][j] + 1, row[j - 1] + 1, rows[i - 1][j - 1] + (a[i - 1] != b[j - 1] ? 1 : 0)});
+            if (i > 1 && j > 1 && a[i - 1] == b[j - 2] && a[i - 2] == b[j - 1]) {
+                row[j] = std::min(row[j], rows[i - 2][j - 2] + 1);
+            }
+        }
+        rows.append(row);
+    }
+    return rows.constLast().constLast();
+}
+
 } // namespace
+
+QStringList closest(const QString &word, const QStringList &guesses, int most)
+{
+    if (guesses.isEmpty()) {
+        return {};
+    }
+    const QString &best = guesses.first();
+    const int near = std::min(distance(word, best), 2);
+    QStringList kept{best};
+    for (qsizetype i = 1; i < guesses.size() && kept.size() < most; ++i) {
+        const QString &guess = guesses.at(i);
+        QString joined = guess;
+        joined.remove(QLatin1Char(' ')).remove(QLatin1Char('-'));
+        const bool split = joined == word;
+        if (!split && guess.size() >= 3 && guess.left(1).toLower() == word.left(1).toLower()
+            && distance(word, guess) <= near) {
+            kept.append(guess);
+        }
+    }
+    return kept;
+}
 
 QList<WordSpan> wordsToCheck(const QString &line)
 {
@@ -278,7 +324,7 @@ void Spelling::findWord()
     }
     m_word = word;
     m_wordStart = wordStart;
-    m_suggestions = word.isEmpty() ? QStringList() : speller().suggest(word).mid(0, 3);
+    m_suggestions = word.isEmpty() ? QStringList() : closest(word, speller().suggest(word));
     Q_EMIT wordChanged();
 }
 

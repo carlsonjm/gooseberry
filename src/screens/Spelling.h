@@ -27,6 +27,11 @@ struct WordSpan {
 // a link, an address, a path or a #folder is left as it is written.
 QList<WordSpan> wordsToCheck(const QString &line);
 
+// Of the dictionary's guesses for a word, the first, then only the others as
+// near to the word as it is: a slip is a letter or two, so a far-off word is
+// no help. A guess that only splits the word in two is kept only as the first.
+QStringList closest(const QString &word, const QStringList &guesses, int most = 3);
+
 // Spelling on a page of text, as the desktop's own spell checker sees it: a
 // red line under each word it does not know, and for the word the cursor
 // stands in, what it might have been. The word still being typed is left

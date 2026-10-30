@@ -300,8 +300,9 @@ to drop it on, and the paper page with nothing offered.
 ## Spelling is the desktop's own, offered as the note listens
 
 A word the desktop's spell checker (Sonnet, as in Kate) does not know has a
-red line under it. With the cursor in that word, up to three things it might
-have been are offered under the note, where a day or a #word already offers
+red line under it. With the cursor in that word, the spell checker's best
+guess, and up to two more only when they are as few edits from the word as it
+is, are offered under the note, where a day or a #word already offers
 something, then a quiet Add to dictionary; a tap puts the word in place and the
 note is kept as typing keeps it. A checklist's lines are checked the same way.
 On a note stuck over a window, the line and the fixes show only while it is
