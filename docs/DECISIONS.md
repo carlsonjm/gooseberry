@@ -326,10 +326,13 @@ On a note stuck over a window, the line and the fixes show only while it is
 typed on, along its foot as Copy is. The word still being typed is left alone
 until the cursor leaves it; nothing is offered where a note opens, at the end
 of its words; a word with a digit, a capital past its first letter or an
-underscore, and a word in a link, an address, a path or a #folder, are left as
-they are written. The language and the dictionary's added words are the
+underscore, and a word in a link, an address, a path, a #folder or a key or
+serial (a number anywhere in it, or same-length groups joined by dashes), are
+left as they are written, with no line; a word marked keeps its own colour,
+only the line is red. The language and the dictionary's added words are the
 desktop's, shared with every KDE program. (The maintainer, 30 October, from the
-approved mock-up.)
+approved mock-up; keys and serials left alone 31 October, after a pasted
+licence key was marked from end to end.)
 
 It holds because a note is written fast, mid-task, and a slip should be one
 tap to mend without a menu; and because a person's dictionary and language are

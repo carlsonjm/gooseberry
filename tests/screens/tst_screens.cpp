@@ -733,6 +733,16 @@ private Q_SLOTS:
             words.append(line.mid(word.start, word.length));
         }
         QCOMPARE(words, (QStringList{QStringLiteral("Ask"), QStringLiteral("thier"), QStringLiteral("don't")}));
+
+        // A key or a serial is left whole, whatever its letters spell; a
+        // word joined by dashes is still a word.
+        const QString keys = QStringLiteral("Key: SHUF-QRTX-7HJK-WBNV-23MP, old key shuf-qrtx-hjkm-wbnv, ab12-cdef, mother-in-law");
+        words.clear();
+        for (const WordSpan &word : wordsToCheck(keys)) {
+            words.append(keys.mid(word.start, word.length));
+        }
+        QCOMPARE(words, (QStringList{QStringLiteral("Key"), QStringLiteral("old"), QStringLiteral("key"), QStringLiteral("mother"),
+                                     QStringLiteral("in"), QStringLiteral("law")}));
     }
 
     // What a word was most likely meant to be: a stray key, two keys swapped
