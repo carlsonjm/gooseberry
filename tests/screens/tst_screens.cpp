@@ -22,6 +22,8 @@
 #include <QColor>
 #include <QIcon>
 #include <QQmlComponent>
+#include <QQmlExpression>
+#include <QQmlContext>
 #include <QRegularExpression>
 #include <QQmlEngine>
 #include <QStyleHints>
@@ -350,6 +352,22 @@ bool underlined(QQuickItem *text, int position)
         }
     }
     return false;
+}
+
+// Whether any of the page's own formats changes the colour of the letters
+// at that place, which a red line under a word must not.
+bool recoloured(QQuickItem *text, int position)
+{
+    auto *document = text->property("textDocument").value<QQuickTextDocument *>();
+    if (!document) {
+        return false;
+    }
+    const QTextBlock block = document->textDocument()->findBlock(position);
+    const int at = position - block.position();
+    const auto formats = block.layout()->formats();
+    return std::any_of(formats.begin(), formats.end(), [at](const QTextLayout::FormatRange &range) {
+        return at >= range.start && at < range.start + range.length && range.format.hasProperty(QTextFormat::ForegroundBrush);
+    });
 }
 
 // A finger held still on a point until it counts as a hold, then lifted.
@@ -793,6 +811,11 @@ private Q_SLOTS:
         QTRY_VERIFY(underlined(page, 9));
         QVERIFY(!underlined(page, 1));
         QVERIFY(!named(QStringLiteral("offer-spell")));
+        // Only the line is red: the letters keep the note's colour, and the
+        // desktop style's own checker, which colours them, is off.
+        QVERIFY(!recoloured(page, 9));
+        QQmlExpression styleChecks(qmlContext(page), page, QStringLiteral("Kirigami.SpellCheck.enabled"));
+        QCOMPARE(styleChecks.evaluate(), QVariant(false));
 
         page->setProperty("cursorPosition", 10);
         QTRY_VERIFY(named(QStringLiteral("offer-spell")));

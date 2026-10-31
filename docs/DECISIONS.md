@@ -341,7 +341,10 @@ set once, for the whole desktop.
 Rejected: the right-click menu as the only way to a fix, which a finger
 cannot reach; a spell checker of Gooseberry's own, with its own word list;
 and Sonnet's own QML highlighter, whose absence would keep the note from
-opening, and which offers nothing to a finger.
+opening, and which offers nothing to a finger. The desktop style's text box
+runs that highlighter by itself where Sonnet is installed, colouring a word
+rather than underlining it and marking keys; it is turned off on the note's
+page (`Kirigami.SpellCheck.enabled`), so the note has one checker.
 
 ## The board is a search
 
