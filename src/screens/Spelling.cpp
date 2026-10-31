@@ -52,9 +52,31 @@ QStringView tokenAround(const QString &line, int start, int end)
     return QStringView(line).mid(start, end - start);
 }
 
+// A key, a serial or a code: a number anywhere in it, or three or more
+// groups of letters the same length joined by dashes (SHUF-ABCD-EFGH-JKMN).
+bool isCode(QStringView token)
+{
+    if (std::any_of(token.begin(), token.end(), [](QChar c) { return c.isDigit(); })) {
+        return true;
+    }
+    while (!token.isEmpty() && !token.front().isLetter()) {
+        token = token.sliced(1);
+    }
+    while (!token.isEmpty() && !token.back().isLetter()) {
+        token.chop(1);
+    }
+    const auto groups = token.split(QLatin1Char('-'));
+    if (groups.size() < 3) {
+        return false;
+    }
+    return std::all_of(groups.begin(), groups.end(), [&groups](QStringView group) {
+        return group.size() >= 3 && group.size() == groups.first().size();
+    });
+}
+
 bool isLeftAlone(QStringView token)
 {
-    return token.startsWith(QLatin1Char('#')) || token.startsWith(QLatin1Char('@'))
+    return isCode(token) || token.startsWith(QLatin1Char('#')) || token.startsWith(QLatin1Char('@'))
         || token.contains(QLatin1String("://")) || token.startsWith(QLatin1String("www."), Qt::CaseInsensitive)
         || token.contains(QLatin1Char('@')) || token.contains(QLatin1Char('/')) || token.contains(QLatin1Char('\\'));
 }

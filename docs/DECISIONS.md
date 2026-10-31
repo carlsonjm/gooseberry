@@ -326,10 +326,13 @@ On a note stuck over a window, the line and the fixes show only while it is
 typed on, along its foot as Copy is. The word still being typed is left alone
 until the cursor leaves it; nothing is offered where a note opens, at the end
 of its words; a word with a digit, a capital past its first letter or an
-underscore, and a word in a link, an address, a path or a #folder, are left as
-they are written. The language and the dictionary's added words are the
+underscore, and a word in a link, an address, a path, a #folder or a key or
+serial (a number anywhere in it, or same-length groups joined by dashes), are
+left as they are written, with no line; a word marked keeps its own colour,
+only the line is red. The language and the dictionary's added words are the
 desktop's, shared with every KDE program. (The maintainer, 30 October, from the
-approved mock-up.)
+approved mock-up; keys and serials left alone 31 October, after a pasted
+licence key was marked from end to end.)
 
 It holds because a note is written fast, mid-task, and a slip should be one
 tap to mend without a menu; and because a person's dictionary and language are
@@ -338,7 +341,10 @@ set once, for the whole desktop.
 Rejected: the right-click menu as the only way to a fix, which a finger
 cannot reach; a spell checker of Gooseberry's own, with its own word list;
 and Sonnet's own QML highlighter, whose absence would keep the note from
-opening, and which offers nothing to a finger.
+opening, and which offers nothing to a finger. The desktop style's text box
+runs that highlighter by itself where Sonnet is installed, colouring a word
+rather than underlining it and marking keys; it is turned off on the note's
+page (`Kirigami.SpellCheck.enabled`), so the note has one checker.
 
 ## The board is a search
 

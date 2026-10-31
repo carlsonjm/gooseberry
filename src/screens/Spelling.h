@@ -26,7 +26,8 @@ struct WordSpan {
 
 // The words in a line that spelling looks at. A word with a digit, a capital
 // past its first letter or an underscore is a name or a code, and a word in
-// a link, an address, a path or a #folder is left as it is written.
+// a link, an address, a path, a #folder or a key or serial (a number in it,
+// or same-length groups joined by dashes) is left as it is written.
 QList<WordSpan> wordsToCheck(const QString &line);
 
 // What it costs, in tenths of an edit, for fingers meaning one word to type

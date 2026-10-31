@@ -347,6 +347,11 @@ Item {
                         topPadding: 16
                         bottomPadding: 16
                         background: null
+                        // Spelling is pageSpelling's alone. The desktop
+                        // style's own checker would draw over it, turning a
+                        // word red rather than underlining it, and mark keys
+                        // and codes Notes leaves alone.
+                        Kirigami.SpellCheck.enabled: false
                         // Selecting with a mouse or a touchpad stays on in
                         // tablet mode, where the desktop's style turns it off
                         // once the screen has been touched.
