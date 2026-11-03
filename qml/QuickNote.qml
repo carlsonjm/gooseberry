@@ -685,8 +685,12 @@ Item {
                 // What the note listens for, while nothing is offered.
                 QQC2.Label {
                     objectName: "listensHint"
-                    visible: quick.offers.length === 0 && tray.width > 760 && !quick.capture.readOnly
+                    // Shown only where the line has room for it whole; if
+                    // the line is short of room anyway, it gives way first.
+                    visible: quick.offers.length === 0 && tray.width > 960 && !quick.capture.readOnly
                     Layout.rightMargin: 8
+                    Layout.minimumWidth: 0
+                    elide: Text.ElideRight
                     text: i18n("Write a day or a #folder, and the note offers to use it")
                     font.pixelSize: 12
                     color: Qt.alpha(Kirigami.Theme.textColor, 0.45)
