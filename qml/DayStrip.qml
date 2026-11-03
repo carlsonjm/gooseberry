@@ -4,7 +4,7 @@ import QtQuick.Controls as QQC2
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 
-// The planner's days, two back to three ahead. The chosen day turns over to
+// The planner's week, two days back to four ahead. The chosen day turns over to
 // the board's own colours; a day with notes planned carries a dot. A carried
 // note let go on a day is planned for it.
 Row {

@@ -16,12 +16,18 @@ QQC2.AbstractButton {
     // The text and glyph colour; the context line's are quieter than an
     // action's.
     property color ink: Kirigami.Theme.textColor
+    // What a pointer resting on it is told: its words, where they are not
+    // already beside the glyph.
+    property string tip: showText ? "" : text
 
     implicitHeight: 44
     implicitWidth: showText ? Math.max(44, row.implicitWidth + 2 * horizontalPadding) : 44
     horizontalPadding: showText ? 14 : 0
     focusPolicy: Qt.NoFocus
     Accessible.name: text
+    QQC2.ToolTip.text: tip
+    QQC2.ToolTip.visible: hovered && tip.length > 0
+    QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
 
     background: Rectangle {
         objectName: "face"

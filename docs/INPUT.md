@@ -8,7 +8,7 @@ below is built.
 | Capture a note | Hold Gooseberry, then tap New note | None yet |
 | Finish a note | Tap the work around the card | `Esc` |
 | Keep a note in a folder | Tap the folder's name | None yet |
-| Stick a note to a window | Tap the window's name, or Not stuck | None yet |
+| Stick a note to a window | Tap the window's name, or Stick to a window | None yet |
 | Start a folder | Tap New folder on the board | None yet |
 | Move a note | Hold a note on the board | None yet |
 | Set a reminder | Tap Remind | None yet |
@@ -88,7 +88,7 @@ in the workspace's folder, or Inbox, and stuck to the window in front.
 
 | Input | What happens |
 | --- | --- |
-| Tap the window's name, or Not stuck | The open windows come up above the line, the one in front first, and Don't stick to a window. |
+| Tap the window's name, or Stick to a window | The open windows come up above the line, the one in front first, and Don't stick to a window. |
 | Tap a window | The note is stuck to it, and comes back with it when it opens again. Its folder stays. |
 | Tap Don't stick to a window | The note is stuck to nothing; it stays in its folder. |
 
@@ -96,7 +96,7 @@ in the workspace's folder, or Inbox, and stuck to the window in front.
 
 | Input | What happens |
 | --- | --- |
-| Tap New folder on the board, the + after the folders once there is one | A folder named New folder is made, empty, and the board shows it with its name ready to type over; type a name and press Enter, or leave it. A second one is New folder 2. It stays until it is removed. |
+| Tap New folder on the board, at the end of its places | A folder named New folder is made, empty, and the board shows it with its name ready to type over; type a name and press Enter, or leave it. A second one is New folder 2. It stays until it is removed. |
 | Tap Rename under a folder's name, type, then press Enter | The folder takes the new name; its notes stay in it. |
 | Tap New notes on (the workspace) go here | Notes written on this workspace go into the folder. Tap again for Inbox. |
 | Tap Remove folder | The folder goes and its notes go to Inbox. Undo, in the message that follows, puts them back. |

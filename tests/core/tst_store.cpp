@@ -629,15 +629,15 @@ private Q_SLOTS:
             keys.append(places.index(row).data(Places::KeyRole).toString());
             sections.append(places.index(row).data(Places::SectionRole).toString());
         }
-        // Today; Inbox first and New folder last among the folders; the
-        // windows with notes stuck to them; Tucked away.
+        // Today; Inbox first among the folders; the windows with notes
+        // stuck to them; Tucked away; New folder last.
         QCOMPARE(keys, (QStringList{QStringLiteral("today"), QStringLiteral("inbox"), QStringLiteral("folder:Empty"),
                                     QStringLiteral("folder:Home"), QStringLiteral("folder:Shuffle"),
-                                    QStringLiteral("folder:Split Rock"), QStringLiteral("newfolder"),
-                                    QStringLiteral("window:SpreadGesture.qml"), QStringLiteral("tucked")}));
+                                    QStringLiteral("folder:Split Rock"),
+                                    QStringLiteral("window:SpreadGesture.qml"), QStringLiteral("tucked"), QStringLiteral("newfolder")}));
         QCOMPARE(sections, (QStringList{QString(), QStringLiteral("folders"), QStringLiteral("folders"),
                                         QStringLiteral("folders"), QStringLiteral("folders"), QStringLiteral("folders"),
-                                        QStringLiteral("folders"), QStringLiteral("windows"), QStringLiteral("end")}));
+                                        QStringLiteral("windows"), QStringLiteral("end"), QStringLiteral("end")}));
         QCOMPARE(places.folders().size(), 4);
 
         PlaceNotes board(m_store.get());

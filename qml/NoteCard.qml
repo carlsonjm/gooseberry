@@ -238,7 +238,7 @@ Rectangle {
                     anchors.centerIn: parent
                     width: 18
                     height: 18
-                    source: Qt.resolvedUrl("icons/tuck.svg")
+                    source: Qt.resolvedUrl("icons/lucide/eye-off.svg")
                     color: Kirigami.Theme.textColor
                     isMask: true
                     opacity: parent.parent.down ? 1 : parent.parent.hovered || rowHover.hovered ? 0.7 : 0.35

@@ -4,11 +4,13 @@ import QtQuick.Window
 import org.kde.kirigami as Kirigami
 
 // The quick note's surface: the whole display, with the note on a card the
-// size of the desktop search's, centred. With the on-screen keys up the card
+// size of the desktop search's, centred: one size on every display, 840 by
+// at most 704, trimmed only by a smaller screen. With the on-screen keys up the card
 // rises only as far as it must to stay above them, then shortens. All notes
 // opens the board as Gooseberry's own window and the card goes. A note opened
 // here from a search's Notes has a bar on top leading back there. A tap
-// outside the card puts it away; the note is already kept. In Kadunce's
+// outside the card, its close button or Esc puts it away; the note is
+// already kept. In Kadunce's
 // Spread the card is drawn where Kadunce gives it Spread's centre.
 Window {
     id: root
@@ -175,7 +177,12 @@ Window {
         id: card
         objectName: "card"
 
-        readonly property real restHeight: root.asGuest ? root.guestRect.height : Math.round(root.area.height * 0.64)
+        // Floating, as Search floats: as wide as Search and as tall as Search
+        // with both its sections, never scaled up with a large display.
+        readonly property real universalWidth: 840
+        readonly property real universalHeight: 704
+        readonly property real restHeight: root.asGuest ? root.guestRect.height
+            : Math.min(universalHeight, root.area.height - 40)
         readonly property real keysLine: root.height - root.keysReach
         // In Spread the card keeps the place Kadunce gave it and only shortens.
         readonly property real highest: root.asGuest ? root.guestRect.y
@@ -185,7 +192,7 @@ Window {
         Kirigami.Theme.inherit: false
 
         width: root.asGuest ? root.guestRect.width
-             : Math.min(root.area.width - 20, Math.max(Math.round(root.area.width * 0.64), 420))
+             : Math.min(root.area.width - 40, universalWidth)
         height: Math.max(Math.min(restHeight, 160), Math.min(restHeight, keysLine - highest))
         x: root.asGuest ? root.guestRect.x : root.area.x + (root.area.width - width) / 2
         y: root.asGuest ? root.guestRect.y
@@ -260,7 +267,9 @@ Window {
             title: root.shell.applicationName()
             words: root.shell.reminderLabel !== undefined ? root.shell : null
             surface: card.color
+            closable: true
             onBoardRequested: root.allNotes()
+            onCloseRequested: root.shell.capture.finish()
         }
     }
 

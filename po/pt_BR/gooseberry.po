@@ -58,8 +58,8 @@ msgid "Folders"
 msgstr "Pastas"
 
 #: qml/BoardView.qml
-msgid "Hold a note anywhere on the board and drop it here, or tap New note."
-msgstr "Segure uma nota em qualquer lugar do quadro e solte-a aqui, ou toque em Nova nota."
+msgid "Hold a note on the board and drag it here, or tap or click New note."
+msgstr "Segure uma nota do quadro e arraste-a para cá, ou toque ou clique em Nova nota."
 
 #: qml/BoardView.qml
 msgid "Ideas · no date needed"
@@ -99,8 +99,8 @@ msgid "New notes on %1 go here"
 msgstr "Novas notas de %1 vêm para cá"
 
 #: qml/BoardView.qml
-msgid "No note has those words"
-msgstr "Nenhuma nota tem essas palavras"
+msgid "No note has those words yet"
+msgstr "Nenhuma nota tem essas palavras ainda"
 
 #: qml/BoardView.qml
 msgid "No notes here"
@@ -139,16 +139,16 @@ msgid "Stuck to windows"
 msgstr "Presas a janelas"
 
 #: qml/BoardView.qml
-msgid "Tap New note, or %1's button, to write one."
-msgstr "Toque em Nova nota, ou no botão de %1, para escrever uma."
+msgid "Tap or click New note to write one."
+msgstr "Toque ou clique em Nova nota para escrever uma."
 
 #: qml/BoardView.qml
 msgid "Trash"
 msgstr "Lixeira"
 
 #: qml/BoardView.qml
-msgid "Tuck a note away to keep it here, out of sight. Tap it to bring it back."
-msgstr "Guarde uma nota para mantê-la aqui, fora de vista. Toque nela para trazê-la de volta."
+msgid "A tucked-away note waits here, out of sight. Tap or click it to bring it back."
+msgstr "Uma nota guardada espera aqui, fora de vista. Toque ou clique nela para trazê-la de volta."
 
 #: qml/BoardView.qml
 msgid "Tucked away"
@@ -252,8 +252,8 @@ msgid "Not kept yet: %1"
 msgstr "Ainda não salva: %1"
 
 #: qml/QuickNote.qml
-msgid "Not stuck"
-msgstr "Não presa"
+msgid "Stick to a window"
+msgstr "Prender a uma janela"
 
 #: qml/QuickNote.qml
 msgid "Not stuck to a window"
@@ -297,8 +297,8 @@ msgid "Unpin from the panel"
 msgstr "Desafixar do painel"
 
 #: qml/QuickNote.qml
-msgid "Words that ask for something offer it"
-msgstr "Palavras que pedem algo o oferecem"
+msgid "Write a day or a #folder to get a shortcut"
+msgstr "Escreva um dia ou uma #pasta para ganhar um atalho"
 
 #: qml/QuickNote.qml
 msgid "Write it down…"
@@ -567,3 +567,44 @@ msgstr "Amanhã · %1"
 #: src/desktop/ReminderWords.cpp
 msgid "Pick a time…"
 msgstr "Escolher um horário…"
+
+#: qml/QuickNote.qml
+msgid "Choose the folder this note is kept in"
+msgstr "Escolha a pasta onde esta nota fica"
+
+#: qml/QuickNote.qml
+msgid "Stuck to %1. Choose another window, or none"
+msgstr "Presa a %1. Escolha outra janela, ou nenhuma"
+
+#: qml/QuickNote.qml
+msgid "Choose a window to stick this note to"
+msgstr "Escolha uma janela para prender esta nota"
+
+#: qml/BoardView.qml
+msgid "Start a note: %1"
+msgstr "Começar uma nota: %1"
+
+#: qml/BoardView.qml
+msgctxt "the Enter key"
+msgid "Enter"
+msgstr "Enter"
+
+#: qml/BoardView.qml
+msgid "Notes stuck to %1"
+msgstr "Notas presas a %1"
+
+#: qml/QuickNote.qml
+msgid "Close"
+msgstr "Fechar"
+
+#: qml/QuickNote.qml
+msgid "Close (Esc). The note is already kept."
+msgstr "Fechar (Esc). A nota já está salva."
+
+#: qml/PlannerColumn.qml
+msgid "Nothing planned for today. Drag a note onto a day above to plan it."
+msgstr "Nada planejado para hoje. Arraste uma nota para um dia acima para planejá-la."
+
+#: qml/PlannerColumn.qml
+msgid "Nothing planned for this day. Drag a note onto a day above to plan it."
+msgstr "Nada planejado para este dia. Arraste uma nota para um dia acima para planejá-la."

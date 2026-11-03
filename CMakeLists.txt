@@ -69,11 +69,12 @@ qt_add_qml_module(gooseberry-screens
         qml/TouchSelect.qml
     RESOURCES
         qml/icons/note.svg
-        qml/icons/tuck.svg
+        qml/icons/lucide/app-window.svg
         qml/icons/lucide/bell.svg
         qml/icons/lucide/check.svg
         qml/icons/lucide/copy.svg
         qml/icons/lucide/ellipsis.svg
+        qml/icons/lucide/eye-off.svg
         qml/icons/lucide/folder.svg
         qml/icons/lucide/layout-grid.svg
         qml/icons/lucide/list-checks.svg
