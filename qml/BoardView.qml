@@ -4,9 +4,9 @@ import QtQuick.Controls as QQC2
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 
-// The board: every note in one place. The places run down the side, Today,
-// then the folders with Inbox first and New folder last, the windows with
-// notes stuck to them, and Tucked away; the notes of the chosen one fill the
+// The board: every note in one place. The places run along the top, Today,
+// then the folders with Inbox first, the windows with notes stuck to them,
+// Tucked away, and New folder last; the notes of the chosen one fill the
 // rest. A held note lifts, and drops on a folder, a day or the trash. It
 // fills its own window, and the quick-note card when the card grows.
 Item {
@@ -39,6 +39,17 @@ Item {
         }
     }
 
+    // Words no note has start a note with them, in Inbox.
+    function startFromSearch() {
+        const words = search.text.trim();
+        if (words.length === 0 || board.notes.count > 0 || board.shell.store.readOnly) {
+            return;
+        }
+        board.shell.newNoteIn("inbox");
+        board.shell.capture.text = words;
+        search.text = "";
+    }
+
     // A note leaves the place shown as soon as it is tucked away or brought
     // back, so what follows is done here rather than on its card.
     function tuckAway(id) {
@@ -64,7 +75,7 @@ Item {
     function iconFor(key) {
         if (key === "inbox") return "mail-folder-inbox";
         if (key === "today") return "view-calendar-day";
-        if (key === "tucked") return Qt.resolvedUrl("icons/tuck.svg");
+        if (key === "tucked") return Qt.resolvedUrl("icons/lucide/eye-off.svg");
         if (key === "newfolder") return "folder-new";
         if (key.startsWith("window:")) return "window";
         return "folder";
@@ -182,8 +193,9 @@ Item {
 
         // Along the top, as Search's Notes has it: Find or start a note, and
         // the places in one row under it, Today, the folders with Inbox
-        // first and New folder last, the windows with notes stuck to them,
-        // and Tucked away. A carried note can be let go on a place.
+        // first, the windows with notes stuck to them, each with a window's
+        // mark, Tucked away, and New folder at the end. A carried note can be
+        // let go on a place.
         ColumnLayout {
             Layout.fillWidth: true
             Layout.leftMargin: 24
@@ -204,15 +216,7 @@ Item {
                 rightPadding: 20
                 onTextChanged: board.notes.search = text
                 // Enter with words no note has starts a note with them.
-                onAccepted: {
-                    const words = text.trim();
-                    if (words.length === 0 || board.notes.count > 0 || board.shell.store.readOnly) {
-                        return;
-                    }
-                    board.shell.newNoteIn("inbox");
-                    board.shell.capture.text = words;
-                    text = "";
-                }
+                onAccepted: board.startFromSearch()
                 background: Rectangle {
                     radius: height / 2
                     color: Qt.alpha(Kirigami.Theme.textColor, 0.09)
@@ -282,13 +286,12 @@ Item {
                         readonly property bool takesNotes: key === "inbox" || key === "tucked" || key.startsWith("folder:")
                         readonly property bool newFolder: key === "newfolder"
                         readonly property bool quiet: key === "tucked" || newFolder
+                        readonly property bool stuckWindow: key.startsWith("window:")
                         objectName: "place-" + key
                         implicitHeight: 44
-                        // Once there is a folder, New folder is a + after them.
-                        readonly property bool plus: newFolder && board.places.folders.length > 0
-                        implicitWidth: plus ? 44 : Math.max(44, placeRow.implicitWidth + 28)
+                        implicitWidth: Math.max(44, placeRow.implicitWidth + 28)
                         focusPolicy: Qt.NoFocus
-                        Accessible.name: label
+                        Accessible.name: stuckWindow ? i18n("Notes stuck to %1", label) : label
                         onClicked: {
                             if (newFolder) {
                                 board.newFolder();
@@ -317,24 +320,27 @@ Item {
                                  : placeButton.current ? Qt.alpha(Kirigami.Theme.textColor, 0.16)
                                  : placeButton.down ? Qt.alpha(Kirigami.Theme.textColor, 0.08)
                                  : placeButton.hovered ? Qt.alpha(Kirigami.Theme.textColor, 0.06) : "transparent"
-                            border.width: dropHere.containsDrag ? 2 : 0
-                            border.color: Kirigami.Theme.highlightColor
+                            // New folder, last in the row, is outlined as
+                            // something to make rather than a place to go.
+                            border.width: dropHere.containsDrag ? 2 : placeButton.newFolder ? 1 : 0
+                            border.color: dropHere.containsDrag ? Kirigami.Theme.highlightColor
+                                        : Qt.alpha(Kirigami.Theme.textColor, 0.25)
                         }
                         contentItem: Item {
-                            Kirigami.Icon {
-                                anchors.centerIn: parent
-                                visible: placeButton.plus
-                                implicitWidth: 20
-                                implicitHeight: 20
-                                source: "list-add"
-                                color: Qt.alpha(Kirigami.Theme.textColor, 0.72)
-                                isMask: true
-                            }
                             RowLayout {
                                 id: placeRow
                                 anchors.centerIn: parent
-                                visible: !placeButton.plus
                                 spacing: 6
+                                // A window's notes carry a window's mark, so
+                                // the window does not read as a folder.
+                                Kirigami.Icon {
+                                    visible: placeButton.stuckWindow
+                                    implicitWidth: 15
+                                    implicitHeight: 15
+                                    source: Qt.resolvedUrl("icons/lucide/app-window.svg")
+                                    color: Kirigami.Theme.disabledTextColor
+                                    isMask: true
+                                }
                                 QQC2.Label {
                                     text: placeButton.newFolder ? i18n("+ New folder") : placeButton.label
                                     font.pixelSize: 13
@@ -503,14 +509,68 @@ Item {
                     Layout.fillHeight: true
                     spacing: 16
 
+                    // The ideas' column heading, as the planner's is drawn,
+                    // once there are ideas to head.
                     QQC2.Label {
                         objectName: "ideasHeading"
-                        visible: board.planning
-                        text: i18n("Ideas · no date needed")
+                        visible: board.planning && board.notes.count > 0
+                        text: i18n("Ideas · no date needed").toUpperCase()
                         font.pixelSize: 13
-                        font.weight: Font.DemiBold
+                        font.weight: Font.ExtraBold
+                        font.letterSpacing: 0.8
                         color: Kirigami.Theme.disabledTextColor
                         Accessible.role: Accessible.Heading
+                    }
+
+                    // Words no note has, as a row to start a note with them.
+                    QQC2.AbstractButton {
+                        id: startNote
+                        objectName: "startNote"
+                        Layout.fillWidth: true
+                        Layout.rightMargin: 24
+                        implicitHeight: 64
+                        visible: board.searching && board.notes.count === 0 && !board.shell.store.readOnly
+                        focusPolicy: Qt.NoFocus
+                        text: i18n("Start a note: %1", search.text.trim())
+                        Accessible.name: text
+                        onClicked: board.startFromSearch()
+                        background: Rectangle {
+                            radius: 12
+                            color: Qt.alpha(Kirigami.Theme.highlightColor, startNote.down ? 0.28 : startNote.hovered ? 0.2 : 0.14)
+                        }
+                        contentItem: RowLayout {
+                            spacing: 14
+                            Rectangle {
+                                Layout.leftMargin: 16
+                                implicitWidth: 32
+                                implicitHeight: 32
+                                radius: 16
+                                color: Kirigami.Theme.highlightColor
+                                Kirigami.Icon {
+                                    anchors.centerIn: parent
+                                    implicitWidth: 16
+                                    implicitHeight: 16
+                                    source: "list-add"
+                                    color: Kirigami.Theme.highlightedTextColor
+                                    isMask: true
+                                }
+                            }
+                            QQC2.Label {
+                                Layout.fillWidth: true
+                                text: startNote.text
+                                textFormat: Text.PlainText
+                                elide: Text.ElideRight
+                                font.pixelSize: 15
+                                font.weight: Font.Medium
+                            }
+                            QQC2.Label {
+                                Layout.rightMargin: 16
+                                text: i18nc("the Enter key", "Enter")
+                                font.pixelSize: 12
+                                font.weight: Font.DemiBold
+                                color: Kirigami.Theme.disabledTextColor
+                            }
+                        }
                     }
 
                     Item {
@@ -555,14 +615,18 @@ Item {
                             }
                         }
 
+                        // Centred above the band along the bottom where New
+                        // note and the board's messages stand, so neither
+                        // covers it.
                         Kirigami.PlaceholderMessage {
                             anchors.centerIn: parent
                             anchors.horizontalCenterOffset: -12
+                            anchors.verticalCenterOffset: -48
                             width: Math.min(parent.width - 2 * Kirigami.Units.gridUnit, 420)
                             visible: board.notes.count === 0
                             icon.name: board.iconFor(board.notes.place)
                             text: {
-                                if (board.searching) return i18n("No note has those words");
+                                if (board.searching) return i18n("No note has those words yet");
                                 switch (board.notes.place) {
                                 case "today": return i18n("Nothing written today yet");
                                 case "inbox": return i18n("Inbox is empty");
@@ -571,9 +635,8 @@ Item {
                                 return i18n("No notes here");
                             }
                             explanation: {
-                                // Enter starts a note with the words, so the field
-                                // says so where it finds none.
-                                if (board.searching) return board.shell.store.readOnly ? "" : i18n("Press Enter to start a note with them.");
+                                // Start a note, above, offers the words.
+                                if (board.searching) return "";
                                 if (board.shownFolder.length > 0) return i18n("Hold a note on the board and drag it here, or tap or click New note.");
                                 switch (board.notes.place) {
                                 case "inbox": return i18n("A note lands here when no folder is chosen.");

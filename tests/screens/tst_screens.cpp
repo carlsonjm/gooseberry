@@ -1312,9 +1312,9 @@ private Q_SLOTS:
         QVERIFY(QFile::exists(m_home->trash()));
     }
 
-    // The card on a tablet's free room: the search's size, centred, the
-    // cursor in the note. With the keys up it rises only as far as it must,
-    // then shortens; it never lies under them.
+    // The card floats at the search's size on any display, 840 by 704,
+    // centred, the cursor in the note. With the keys up it rises only as far
+    // as it must, then shortens; it never lies under them.
     void cardFitsTheRoomAndTheKeys()
     {
         Places places(m_store.get());
@@ -1326,15 +1326,15 @@ private Q_SLOTS:
         std::unique_ptr<QObject> object(component.createWithInitialProperties({{QStringLiteral("shell"), QVariant::fromValue<QObject *>(&shell)}}));
         QVERIFY2(object, qPrintable(component.errorString()));
         auto *window = qobject_cast<QQuickWindow *>(object.get());
-        window->resize(1260, 736);
+        window->resize(1600, 1000);
         QMetaObject::invokeMethod(window, "open");
         QVERIFY(QTest::qWaitForWindowExposed(window));
         auto *card = window->property("card").value<QQuickItem *>();
         QVERIFY(card);
-        QTRY_COMPARE(card->width(), 806.0);
-        QCOMPARE(card->height(), 471.0);
-        QCOMPARE(card->x(), 227.0);
-        QCOMPARE(card->y(), 133.0);
+        QTRY_COMPARE(card->width(), 840.0);
+        QTRY_COMPARE(card->height(), 704.0);
+        QCOMPARE(card->x(), 380.0);
+        QCOMPARE(card->y(), 148.0);
         QCOMPARE(card->property("radius").toReal(), 10.0);
         QCOMPARE(card->property("border").value<QObject *>()->property("width").toReal(), 1.0);
         auto *quick = window->property("note").value<QQuickItem *>();
@@ -1342,25 +1342,30 @@ private Q_SLOTS:
         picture(window, QStringLiteral("card"));
 
         // Low keys leave the card where it is.
-        window->setProperty("keysRect", QRectF(0, 650, 1260, 86));
+        window->setProperty("keysRect", QRectF(0, 900, 1600, 100));
         QTest::qWait(300);
-        QCOMPARE(card->y(), 133.0);
-        QCOMPARE(card->height(), 471.0);
+        QCOMPARE(card->y(), 148.0);
+        QCOMPARE(card->height(), 704.0);
         // Taller keys lift it just clear of them.
-        window->setProperty("keysRect", QRectF(0, 560, 1260, 176));
-        QTRY_COMPARE(card->y(), 79.0);
-        QCOMPARE(card->height(), 471.0);
+        window->setProperty("keysRect", QRectF(0, 800, 1600, 200));
+        QTRY_COMPARE(card->y(), 86.0);
+        QCOMPARE(card->height(), 704.0);
         // Taller still: it reaches the top of the room, then shortens.
-        window->setProperty("keysRect", QRectF(0, 436, 1260, 300));
-        QTRY_COMPARE(card->height(), 416.0);
+        window->setProperty("keysRect", QRectF(0, 600, 1600, 400));
+        QTRY_COMPARE(card->height(), 580.0);
         QCOMPARE(card->y(), 10.0);
-        QVERIFY(card->y() + card->height() <= 436);
+        QVERIFY(card->y() + card->height() <= 600);
         picture(window, QStringLiteral("card-keys"));
         for (QQuickItem *button : buttonsIn(card)) {
             QVERIFY2(button->height() >= 44 && button->width() >= 44, qPrintable(button->objectName()));
         }
         window->setProperty("keysRect", QRectF());
-        QTRY_COMPARE(card->y(), 133.0);
+        QTRY_COMPARE(card->y(), 148.0);
+
+        // A smaller screen trims it, 20 clear of each edge.
+        window->resize(800, 600);
+        QTRY_COMPARE(card->width(), 760.0);
+        QTRY_COMPARE(card->height(), 560.0);
     }
 
     // Under Shuffle the card's surface covers the Context Bar too. Keys tall
@@ -1380,22 +1385,22 @@ private Q_SLOTS:
         std::unique_ptr<QObject> object(component.createWithInitialProperties({{QStringLiteral("shell"), QVariant::fromValue<QObject *>(&shell)}}));
         QVERIFY2(object, qPrintable(component.errorString()));
         auto *window = qobject_cast<QQuickWindow *>(object.get());
-        window->resize(1260, 736);
+        window->resize(1600, 1000);
         QMetaObject::invokeMethod(window, "open");
         QVERIFY(QTest::qWaitForWindowExposed(window));
         auto *card = window->property("card").value<QQuickItem *>();
         QVERIFY(card);
         // Without the keys the card rests where it does without a bar.
         // The card's place and height settle on frames of their own.
-        QTRY_COMPARE(card->y(), 133.0);
-        QTRY_COMPARE(card->height(), 471.0);
-        window->setProperty("keysRect", QRectF(0, 436, 1260, 300));
-        QTRY_COMPARE(card->height(), 384.0);
+        QTRY_COMPARE(card->y(), 148.0);
+        QTRY_COMPARE(card->height(), 704.0);
+        window->setProperty("keysRect", QRectF(0, 600, 1600, 400));
+        QTRY_COMPARE(card->height(), 548.0);
         QCOMPARE(card->y(), 42.0);
-        QCOMPARE(card->y() + card->height(), 426.0);
+        QCOMPARE(card->y() + card->height(), 590.0);
         picture(window, QStringLiteral("card-keys-bar"));
         window->setProperty("keysRect", QRectF());
-        QTRY_COMPARE(card->y(), 133.0);
+        QTRY_COMPARE(card->y(), 148.0);
     }
 
     // The Context Bar's height, from its clock extent; anything but a
@@ -1434,12 +1439,12 @@ private Q_SLOTS:
         QMetaObject::invokeMethod(window, "open");
         QVERIFY(QTest::qWaitForWindowExposed(window));
         auto *card = window->property("card").value<QQuickItem *>();
-        QTRY_COMPARE(card->width(), 806.0);
+        QTRY_COMPARE(card->width(), 840.0);
         QVERIFY(!itemNamed(card, QStringLiteral("backBar"))->isVisible());
 
         tap(window, itemNamed(card, QStringLiteral("allNotes")));
         QCOMPARE(shell.boards, 1);
-        QCOMPARE(card->width(), 806.0);
+        QCOMPARE(card->width(), 840.0);
 
         // From a search's Notes: the bar leads back, and so does Esc.
         shell.setBack(QStringLiteral("Notes"));
@@ -1465,6 +1470,15 @@ private Q_SLOTS:
         QCOMPARE(finished.count(), 1);
         QTest::mouseClick(window, Qt::LeftButton, {}, QPoint(60, 60));
         QCOMPARE(finished.count(), 2);
+
+        // Its close button, at the page's top right, puts it away too.
+        QMetaObject::invokeMethod(window, "open");
+        QQuickItem *close = itemNamed(card, QStringLiteral("closeNote"));
+        QTRY_VERIFY(close->isVisible());
+        QVERIFY(close->width() >= 44 && close->height() >= 44);
+        QVERIFY(close->mapToItem(card, QPointF()).x() > card->width() - 80);
+        tap(window, close);
+        QCOMPARE(finished.count(), 3);
     }
 
     // Opened from a search's Notes, the card comes up as the search goes,
@@ -1621,20 +1635,20 @@ private Q_SLOTS:
         QCOMPARE(shell.newIn, QStringLiteral("window:SpreadGesture.qml"));
 
         // The places in one row along the top, under the search: Today,
-        // Inbox first among the folders, New folder last, then the windows
-        // and Tucked away.
+        // Inbox first among the folders, then the windows, each with a
+        // window's mark, Tucked away, and New folder last.
         QQuickItem *inbox = find(QStringLiteral("place-inbox"));
         QQuickItem *home = find(QStringLiteral("place-folder:Home"));
         QQuickItem *shuffle = find(QStringLiteral("place-folder:Shuffle"));
         QQuickItem *newFolder = find(QStringLiteral("place-newfolder"));
         QQuickItem *window = find(QStringLiteral("place-window:SpreadGesture.qml"));
         QVERIFY(find(QStringLiteral("place-today"))->x() < inbox->x());
-        QVERIFY(inbox->x() < home->x() && home->x() < shuffle->x() && shuffle->x() < newFolder->x());
-        QVERIFY(newFolder->x() < window->x() && window->x() < find(QStringLiteral("place-tucked"))->x());
+        QVERIFY(inbox->x() < home->x() && home->x() < shuffle->x() && shuffle->x() < window->x());
+        QVERIFY(window->x() < find(QStringLiteral("place-tucked"))->x() && find(QStringLiteral("place-tucked"))->x() < newFolder->x());
         QCOMPARE(inbox->y(), window->y());
-        // With folders made, New folder is a + after them.
-        QVERIFY(newFolder->property("plus").toBool());
-        QCOMPARE(newFolder->width(), 44.0);
+        QVERIFY(window->property("stuckWindow").toBool());
+        QVERIFY(!home->property("stuckWindow").toBool());
+        QVERIFY(newFolder->width() > 44.0);
         QQuickItem *searchField = find(QStringLiteral("search"));
         QVERIFY(inbox->mapToScene({0, 0}).y() > searchField->mapToScene({0, searchField->height()}).y());
 
@@ -1742,13 +1756,27 @@ private Q_SLOTS:
                                     .arg(button->width()).arg(button->height())));
         }
 
-        // Words no note has, and Enter, start a note with them in Inbox.
+        // Words no note has offer Start a note with them, and Enter or a tap
+        // on it starts one in Inbox.
         tap(board, searchField);
         type(board, QStringLiteral("Zebra crossing"));
         QTRY_COMPARE(notes.count(), 0);
+        QQuickItem *startNote = find(QStringLiteral("startNote"));
+        QTRY_VERIFY(startNote->isVisible());
+        QCOMPARE(startNote->property("text").toString(), QStringLiteral("Start a note: Zebra crossing"));
+        QVERIFY(startNote->height() >= 44);
         QTest::keyClick(board, Qt::Key_Return);
         QCOMPARE(shell.newIn, QStringLiteral("inbox"));
         QCOMPARE(m_capture->text(), QStringLiteral("Zebra crossing"));
+        QCOMPARE(searchField->property("text").toString(), QString());
+        QTRY_VERIFY(!startNote->isVisible());
+        shell.newIn.clear();
+        tap(board, searchField);
+        type(board, QStringLiteral("Bike pump"));
+        QTRY_VERIFY(startNote->isVisible());
+        tap(board, startNote);
+        QCOMPARE(shell.newIn, QStringLiteral("inbox"));
+        QCOMPARE(m_capture->text(), QStringLiteral("Bike pump"));
         QCOMPARE(searchField->property("text").toString(), QString());
     }
 
@@ -1850,7 +1878,7 @@ private Q_SLOTS:
         // Ideas beside it: no note with a time among them; the checklist as
         // its heading and items.
         QVERIFY(find(QStringLiteral("ideasHeading"))->isVisible());
-        QCOMPARE(find(QStringLiteral("ideasHeading"))->property("text").toString(), QStringLiteral("Ideas · no date needed"));
+        QCOMPARE(find(QStringLiteral("ideasHeading"))->property("text").toString(), QStringLiteral("IDEAS · NO DATE NEEDED"));
         QVERIFY(find(QStringLiteral("note-") + groceries));
         QVERIFY(!find(QStringLiteral("note-") + next));
         QQuickItem *groceriesCard = find(QStringLiteral("note-") + groceries);

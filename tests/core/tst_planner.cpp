@@ -355,7 +355,7 @@ private Q_SLOTS:
         QCOMPARE(notes.count(), 3);
     }
 
-    // The planner: the strip from two days back to three ahead, the chosen
+    // The planner: the strip of a week from two days back, the chosen
     // day's notes in time order with Done and the next one to come, then the
     // days ahead that have notes.
     void plannerDays()
@@ -376,7 +376,8 @@ private Q_SLOTS:
         Planner planner(m_store.get());
         QTRY_COMPARE(planner.days().size(), 2);
         const QVariantList strip = planner.strip();
-        QCOMPARE(strip.size(), 6);
+        QCOMPARE(strip.size(), 7);
+        QCOMPARE(strip.at(6).toMap().value(QStringLiteral("date")).toDate(), today.addDays(4));
         QCOMPARE(strip.at(0).toMap().value(QStringLiteral("date")).toDate(), today.addDays(-2));
         QVERIFY(strip.at(2).toMap().value(QStringLiteral("today")).toBool());
         QVERIFY(strip.at(2).toMap().value(QStringLiteral("chosen")).toBool());

@@ -99,8 +99,8 @@ msgid "New notes on %1 go here"
 msgstr "Novas notas de %1 vêm para cá"
 
 #: qml/BoardView.qml
-msgid "No note has those words"
-msgstr "Nenhuma nota tem essas palavras"
+msgid "No note has those words yet"
+msgstr "Nenhuma nota tem essas palavras ainda"
 
 #: qml/BoardView.qml
 msgid "No notes here"
@@ -297,8 +297,8 @@ msgid "Unpin from the panel"
 msgstr "Desafixar do painel"
 
 #: qml/QuickNote.qml
-msgid "Write a day or a #folder, and the note offers to use it"
-msgstr "Escreva um dia ou uma #pasta, e a nota oferece usá-lo"
+msgid "Write a day or a #folder to get a shortcut"
+msgstr "Escreva um dia ou uma #pasta para ganhar um atalho"
 
 #: qml/QuickNote.qml
 msgid "Write it down…"
@@ -568,10 +568,6 @@ msgstr "Amanhã · %1"
 msgid "Pick a time…"
 msgstr "Escolher um horário…"
 
-#: qml/BoardView.qml
-msgid "Press Enter to start a note with them."
-msgstr "Pressione Enter para começar uma nota com elas."
-
 #: qml/QuickNote.qml
 msgid "Choose the folder this note is kept in"
 msgstr "Escolha a pasta onde esta nota fica"
@@ -583,3 +579,32 @@ msgstr "Presa a %1. Escolha outra janela, ou nenhuma"
 #: qml/QuickNote.qml
 msgid "Choose a window to stick this note to"
 msgstr "Escolha uma janela para prender esta nota"
+
+#: qml/BoardView.qml
+msgid "Start a note: %1"
+msgstr "Começar uma nota: %1"
+
+#: qml/BoardView.qml
+msgctxt "the Enter key"
+msgid "Enter"
+msgstr "Enter"
+
+#: qml/BoardView.qml
+msgid "Notes stuck to %1"
+msgstr "Notas presas a %1"
+
+#: qml/QuickNote.qml
+msgid "Close"
+msgstr "Fechar"
+
+#: qml/QuickNote.qml
+msgid "Close (Esc). The note is already kept."
+msgstr "Fechar (Esc). A nota já está salva."
+
+#: qml/PlannerColumn.qml
+msgid "Nothing planned for today. Drag a note onto a day above to plan it."
+msgstr "Nada planejado para hoje. Arraste uma nota para um dia acima para planejá-la."
+
+#: qml/PlannerColumn.qml
+msgid "Nothing planned for this day. Drag a note onto a day above to plan it."
+msgstr "Nada planejado para este dia. Arraste uma nota para um dia acima para planejá-la."

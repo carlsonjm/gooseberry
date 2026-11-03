@@ -99,8 +99,8 @@ msgid "New notes on %1 go here"
 msgstr "Las notas nuevas del %1 van aquí"
 
 #: qml/BoardView.qml
-msgid "No note has those words"
-msgstr "Ninguna nota tiene esas palabras"
+msgid "No note has those words yet"
+msgstr "Ninguna nota tiene esas palabras todavía"
 
 #: qml/BoardView.qml
 msgid "No notes here"
@@ -297,8 +297,8 @@ msgid "Unpin from the panel"
 msgstr "Quitar del panel"
 
 #: qml/QuickNote.qml
-msgid "Write a day or a #folder, and the note offers to use it"
-msgstr "Escribe un día o una #carpeta, y la nota ofrece usarlo"
+msgid "Write a day or a #folder to get a shortcut"
+msgstr "Escribe un día o una #carpeta para obtener un atajo"
 
 #: qml/QuickNote.qml
 msgid "Write it down…"
@@ -568,10 +568,6 @@ msgstr "Mañana · %1"
 msgid "Pick a time…"
 msgstr "Elegir una hora…"
 
-#: qml/BoardView.qml
-msgid "Press Enter to start a note with them."
-msgstr "Pulsa Intro para empezar una nota con ellas."
-
 #: qml/QuickNote.qml
 msgid "Choose the folder this note is kept in"
 msgstr "Elige la carpeta donde se guarda esta nota"
@@ -583,3 +579,32 @@ msgstr "Pegada a %1. Elige otra ventana, o ninguna"
 #: qml/QuickNote.qml
 msgid "Choose a window to stick this note to"
 msgstr "Elige una ventana a la que pegar esta nota"
+
+#: qml/BoardView.qml
+msgid "Start a note: %1"
+msgstr "Empezar una nota: %1"
+
+#: qml/BoardView.qml
+msgctxt "the Enter key"
+msgid "Enter"
+msgstr "Intro"
+
+#: qml/BoardView.qml
+msgid "Notes stuck to %1"
+msgstr "Notas pegadas a %1"
+
+#: qml/QuickNote.qml
+msgid "Close"
+msgstr "Cerrar"
+
+#: qml/QuickNote.qml
+msgid "Close (Esc). The note is already kept."
+msgstr "Cerrar (Esc). La nota ya está guardada."
+
+#: qml/PlannerColumn.qml
+msgid "Nothing planned for today. Drag a note onto a day above to plan it."
+msgstr "Nada planeado para hoy. Arrastra una nota a un día de arriba para planearla."
+
+#: qml/PlannerColumn.qml
+msgid "Nothing planned for this day. Drag a note onto a day above to plan it."
+msgstr "Nada planeado para este día. Arrastra una nota a un día de arriba para planearla."

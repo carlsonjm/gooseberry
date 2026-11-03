@@ -99,8 +99,8 @@ msgid "New notes on %1 go here"
 msgstr "Les nouvelles notes du %1 arrivent ici"
 
 #: qml/BoardView.qml
-msgid "No note has those words"
-msgstr "Aucune note ne contient ces mots"
+msgid "No note has those words yet"
+msgstr "Aucune note ne contient encore ces mots"
 
 #: qml/BoardView.qml
 msgid "No notes here"
@@ -297,8 +297,8 @@ msgid "Unpin from the panel"
 msgstr "Détacher du panneau"
 
 #: qml/QuickNote.qml
-msgid "Write a day or a #folder, and the note offers to use it"
-msgstr "Écrivez un jour ou un #dossier, et la note propose de l'utiliser"
+msgid "Write a day or a #folder to get a shortcut"
+msgstr "Écrivez un jour ou un #dossier pour obtenir un raccourci"
 
 #: qml/QuickNote.qml
 msgid "Write it down…"
@@ -568,10 +568,6 @@ msgstr "Demain · %1"
 msgid "Pick a time…"
 msgstr "Choisir une heure…"
 
-#: qml/BoardView.qml
-msgid "Press Enter to start a note with them."
-msgstr "Appuyez sur Entrée pour commencer une note avec ces mots."
-
 #: qml/QuickNote.qml
 msgid "Choose the folder this note is kept in"
 msgstr "Choisir le dossier où cette note est gardée"
@@ -583,3 +579,32 @@ msgstr "Collée à %1. Choisir une autre fenêtre, ou aucune"
 #: qml/QuickNote.qml
 msgid "Choose a window to stick this note to"
 msgstr "Choisir une fenêtre où coller cette note"
+
+#: qml/BoardView.qml
+msgid "Start a note: %1"
+msgstr "Commencer une note : %1"
+
+#: qml/BoardView.qml
+msgctxt "the Enter key"
+msgid "Enter"
+msgstr "Entrée"
+
+#: qml/BoardView.qml
+msgid "Notes stuck to %1"
+msgstr "Notes collées à %1"
+
+#: qml/QuickNote.qml
+msgid "Close"
+msgstr "Fermer"
+
+#: qml/QuickNote.qml
+msgid "Close (Esc). The note is already kept."
+msgstr "Fermer (Échap). La note est déjà enregistrée."
+
+#: qml/PlannerColumn.qml
+msgid "Nothing planned for today. Drag a note onto a day above to plan it."
+msgstr "Rien de prévu aujourd'hui. Faites glisser une note sur un jour ci-dessus pour la prévoir."
+
+#: qml/PlannerColumn.qml
+msgid "Nothing planned for this day. Drag a note onto a day above to plan it."
+msgstr "Rien de prévu ce jour-là. Faites glisser une note sur un jour ci-dessus pour la prévoir."

@@ -11,8 +11,8 @@ namespace Gooseberry {
 
 class NoteStore;
 
-// The planner: notes with a time, day by day. A day strip from two days back
-// to three ahead, the chosen day's notes in time order, then the days ahead
+// The planner: notes with a time, day by day. A day strip of a week, from
+// two days back to four ahead, the chosen day's notes in time order, then the days ahead
 // that have any. A note marked done stays on its day, as Done.
 class Planner : public QObject
 {
@@ -32,7 +32,7 @@ class Planner : public QObject
 
 public:
     static constexpr int DaysBack = 2;
-    static constexpr int DaysAhead = 3;
+    static constexpr int DaysAhead = 4;
     // How far past the chosen day the planner looks for days ahead.
     static constexpr int LooksAhead = 7;
 

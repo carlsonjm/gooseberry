@@ -51,6 +51,29 @@ QQC2.ScrollView {
                     Accessible.role: Accessible.Heading
                 }
 
+                // A day with nothing planned says how to plan it.
+                QQC2.Label {
+                    objectName: "plannerEmpty"
+                    visible: dayBlock.index === 0 && dayBlock.modelData.rows.length === 0
+                    Layout.fillWidth: true
+                    topPadding: 16
+                    bottomPadding: 16
+                    leftPadding: 16
+                    rightPadding: 16
+                    wrapMode: Text.Wrap
+                    font.pixelSize: 14
+                    color: Kirigami.Theme.disabledTextColor
+                    text: dayBlock.modelData.today
+                        ? i18n("Nothing planned for today. Drag a note onto a day above to plan it.")
+                        : i18n("Nothing planned for this day. Drag a note onto a day above to plan it.")
+                    background: Rectangle {
+                        radius: 12
+                        color: "transparent"
+                        border.width: 1
+                        border.color: Qt.alpha(Kirigami.Theme.textColor, 0.18)
+                    }
+                }
+
                 Repeater {
                     model: dayBlock.modelData.rows
                     delegate: Rectangle {

@@ -101,7 +101,6 @@ void Places::rebuild()
     for (const QString &folder : folders) {
         places.append({FolderPrefix + folder, folder, QStringLiteral("folders"), 0});
     }
-    places.append({NewFolder, i18nc("@action a place on the board", "New folder"), QStringLiteral("folders"), 0});
     QList<Place> windows;
     Place tucked{Tucked, i18nc("@title notes put out of sight", "Tucked away"), QStringLiteral("end"), 0};
 
@@ -141,6 +140,8 @@ void Places::rebuild()
     }
     places += windows;
     places.append(tucked);
+    // New folder ends the row, after every place, as something to make.
+    places.append({NewFolder, i18nc("@action a place on the board", "New folder"), QStringLiteral("end"), 0});
 
     bool sameRows = places.size() == m_places.size();
     for (qsizetype i = 0; sameRows && i < places.size(); ++i) {

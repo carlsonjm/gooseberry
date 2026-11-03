@@ -293,15 +293,18 @@ a hairline is one 44 px line: where the note is kept and what it is stuck to,
 as quiet words that open their choices ("Stick to a window" while it is stuck
 to none), a tick for kept as written, then Checklist, Remind, More and All
 notes as glyphs, each named when a pointer rests on it, with "Write a day or a
-#folder, and the note offers to use it" while nothing is offered and there is
-room. Remind says
+#folder to get a shortcut" while nothing is offered and there is room. Remind says
 when once a reminder is set. More holds what a kept note rarely needs: Copy
 all, Pin, Tuck away and Remove. One note is pinned at a time, and the
 desktop's panel keeps it in sight beside a dot that starts a quick note. There
-is no Done: going back to the work, or `Esc`, puts the card away, and `Esc`
-first closes whatever is open on the note. Sizes and spacing come from the
+is no Done: a close button at the page's top right, going back to the work, or
+`Esc` puts the card away, and `Esc` first closes whatever is open on the note.
+Floating, the card is the size Search floats at on every display, 840 by at
+most 704, trimmed only by a smaller screen. Sizes and spacing come from the
 suite's visual language. (The maintainer, 17 October: "Listens", after first
-choosing "Just paper" of three directions.) This replaces the paper page in
+choosing "Just paper" of three directions; 3 November: the close button, and
+Search's size rather than two thirds of the screen, which on a large display
+made the note twice Search's size.) This replaces the paper page in
 the note's colour, and before it the card's layout of 4 October: the header
 with the application's tile and name, the five colours and the All notes
 pill, the Checklist and Remind pills, the Folder and Stuck to chips, and Saved
@@ -351,11 +354,12 @@ page (`Kirigami.SpellCheck.enabled`), so the note has one checker.
 ## The board is a search
 
 The board opens as a search of every note: Find or start a note along its top,
-and the places in one row under it, Today, the folders with Inbox first and
-New folder last, a + once there is a folder, which makes one at a tap with its
-name ready to type over,
-the windows with notes stuck to them, and Tucked away, quieter,
-last, each a place to drop a carried note. Enter with words no note has starts
+and the places in one row under it, Today, the folders with Inbox first, the
+windows with notes stuck to them, each with a window's mark so it does not read
+as a folder, Tucked away, quieter, and New folder, outlined, at the end, which
+makes one at a tap with its name ready to type over; each but New folder is a
+place to drop a carried note. (The maintainer, 3 November: New folder at the
+end rather than among the folders, where it split them from the windows.) Enter with words no note has starts
 a note with them. The notes of the place chosen fill the rest one a row, as a
 search lists what it finds: a swatch in the note's colour, its first line, and
 its folder and window under it, each still held to be carried, with the

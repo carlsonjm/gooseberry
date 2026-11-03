@@ -21,6 +21,10 @@ Item {
     property string title: Qt.application.displayName
 
     signal boardRequested()
+    // A close button at the page's top right, where the card holding the
+    // note can be put away; the note is already kept.
+    property bool closable: false
+    signal closeRequested()
 
     readonly property alias editor: area
     // The spelling of the words being written, on the page or a checklist's
@@ -315,6 +319,7 @@ Item {
                     objectName: "checklistPad"
                     anchors.fill: parent
                     anchors.leftMargin: 56
+                    anchors.rightMargin: quick.closable ? 48 : 0
                     visible: quick.capture.checklist
                     capture: quick.capture
                 }
@@ -323,6 +328,7 @@ Item {
                     id: pageScroll
                     anchors.fill: parent
                     anchors.leftMargin: 52
+                    anchors.rightMargin: quick.closable ? 48 : 0
                     visible: !quick.capture.checklist
                     QQC2.TextArea {
                         id: area
@@ -385,6 +391,24 @@ Item {
                     property: "interactive"
                     value: false
                     when: touchSelect.selecting
+                }
+
+                // The way out, opposite the colour's dot: it puts the card
+                // away as going back to the work does.
+                IconButton {
+                    objectName: "closeNote"
+                    anchors.right: parent.right
+                    anchors.top: parent.top
+                    anchors.topMargin: 4
+                    visible: quick.closable
+                    glyph: "x"
+                    text: i18n("Close")
+                    tip: i18n("Close (Esc). The note is already kept.")
+                    background: Rectangle {
+                        radius: height / 2
+                        color: Qt.alpha(Kirigami.Theme.textColor, parent.down ? 0.16 : parent.hovered ? 0.12 : 0.06)
+                    }
+                    onClicked: quick.closeRequested()
                 }
 
                 // The note's colour, a dot beside the words; a tap lays the
@@ -687,11 +711,12 @@ Item {
                     objectName: "listensHint"
                     // Shown only where the line has room for it whole; if
                     // the line is short of room anyway, it gives way first.
-                    visible: quick.offers.length === 0 && tray.width > 960 && !quick.capture.readOnly
+                    visible: quick.offers.length === 0 && tray.width > 760 && !quick.capture.readOnly
+                             && !quick.capture.hasReminder
                     Layout.rightMargin: 8
                     Layout.minimumWidth: 0
                     elide: Text.ElideRight
-                    text: i18n("Write a day or a #folder, and the note offers to use it")
+                    text: i18n("Write a day or a #folder to get a shortcut")
                     font.pixelSize: 12
                     color: Qt.alpha(Kirigami.Theme.textColor, 0.45)
                 }
@@ -816,7 +841,7 @@ Item {
             }
             MenuRow {
                 objectName: "tuckAway"
-                glyph: "tuck.svg"
+                glyph: "lucide/eye-off.svg"
                 text: i18n("Tuck away")
                 onClicked: {
                     quick.showingMore = false;
