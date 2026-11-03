@@ -1100,7 +1100,7 @@ private Q_SLOTS:
         QVERIFY(!m_capture->stuck());
         QVERIFY(!m_store->note(m_capture->noteId())->stuck);
         QCOMPARE(m_store->note(m_capture->noteId())->folder, QStringLiteral("Shuffle"));
-        QCOMPARE(named(QStringLiteral("stuckChip"))->property("text").toString(), QStringLiteral("Not stuck"));
+        QCOMPARE(named(QStringLiteral("stuckChip"))->property("text").toString(), QStringLiteral("Stick to a window"));
     }
 
     void newFolderIsNamedOnce()

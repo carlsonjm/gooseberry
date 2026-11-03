@@ -8,7 +8,7 @@ below is built.
 | Capture a note | Hold Gooseberry, then tap New note | None yet |
 | Finish a note | Tap the work around the card | `Esc` |
 | Keep a note in a folder | Tap the folder's name | None yet |
-| Stick a note to a window | Tap the window's name, or Not stuck | None yet |
+| Stick a note to a window | Tap the window's name, or Stick to a window | None yet |
 | Start a folder | Tap New folder on the board | None yet |
 | Move a note | Hold a note on the board | None yet |
 | Set a reminder | Tap Remind | None yet |
@@ -88,7 +88,7 @@ in the workspace's folder, or Inbox, and stuck to the window in front.
 
 | Input | What happens |
 | --- | --- |
-| Tap the window's name, or Not stuck | The open windows come up above the line, the one in front first, and Don't stick to a window. |
+| Tap the window's name, or Stick to a window | The open windows come up above the line, the one in front first, and Don't stick to a window. |
 | Tap a window | The note is stuck to it, and comes back with it when it opens again. Its folder stays. |
 | Tap Don't stick to a window | The note is stuck to nothing; it stays in its folder. |
 

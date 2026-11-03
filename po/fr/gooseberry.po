@@ -58,8 +58,8 @@ msgid "Folders"
 msgstr "Dossiers"
 
 #: qml/BoardView.qml
-msgid "Hold a note anywhere on the board and drop it here, or tap New note."
-msgstr "Maintenez une note n'importe où sur le tableau et déposez-la ici, ou touchez Nouvelle note."
+msgid "Hold a note on the board and drag it here, or tap or click New note."
+msgstr "Maintenez une note du tableau et faites-la glisser ici, ou touchez ou cliquez sur Nouvelle note."
 
 #: qml/BoardView.qml
 msgid "Ideas · no date needed"
@@ -139,16 +139,16 @@ msgid "Stuck to windows"
 msgstr "Collées aux fenêtres"
 
 #: qml/BoardView.qml
-msgid "Tap New note, or %1's button, to write one."
-msgstr "Touchez Nouvelle note, ou le bouton de %1, pour en écrire une."
+msgid "Tap or click New note to write one."
+msgstr "Touchez ou cliquez sur Nouvelle note pour en écrire une."
 
 #: qml/BoardView.qml
 msgid "Trash"
 msgstr "Corbeille"
 
 #: qml/BoardView.qml
-msgid "Tuck a note away to keep it here, out of sight. Tap it to bring it back."
-msgstr "Rangez une note pour la garder ici, hors de vue. Touchez-la pour la ramener."
+msgid "A tucked-away note waits here, out of sight. Tap or click it to bring it back."
+msgstr "Une note rangée attend ici, hors de vue. Touchez-la ou cliquez dessus pour la ramener."
 
 #: qml/BoardView.qml
 msgid "Tucked away"
@@ -252,8 +252,8 @@ msgid "Not kept yet: %1"
 msgstr "Pas encore enregistrée : %1"
 
 #: qml/QuickNote.qml
-msgid "Not stuck"
-msgstr "Non collée"
+msgid "Stick to a window"
+msgstr "Coller à une fenêtre"
 
 #: qml/QuickNote.qml
 msgid "Not stuck to a window"
@@ -297,8 +297,8 @@ msgid "Unpin from the panel"
 msgstr "Détacher du panneau"
 
 #: qml/QuickNote.qml
-msgid "Words that ask for something offer it"
-msgstr "Les mots qui demandent quelque chose le proposent"
+msgid "Write a day or a #folder, and the note offers to use it"
+msgstr "Écrivez un jour ou un #dossier, et la note propose de l'utiliser"
 
 #: qml/QuickNote.qml
 msgid "Write it down…"
@@ -567,3 +567,19 @@ msgstr "Demain · %1"
 #: src/desktop/ReminderWords.cpp
 msgid "Pick a time…"
 msgstr "Choisir une heure…"
+
+#: qml/BoardView.qml
+msgid "Press Enter to start a note with them."
+msgstr "Appuyez sur Entrée pour commencer une note avec ces mots."
+
+#: qml/QuickNote.qml
+msgid "Choose the folder this note is kept in"
+msgstr "Choisir le dossier où cette note est gardée"
+
+#: qml/QuickNote.qml
+msgid "Stuck to %1. Choose another window, or none"
+msgstr "Collée à %1. Choisir une autre fenêtre, ou aucune"
+
+#: qml/QuickNote.qml
+msgid "Choose a window to stick this note to"
+msgstr "Choisir une fenêtre où coller cette note"

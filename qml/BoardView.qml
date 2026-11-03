@@ -571,13 +571,15 @@ Item {
                                 return i18n("No notes here");
                             }
                             explanation: {
-                                if (board.searching) return "";
-                                if (board.shownFolder.length > 0) return i18n("Hold a note anywhere on the board and drop it here, or tap New note.");
+                                // Enter starts a note with the words, so the field
+                                // says so where it finds none.
+                                if (board.searching) return board.shell.store.readOnly ? "" : i18n("Press Enter to start a note with them.");
+                                if (board.shownFolder.length > 0) return i18n("Hold a note on the board and drag it here, or tap or click New note.");
                                 switch (board.notes.place) {
                                 case "inbox": return i18n("A note lands here when no folder is chosen.");
-                                case "tucked": return i18n("Tuck a note away to keep it here, out of sight. Tap it to bring it back.");
+                                case "tucked": return i18n("A tucked-away note waits here, out of sight. Tap or click it to bring it back.");
                                 }
-                                return i18n("Tap New note, or %1's button, to write one.", Qt.application.displayName);
+                                return i18n("Tap or click New note to write one.");
                             }
                         }
                     }

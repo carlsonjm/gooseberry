@@ -623,6 +623,7 @@ Item {
                     Layout.minimumWidth: 44
                     Layout.maximumWidth: tray.width * 0.32
                     Accessible.name: i18n("Folder: %1", quick.capture.folderLabel)
+                    tip: i18n("Choose the folder this note is kept in")
                     onClicked: quick.chooseFolder()
                 }
                 IconButton {
@@ -630,13 +631,16 @@ Item {
                     glyph: "pin"
                     showText: true
                     horizontalPadding: 12
-                    text: quick.capture.stuck ? quick.capture.window : i18n("Not stuck")
+                    // Unstuck, the chip names what a tap on it does.
+                    text: quick.capture.stuck ? quick.capture.window : i18n("Stick to a window")
                     ink: quick.quiet
                     checked: quick.choosingWindow
                     enabled: !quick.capture.readOnly
                     Layout.minimumWidth: 44
                     Layout.maximumWidth: tray.width * 0.32
                     Accessible.name: quick.capture.stuck ? i18n("Stuck to %1", quick.capture.window) : i18n("Not stuck to a window")
+                    tip: quick.capture.stuck ? i18n("Stuck to %1. Choose another window, or none", quick.capture.window)
+                                             : i18n("Choose a window to stick this note to")
                     onClicked: quick.chooseWindow()
                 }
 
@@ -647,6 +651,12 @@ Item {
                     Layout.leftMargin: 8
                     Layout.maximumWidth: tray.width * 0.3
                     spacing: 8
+                    HoverHandler {
+                        id: statusHover
+                    }
+                    QQC2.ToolTip.visible: statusHover.hovered
+                    QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
+                    QQC2.ToolTip.text: trouble ? statusWords.text : i18n("Saved as you go")
                     Kirigami.Icon {
                         implicitWidth: 16
                         implicitHeight: 16
@@ -675,9 +685,9 @@ Item {
                 // What the note listens for, while nothing is offered.
                 QQC2.Label {
                     objectName: "listensHint"
-                    visible: quick.offers.length === 0 && tray.width > 620 && !quick.capture.readOnly
+                    visible: quick.offers.length === 0 && tray.width > 760 && !quick.capture.readOnly
                     Layout.rightMargin: 8
-                    text: i18n("Words that ask for something offer it")
+                    text: i18n("Write a day or a #folder, and the note offers to use it")
                     font.pixelSize: 12
                     color: Qt.alpha(Kirigami.Theme.textColor, 0.45)
                 }

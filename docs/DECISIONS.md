@@ -290,9 +290,11 @@ named offers a reminder at nine that morning, or six for tonight; lines begun
 with "- " offer a checklist; a #word offers to keep the note in that folder,
 made if it is new. A taken offer goes, and shows kept on the line below. Past
 a hairline is one 44 px line: where the note is kept and what it is stuck to,
-as quiet words that open their choices, a tick for kept as written, then
-Checklist, Remind, More and All notes as glyphs, with "Words that ask for
-something offer it" while nothing is offered and there is room. Remind says
+as quiet words that open their choices ("Stick to a window" while it is stuck
+to none), a tick for kept as written, then Checklist, Remind, More and All
+notes as glyphs, each named when a pointer rests on it, with "Write a day or a
+#folder, and the note offers to use it" while nothing is offered and there is
+room. Remind says
 when once a reminder is set. More holds what a kept note rarely needs: Copy
 all, Pin, Tuck away and Remove. One note is pinned at a time, and the
 desktop's panel keeps it in sight beside a dot that starts a quick note. There
