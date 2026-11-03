@@ -653,9 +653,11 @@ Item {
                 IconButton {
                     objectName: "stuckChip"
                     glyph: "pin"
-                    showText: true
-                    horizontalPadding: 12
-                    // Unstuck, the chip names what a tap on it does.
+                    // Unstuck, the chip names what a tap on it does; on a
+                    // short line, such as a card in Spread, the pin alone
+                    // says it, with the words on a resting pointer.
+                    showText: quick.capture.stuck || tray.width > 560
+                    horizontalPadding: showText ? 12 : 0
                     text: quick.capture.stuck ? quick.capture.window : i18n("Stick to a window")
                     ink: quick.quiet
                     checked: quick.choosingWindow
