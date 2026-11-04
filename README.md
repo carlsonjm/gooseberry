@@ -23,6 +23,11 @@ planner when it has a time. Nothing asks for a title, a folder or a save first.
 </p>
 
 
+<p align="center">
+<b>Gooseberry is Notes in <a href="https://shuffleplasma.com">Shuffle for Plasma</a></b>, a touch-first desktop for KDE Plasma that comes with every free part already set up to work together.
+</p>
+
+
 
 https://github.com/user-attachments/assets/492e9fef-372f-434d-ab93-b7b324e6898b
 
