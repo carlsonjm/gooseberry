@@ -63,7 +63,17 @@ Window {
     property real arrival: 1
     readonly property bool reducedMotion: Kirigami.Units.longDuration <= 1
 
+    // Plasma's Cut, Copy and Paste wait for a finger on the note: a press
+    // left over from before the card opened does not bring them up over it.
+    function forgetTextPress() {
+        const forget = Qt.createComponent(Qt.resolvedUrl("ForgetTextPress.qml"));
+        if (forget.status === Component.Ready) {
+            forget.createObject(root).destroy();
+        }
+    }
+
     function open() {
+        forgetTextPress();
         hideTimer.stop();
         settling.restart();
         leaving.stop();

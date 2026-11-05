@@ -20,8 +20,19 @@ Kirigami.ApplicationWindow {
     // One page: a sideways swipe is the places row's, not the page stack's.
     pageStack.interactive: false
 
+    // Plasma's Cut, Copy and Paste wait for a finger on the field: a press
+    // left over from before the window opened does not bring them up over
+    // Find or start a note.
+    function forgetTextPress() {
+        const forget = Qt.createComponent(Qt.resolvedUrl("ForgetTextPress.qml"));
+        if (forget.status === Component.Ready) {
+            forget.createObject(root).destroy();
+        }
+    }
+
     // The board starts on Today, or on the place a note sits in.
     function present(place) {
+        forgetTextPress();
         board.reset();
         if (place) {
             board.notes.place = place;

@@ -1925,6 +1925,43 @@ private Q_SLOTS:
         QTRY_VERIFY(find(QStringLiteral("dayStripBelow"))->isVisible());
         QVERIFY(!find(QStringLiteral("dayStrip"))->isVisible());
     }
+
+    // Plasma's own style puts Cut, Copy and Paste over a text field after a
+    // finger presses it, and keeps that press until some field's words
+    // change. A press left from before the board opened is forgotten as it
+    // opens, so they do not stand over Find or start a note with nothing
+    // pressed.
+    void boardForgetsAnEarlierPressOnText()
+    {
+        Places places(m_store.get());
+        PlaceNotes notes(m_store.get());
+        FakeShell shell(m_store.get(), m_capture.get(), &places, &notes);
+        QQmlEngine engine;
+        KLocalization::setupLocalizedContext(&engine);
+        QQmlComponent toolbar(&engine);
+        toolbar.setData(QByteArrayLiteral("import QtQml\n"
+                                          "import org.kde.desktop.private as DesktopPrivate\n"
+                                          "QtObject {\n"
+                                          "    readonly property bool pressed: DesktopPrivate.MobileTextActionsToolBar.shouldBeVisible\n"
+                                          "    function press() { DesktopPrivate.MobileTextActionsToolBar.shouldBeVisible = true; }\n"
+                                          "}\n"),
+                        QUrl::fromLocalFile(m_home->path() + QStringLiteral("/toolbar-watch.qml")));
+        if (!toolbar.isReady())
+            QSKIP("Plasma's own style is not installed here.");
+        std::unique_ptr<QObject> watch(toolbar.create());
+        QVERIFY(watch);
+        QMetaObject::invokeMethod(watch.get(), "press");
+        QVERIFY(watch->property("pressed").toBool());
+
+        QQmlComponent component(&engine, QStringLiteral("io.github.carlsonjm.gooseberry"), QStringLiteral("BoardWindow"));
+        std::unique_ptr<QObject> object(component.createWithInitialProperties({{QStringLiteral("shell"), QVariant::fromValue<QObject *>(&shell)}}));
+        QVERIFY2(object, qPrintable(component.errorString()));
+        auto *board = qobject_cast<QQuickWindow *>(object.get());
+        QVERIFY(board);
+        QMetaObject::invokeMethod(board, "present", Q_ARG(QVariant, QVariant()));
+        QVERIFY(QTest::qWaitForWindowExposed(board));
+        QVERIFY(!watch->property("pressed").toBool());
+    }
 };
 
 int main(int argc, char *argv[])

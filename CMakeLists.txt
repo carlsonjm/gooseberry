@@ -45,6 +45,10 @@ target_compile_definitions(gooseberry-core PRIVATE TRANSLATION_DOMAIN="gooseberr
 
 # The screens, in Kirigami, shared by the program and the screen tests.
 qt_add_library(gooseberry-screens STATIC)
+# Plasma's own style is not there on every machine the screens build on; the
+# file that reaches into it is read as it runs, where it is.
+set_source_files_properties(qml/ForgetTextPress.qml PROPERTIES
+    QT_QML_SKIP_CACHEGEN TRUE QT_QML_SKIP_QMLLINT TRUE)
 qt_add_qml_module(gooseberry-screens
     URI io.github.carlsonjm.gooseberry
     VERSION 1.0
@@ -57,6 +61,7 @@ qt_add_qml_module(gooseberry-screens
         qml/CaptureWindow.qml
         qml/ChecklistPad.qml
         qml/DayStrip.qml
+        qml/ForgetTextPress.qml
         qml/IconButton.qml
         qml/KeysOnTap.qml
         qml/NoteCard.qml
