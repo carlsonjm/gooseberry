@@ -186,6 +186,7 @@ dictionary of strings to variants:
 | `Find(s words, u limit) → av` | The notes with those words in their text, their folder's name or the window they are stuck to, as the board's search finds them, tucked away ones included; no words, or only spaces, gives every note; the most recently changed first, and no more than `limit` (0 for all). Each a dictionary: `id`, `title` (the first words), `excerpt` (the line with the words, when they are not in the title; else empty), `colour`, `colourHex`, `folder`, `folderLabel`, `stuck` (`b`), `window` and `app` (when stuck), `tucked` (`b`), `changed` (ISO 8601), and from 1.1 `remind` (as the note's `remind` key) and `done` (`b`, marked done on the planner). It changes nothing and opens nothing |
 | `OpenNote(s noteId) → b` | Opens that note on Gooseberry's own card, as a tap on the board does; false for a note that is not there |
 | `OpenOnCard(a{sv} request) → b` | Opens Gooseberry's own card on the note `id`, as a tap on the board does, or, with no `id`, on a new note holding `text`. With `back`, the card has a bar on top bearing those words; taking it, or Esc, sends `Back` and puts the card away. False for an `id` that is not there. From 1.1 |
+| `RemindOnCard(a{sv} request) → b` | Opens Gooseberry's own card on a new note holding `text`, with its reminder set to `remind`, an ISO 8601 time, and `back` as `OpenOnCard` takes it. The note is kept, and the card's Remind shows the time, where it is changed or taken away. False, with nothing opened or kept, for no words or for anything that is not a time. After 1.1 |
 | `Edit(s noteId) → a{sv}` | Makes that note the open one, for the search to write on as on a note `Start` began, finishing the one open before as `Done` does; a note that is not there is refused. From 1.1 |
 | `SetPinned(b on) → a{sv}` | Pins the open note, or unpins it. One note is pinned at a time: pinning another unpins the first. A note not kept yet is refused. From 1.1 |
 | `Pinned() → a{sv}` | The pinned note: `id`, `title`, `colour` and `colourHex`; an empty dictionary when none is. From 1.1 |
@@ -236,6 +237,13 @@ back to its Notes; a panel can keep the pinned note in sight. `OpenNote` and
 `OpenOnCard` finish a note a search had open with `Start` or `Edit`, as the
 card takes over. A caller that does not
 know them keeps working as before.
+
+**A reminder from a search, added after 1.1, within version 1.** The method
+`RemindOnCard`. A search that reads "remind me to check the build tomorrow"
+hands the words and the time to Gooseberry's own card in one call. An older
+Gooseberry answers it with an unknown-method error, and the caller hands the
+words to `OpenOnCard` instead, the day still among them, where the note
+offers to remind as it does for any note naming a day.
 
 **The notes tool, added within version 1.** The methods `Read` and `Create`,
 which an assistant broker calls for its `notes.read` and `notes.create` tools

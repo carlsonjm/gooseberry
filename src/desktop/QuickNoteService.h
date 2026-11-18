@@ -71,6 +71,11 @@ public Q_SLOTS:
     // "back", the card has a bar of those words on top, and taking it sends
     // Back and puts the card away. False when there is no such note.
     Q_SCRIPTABLE bool OpenOnCard(const QVariantMap &request);
+    // Added in version 1, after Notes 1.1. Opens Gooseberry's own card on a
+    // new note holding "text" with its reminder set to "remind", an ISO 8601
+    // time, and "back" as OpenOnCard takes it. False, and nothing is opened
+    // or kept, without words or with anything that is not a time.
+    Q_SCRIPTABLE bool RemindOnCard(const QVariantMap &request);
     // Added in version 1, from Notes 1.1. Makes that note the open one, for
     // the search to write on, finishing the one open before.
     Q_SCRIPTABLE QVariantMap Edit(const QString &noteId);

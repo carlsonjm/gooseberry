@@ -404,6 +404,22 @@ bool QuickNoteService::OpenOnCard(const QVariantMap &request)
     return m_shell->openNoteWith(noteId, back);
 }
 
+bool QuickNoteService::RemindOnCard(const QVariantMap &request)
+{
+    const QString text = request.value(QStringLiteral("text")).toString();
+    const QDateTime remind = QDateTime::fromString(request.value(QStringLiteral("remind")).toString(), Qt::ISODate);
+    if (text.trimmed().isEmpty() || !remind.isValid()) {
+        return false;
+    }
+    // The card takes the note; what a search had open here is finished.
+    if (m_open) {
+        m_capture->finish();
+        m_open = false;
+    }
+    m_shell->showCaptureWith(text, request.value(QStringLiteral("back")).toString().simplified(), remind);
+    return true;
+}
+
 QVariantMap QuickNoteService::Edit(const QString &noteId)
 {
     Calling calling(m_calling);

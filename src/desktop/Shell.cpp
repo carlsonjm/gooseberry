@@ -354,7 +354,7 @@ void Shell::showCapture()
     showCaptureWith(QString());
 }
 
-void Shell::showCaptureWith(const QString &text, const QString &back)
+void Shell::showCaptureWith(const QString &text, const QString &back, const QDateTime &remind)
 {
     const CaptureContext context = m_context->current();
     qCDebug(DESKTOP) << "capture: window" << context.window << "app" << context.app << "workspace" << context.workspace;
@@ -363,6 +363,8 @@ void Shell::showCaptureWith(const QString &text, const QString &back)
     setBack(back);
     if (!text.isEmpty()) {
         m_capture->setText(text);
+        // Only a kept note carries a reminder, and words are what keep it.
+        m_capture->setRemindAt(remind);
     }
     raiseCard();
 }
