@@ -62,8 +62,8 @@ public:
 
     Q_INVOKABLE void showCapture();
     // The card on a new note holding those words, with a way back named
-    // back, or none.
-    void showCaptureWith(const QString &text, const QString &back = {});
+    // back, or none, and a reminder at that time when it is one.
+    void showCaptureWith(const QString &text, const QString &back = {}, const QDateTime &remind = {});
     Q_INVOKABLE void showBoard();
     // The board as a window, on the place the note sits in, or on Today.
     void showBoardOn(const QString &noteId);

@@ -552,6 +552,33 @@ private Q_SLOTS:
         QVERIFY(!opened.value());
     }
 
+    // After Notes 1.1: RemindOnCard hands the card a new note with its
+    // reminder already set, and refuses what has no words or no time.
+    void remindOnCardKeepsTheNoteWithItsReminder()
+    {
+        const QString due = QStringLiteral("2031-03-04T09:00:00+00:00");
+        QDBusReply<bool> opened = m_note->call(QStringLiteral("RemindOnCard"),
+            QVariantMap{{QStringLiteral("text"), QStringLiteral("Check the kiln")}, {QStringLiteral("remind"), due},
+                {QStringLiteral("back"), QStringLiteral("Search")}});
+        QVERIFY(opened.isValid());
+        QVERIFY(opened.value());
+        const QVariantList found = asList(m_note->call(QStringLiteral("Find"), QStringLiteral("kiln"), uint(0)).arguments().value(0));
+        QCOMPARE(found.size(), 1);
+        QCOMPARE(asMap(found.first()).value(QStringLiteral("title")).toString(), QStringLiteral("Check the kiln"));
+        QCOMPARE(QDateTime::fromString(asMap(found.first()).value(QStringLiteral("remind")).toString(), Qt::ISODate),
+            QDateTime::fromString(due, Qt::ISODate));
+
+        opened = m_note->call(QStringLiteral("RemindOnCard"),
+            QVariantMap{{QStringLiteral("text"), QStringLiteral("Glaze the bowls")}, {QStringLiteral("remind"), QStringLiteral("soon")}});
+        QVERIFY(opened.isValid());
+        QVERIFY(!opened.value());
+        opened = m_note->call(QStringLiteral("RemindOnCard"),
+            QVariantMap{{QStringLiteral("text"), QStringLiteral("  ")}, {QStringLiteral("remind"), due}});
+        QVERIFY(opened.isValid());
+        QVERIFY(!opened.value());
+        QVERIFY(asList(m_note->call(QStringLiteral("Find"), QStringLiteral("bowls"), uint(0)).arguments().value(0)).isEmpty());
+    }
+
     // From Notes 1.1: one note is pinned at a time, a panel is told when it
     // changes, and tucking it away unpins it.
     void pinKeepsOneNoteInSight()
