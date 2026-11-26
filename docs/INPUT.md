@@ -20,7 +20,7 @@ below is built.
 | Bring a note back | Tap Tucked away on the board, then the note | None yet |
 | Remove a note | Tap the note on the board, then More, then Remove | None yet |
 | Find a note | Type in Find or start a note on the board | None yet |
-| Bring up a window's notes | Tap the dot in its title bar | None yet |
+| Bring up a window's notes | Tap the window's notes dot | None yet |
 | Move a note over a window | Drag it | None yet |
 | Copy words from a note | Hold a word | `Ctrl+C` |
 | Resize a note over a window | Drag its bottom-right corner | None yet |
@@ -208,14 +208,16 @@ today again.
 
 ## Bring up a window's notes
 
-This needs a title bar that draws Gooseberry's dot, as Shuffle's does
-(`DESKTOP.md` § Stuck notes on the bus). On a window whose application draws
+This needs a desktop that shows Gooseberry's dot for the window
+(`DESKTOP.md` § Stuck notes on the bus). Shuffle shows it on the quick note
+island in the Actions Panel while the window is in use; its title bar draws
+none, and folded notes leave no dot over the window there. On a window whose application draws
 its own top bar, as web browsers do, the notes come up from Spread, and fold
 and open on the window the same way.
 
 | Input | What happens |
 | --- | --- |
-| Tap the dot in its title bar | The window's notes come up over it, each where it was last let go there, one never placed at the top-right, the newest on top. They stay up until the dot is tapped again; while they are open they hold the keys, so the next tap or key on the window folds them. |
+| Tap the window's notes dot | The window's notes come up over it, each where it was last let go there, one never placed at the top-right, the newest on top. They stay up until the dot is tapped again; while they are open they hold the keys, so the next tap or key on the window folds them. |
 | Tap a note | The cursor is in it, where it stands, and the on-screen keys come up on a touch screen. What is typed is kept as on the quick note, from the first letter. |
 | Press `Esc` | The typing ends, kept; the notes stay open. |
 | Tap or click the window around the notes, or go to another window | The window takes it. The typing ends, kept, and the notes fold into a small dot where the top note stands, in its colour, with the count when there are several. |
