@@ -68,7 +68,7 @@ Search are all built. The idea behind it is in [docs/CONCEPT.md](docs/CONCEPT.md
 | Finish a note | Tap the work around the card | `Esc` |
 | Open the board | Tap Gooseberry, or hold it and tap All notes | None yet |
 | Set a reminder | Tap Remind | None yet |
-| Bring up a window's notes | Tap the dot in its title bar | None yet |
+| Bring up a window's notes | Tap the window's notes dot | None yet |
 | Copy words from a note | Hold a word | `Ctrl+C` |
 
 Every tap and key, and what happens, is in [docs/INPUT.md](docs/INPUT.md).
@@ -173,8 +173,9 @@ Gooseberry works on any KDE Plasma desktop. Where the Kadunce card workspace is
 running, the quick note opened in Spread takes its centre, and each card shows
 its window's notes where they stand. Where Tettegouche's Search is
 installed, notes are found there too, and Search can host the quick note
-itself. Where the title bar draws Gooseberry's dot, as Shuffle's does, a window
-with notes shows one. What each adds, and what it needs, is in
+itself. Where the desktop shows Gooseberry's dot, a window with notes shows
+one; in Shuffle the dot sits on the quick note island in the Actions Panel
+while that window is in use, and the title bar draws none. What each adds, and what it needs, is in
 [docs/DESKTOP.md](docs/DESKTOP.md). Inside Shuffle, Gooseberry is called Notes;
 its notes folder keeps the name `Gooseberry`.
 
